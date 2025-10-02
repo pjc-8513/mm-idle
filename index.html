@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>City of Might and Magic</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <!-- Resource Bar -->
+<div id="resourceBar">
+  <span id="heroLevelResource">Hero Level: 1</span>
+  <span id="resources">
+    <span id="gold">Gold: 0</span> | 
+    <span id="gems">Gems: 0</span>
+  </span>
+</div>
+
+  <div id="mainLayout">
+    <!-- Main Game Window -->
+    <div id="game">
+      <div id="panelContainer">
+        <!-- Default panel is Area -->
+        <div id="panelArea" class="panel active">
+          <h2>Area</h2>
+          <p>Current wave will be displayed here.</p>
+        </div>
+        <div id="panelParty" class="panel">
+          <h2>Party</h2>
+        </div>
+        <div id="panelTown" class="panel">
+          <h2>Town</h2>
+        </div>
+        <div id="panelSpellbook" class="panel">
+          <h2>Spellbook</h2>
+        </div>
+        <div id="panelQuest" class="panel">
+          <h2> Quests </h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div id="sidePanel">
+      <button data-panel="panelArea">Area</button>
+      <button data-panel="panelParty">Party</button>
+      <button data-panel="panelTown">Town</button>
+      <button data-panel="panelSpellbook">Spellbook</button>
+      <button id="panelQuestButton" data-panel="panelQuest">Active quests</button>
+      <input type="checkbox" id="log-toggle" checked/>
+      <label for="log-toggle">Show Log</label>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div id="log"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
