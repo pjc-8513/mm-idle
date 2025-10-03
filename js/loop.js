@@ -7,6 +7,8 @@ import { buildings } from "./content/buildingDefs.js";
 import { abilities } from "./content/abilities.js";
 import { combatState, executeAttack, calculateAttackInterval, stopAutoAttack, startAutoAttack } from "./systems/combatSystem.js";
 import { floatingTextManager } from './systems/floatingtext.js';
+import { renderQuestPanelAnimations } from "./questManager.js";
+import { uiAnimations } from './systems/animations.js';
 //import { calculateGemIncome } from "./incomeSystem.js";
 
 
@@ -55,6 +57,10 @@ function update(delta) {
 
   // Update floating text animations
   floatingTextManager.update(delta);
+
+  // UI animations
+  uiAnimations.update(delta);
+
 }
 
 function updateSkills(delta) {
@@ -91,6 +97,9 @@ function render() {
   if (activePanel && activePanel.id === "panelParty") {
     renderPartyPanel();
   }  
+
+  renderQuestPanelAnimations();
+
   const canvas = document.getElementById('enemyEffectsCanvas');
   if (!canvas) return;
   

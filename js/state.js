@@ -15,7 +15,8 @@ export const state = {
   heroGains: { attack: 5 },
   activeQuest: null, // Add this
   quests: {
-    prefixQuests: {}
+    prefixQuests: {},
+    typeQuests: {}
   },
   incrementalQuests: {
     gems_collected: {

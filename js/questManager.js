@@ -1,15 +1,22 @@
 // questManager.js
 import { state } from './state.js';
+import { ENEMY_TEMPLATES } from './content/enemyDefs.js';
 import { emit, on } from './events.js';
 import { prefixes } from './content/definitions.js';
 import { logMessage } from './systems/log.js';
+import { uiAnimations } from './systems/animations.js';
 
 // Quest configuration
 const QUEST_CONFIG = {
-  prefixQuest: {
+  defeat_prefix: {
     enemiesRequired: 5,
     baseExpReward: 100,
     expPerLevel: 20
+  },
+  defeat_type: {
+    enemiesRequired: 10,
+    baseExpReward: 200,
+    expPerLevel: 50
   }
 };
 
@@ -21,12 +28,15 @@ export function initQuestSystem() {
   // Add quest state if not exists
   if (!state.quests) {
     state.quests = {
-      prefixQuests: {} // Key: prefix name, Value: quest object
+      prefixQuests: {}, // Key: prefix name, Value: quest object
+      typeQuests: {} // key: type name, value: quest object
     };
   }
 
   // Generate initial quests for unlocked prefixes
+  generateTypeQuests();
   generatePrefixQuests();
+  
 
   // Listen for enemy defeats
   on('enemyDefeated', handleEnemyDefeated);
@@ -38,18 +48,11 @@ export function initQuestSystem() {
   setupQuestUI();
 }
 
-/**
- * Generate or update prefix quests based on unlocked prefixes
- */
-function generatePrefixQuests() {
-  const unlockedPrefixes = prefixes.filter(p => state.heroLevel >= p.unlocks);
-  
-  unlockedPrefixes.forEach(prefixData => {
-    const prefix = prefixData.prefix;
-    
-    // If quest doesn't exist, create it
-    if (!state.quests.prefixQuests[prefix]) {
-      state.quests.prefixQuests[prefix] = createPrefixQuest(prefix);
+function generateQuests({ questType, sourceList, keyExtractor, questStoreKey, createQuestFn }) {
+  sourceList.forEach(item => {
+    const key = keyExtractor(item);
+    if (!state.quests[questStoreKey][key]) {
+      state.quests[questStoreKey][key] = createQuestFn(key);
     }
   });
 
@@ -59,95 +62,174 @@ function generatePrefixQuests() {
   }
 }
 
-/**
- * Create a new prefix quest object
- */
-function createPrefixQuest(prefix) {
+function generatePrefixQuests() {
+  const unlockedPrefixes = prefixes.filter(p => state.heroLevel >= p.unlocks);
+  generateQuests({
+    questType: 'defeat_prefix',
+    sourceList: unlockedPrefixes,
+    keyExtractor: p => p.prefix,
+    questStoreKey: 'prefixQuests',
+    createQuestFn: createPrefixQuest
+  });
+}
+
+function generateTypeQuests() {
+  const enemyTypes = [...new Set(Object.values(ENEMY_TEMPLATES).map(e => e.type))];
+  generateQuests({
+    questType: 'defeat_type',
+    sourceList: enemyTypes,
+    keyExtractor: t => t,
+    questStoreKey: 'typeQuests',
+    createQuestFn: createTypeQuest
+  });
+}
+
+
+function createQuest({ idPrefix, questType, key, configKey }) {
+  const config = QUEST_CONFIG[configKey];
+  console.log(config);
   return {
-    id: `prefix_${prefix}_${Date.now()}`,
-    type: 'defeat_prefix',
-    prefix: prefix,
-    targetCount: QUEST_CONFIG.prefixQuest.enemiesRequired,
+    id: `${idPrefix}_${key}_${Date.now()}`,
+    type: questType,
+    [questType === 'defeat_prefix' ? 'prefix' : 'enemyType']: key,
+    targetCount: config.enemiesRequired,
     currentCount: 0,
-    expReward: QUEST_CONFIG.prefixQuest.baseExpReward + 
-               (state.heroLevel * QUEST_CONFIG.prefixQuest.expPerLevel),
+    expReward: config.baseExpReward + (state.heroLevel * config.expPerLevel),
     isComplete: false
   };
 }
 
+function createPrefixQuest(prefix) {
+  return createQuest({
+    idPrefix: 'prefix',
+    questType: 'defeat_prefix',
+    key: prefix,
+    configKey: 'defeat_prefix' // ✅ must match QUEST_CONFIG key
+  });
+}
+
+function createTypeQuest(type) {
+  return createQuest({
+    idPrefix: 'type',
+    questType: 'defeat_type',
+    key: type,
+    configKey: 'defeat_type' // ✅ must match QUEST_CONFIG key
+  });
+}
+
+
+
 /**
  * Handle enemy defeated event
  */
-function handleEnemyDefeated({row, col, enemy}) {
-    
-  if (!state.quests?.prefixQuests) return;
+function handleEnemyDefeated({ enemy }) {
+  const questTypes = [
+    { store: 'prefixQuests', key: enemy.prefix, type: 'defeat_prefix' },
+    { store: 'typeQuests', key: enemy.type, type: 'defeat_type' }
+  ];
+  console.log(enemy);
+  questTypes.forEach(({ store, key, type }) => {
+    const quest = state.quests[store]?.[key];
+    if (quest && !quest.isComplete) {
+      quest.currentCount++;
+      console.log(enemy);
+      if (quest.currentCount >= quest.targetCount) {
+        quest.isComplete = true;
+        emit('questCompleted', quest);
+        flashSidePanel(quest);
+      }
 
-  const prefix = enemy.prefix;
-  const quest = state.quests.prefixQuests[prefix];
-    console.log('[quest] enemy / quest: ', enemy.prefix, ' / ', quest);
-  if (quest && !quest.isComplete) {
-    quest.currentCount++;
-    
-    // Check if quest is complete
-    if (quest.currentCount >= quest.targetCount) {
-      quest.isComplete = true;
-      emit('questCompleted', quest);
-      flashSidePanel(quest);
-    }
-    
+      emit('questProgressUpdated', quest);
 
-    emit('questProgressUpdated', quest);
-    
-    // Update UI if quest panel is active
-    if (isPanelActive('panelQuest')) {
-      updateQuestCard(prefix);
+      if (isPanelActive('panelQuest')) {
+        console.log(enemy);
+        updateQuestCard(key, store); // ✅ Pass both key and store
+      }
     }
-  }
+  });
 }
+
+
 
 /**
  * Handle hero level up - unlock new prefix quests
  */
-function handleHeroLevelUp(data) {
-  generatePrefixQuests();
+function handleHeroLevelUp() {
+  console.log("[handleHeroLevelUp] Hero leveled up → regenerating quests...");
+
+  // Regenerate prefix quests
+  generateQuests({
+    questType: 'defeat_prefix',
+    sourceList: state.availablePrefixes || [],
+    keyExtractor: prefix => prefix, // or prefix.name if it's an object
+    questStoreKey: 'prefixQuests',
+    createQuestFn: createPrefixQuest
+  });
+
+  // Regenerate type quests
+  generateQuests({
+    questType: 'defeat_type',
+    sourceList: state.availableTypes || [],
+    keyExtractor: type => type, // adjust if your data is objects
+    questStoreKey: 'typeQuests',
+    createQuestFn: createTypeQuest
+  });
 }
+
 
 /**
  * Complete a specific quest and grant rewards
+ * @param {string} questCategory - The key in state.quests (e.g., 'prefixQuests', 'typeQuests')
+ * @param {string} questKey - The identifier for the specific quest (e.g., prefix name or type name)
+ * @param {Function} createQuestFn - Function to create a new quest of this type
  */
-export function completeQuest(prefix) {
-  const quest = state.quests.prefixQuests[prefix];
-  
-  if (!quest || !quest.isComplete) {
-    console.warn(`Cannot complete quest for prefix: ${prefix}`);
+export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
+  const questStore = state.quests[questCategory];
+  const oldQuest = questStore?.[questKey];
+
+  if (!oldQuest || !oldQuest.isComplete) {
+    console.warn(`Cannot complete quest for ${questCategory}: ${questKey}`);
     return;
   }
 
-  const oldLevel = state.heroLevel;
+  console.log("[COMPLETE QUEST] Starting turn-in:", questCategory, questKey, oldQuest);
 
-  // Grant experience
-  addHeroExp(quest.expReward);
+  const prevLevel = state.heroLevel;
 
-  // Reset quest (keep it ongoing)
-  state.quests.prefixQuests[prefix] = createPrefixQuest(prefix);
+  // Grant rewards
+  addHeroExp(oldQuest.expReward);
+  console.log("[COMPLETE QUEST] After EXP:", { heroLevel: state.heroLevel, heroExp: state.heroExp });
+
+  // Replace quest with a fresh one
+  const newQuest = createQuestFn(questKey);
+  questStore[questKey] = newQuest;
+  console.log("[COMPLETE QUEST] New quest created:", newQuest);
 
   emit('questTurnedIn', {
-    prefix,
-    expGained: quest.expReward,
-    leveledUp: state.heroLevel > oldLevel
+    questType: oldQuest.type,
+    key: questKey,
+    expGained: oldQuest.expReward,
+    leveledUp: state.heroLevel > prevLevel
   });
 
-  // Update UI
+  // Refresh UI
   if (isPanelActive('panelQuest')) {
-    updateQuestCard(prefix);
+    //fullRenderQuestPanel();
+    updateQuestPanel();
   }
-  // Check if there are any quests that are still complete and if not remove the flash animation from side panel button
-  const hasActiveQuests = Object.values(state.quests.prefixQuests).some(q => q !== quest && q.isComplete);
-  if (!hasActiveQuests){
+
+  // Check if any *other* quests are still complete
+  const hasActiveQuests = Object.values(questStore).some(q => q.isComplete);
+  console.log("[COMPLETE QUEST] Active quests left?", hasActiveQuests, questStore);
+
+  if (!hasActiveQuests) {
     const panelQuestButton = document.getElementById('panelQuestButton');
-    panelQuestButton.classList.remove('quest-complete');
+    panelQuestButton?.classList.remove('quest-complete');
   }
 }
+
+
+
 
 /**
  * Add experience to hero and handle leveling
@@ -164,6 +246,12 @@ function addHeroExp(amount) {
     levelUpHero();
     expNeeded = getExpForLevel(state.heroLevel + 1);
   }
+
+  console.log("[EXP] Final hero state:", { 
+    level: state.heroLevel, 
+    exp: state.heroExp, 
+    nextNeeded: getExpForLevel(state.heroLevel + 1) 
+  });
 
   updateQuestPanel();
   if (state.heroLevel > oldLevel) {
@@ -188,8 +276,11 @@ function getExpForLevel(level) {
  */
 function levelUpHero() {
   const expNeeded = getExpForLevel(state.heroLevel + 1);
-  state.heroExp -= expNeeded;
+  state.heroExp -= expNeeded;  // expNeeded is correct here (requirement for NEXT level)
   state.heroLevel++;
+
+  // But safeguard: don’t let exp go negative
+  if (state.heroExp < 0) state.heroExp = 0;
 
   // Apply stat gains
   if (state.heroGains) {
@@ -200,11 +291,14 @@ function levelUpHero() {
     }
   }
 
+  uiAnimations.triggerHeroLevelUp();
+
   emit('heroLevelUp', {
     level: state.heroLevel,
     gains: state.heroGains
   });
 }
+
 
 /**
  * Set up quest UI elements
@@ -239,7 +333,7 @@ export function renderQuestPanel() {
  */
 function fullRenderQuestPanel() {
   const panel = document.getElementById("panelQuest");
-  
+
   panel.innerHTML = `
     <div class="quest-panel-header">
       <h2>Quests</h2>
@@ -256,16 +350,26 @@ function fullRenderQuestPanel() {
   const container = document.createElement("div");
   container.classList.add("questGrid");
 
-  // Get all prefix quests sorted by prefix
-  const questEntries = Object.entries(state.quests.prefixQuests || {});
-  
-  questEntries.forEach(([prefix, quest]) => {
-    const questCard = createQuestCard(prefix, quest);
-    container.appendChild(questCard);
+  const questTypes = [
+    { key: 'prefixQuests', label: 'Prefix' },
+    { key: 'typeQuests', label: 'Type' }
+    // Add more types here as needed
+  ];
+
+  let totalQuests = 0;
+
+  questTypes.forEach(({ key, label }) => {
+    const quests = state.quests[key] || {};
+    const entries = Object.entries(quests);
+
+    entries.forEach(([questKey, quest]) => {
+      const questCard = createQuestCard(questKey, quest, key);
+      container.appendChild(questCard);
+      totalQuests++;
+    });
   });
 
-  // If no quests available
-  if (questEntries.length === 0) {
+  if (totalQuests === 0) {
     const emptyMessage = document.createElement("div");
     emptyMessage.classList.add("quest-empty-message");
     emptyMessage.textContent = "No quests available yet. Keep playing to unlock more!";
@@ -276,33 +380,30 @@ function fullRenderQuestPanel() {
   updateQuestPanel();
 }
 
+
 /**
  * Create a quest card element
  */
-function createQuestCard(prefix, quest) {
+function createQuestCard(questKey, quest, questStoreKey) {
   const questCard = document.createElement("div");
   questCard.classList.add("questCard");
-  questCard.dataset.prefix = prefix;
+  questCard.dataset.questKey = questKey;
+  questCard.dataset.questType = quest.type;
 
-  // Quest icon/image area
-  const imageDiv = document.createElement("div");
-  imageDiv.classList.add("questImage");
   const iconText = document.createElement("div");
   iconText.classList.add("quest-icon");
-  iconText.textContent = prefix.charAt(0).toUpperCase();
-  imageDiv.appendChild(iconText);
+  iconText.textContent = questKey.charAt(0).toUpperCase();
 
-  // Quest info overlay
   const infoOverlay = document.createElement("div");
   infoOverlay.classList.add("questInfo");
 
   const titleDiv = document.createElement("div");
   titleDiv.classList.add("questTitle");
-  titleDiv.textContent = `${prefix} Slayer`;
+  titleDiv.textContent = `${questKey} ${quest.type === 'defeat_prefix' ? 'Slayer' : 'Hunter'}`;
 
   const descDiv = document.createElement("div");
   descDiv.classList.add("questDesc");
-  descDiv.textContent = `Defeat ${quest.targetCount} ${prefix} enemies`;
+  descDiv.textContent = `Defeat ${quest.targetCount} ${questKey} enemies`;
 
   const progressDiv = document.createElement("div");
   progressDiv.classList.add("questProgress");
@@ -317,31 +418,33 @@ function createQuestCard(prefix, quest) {
   infoOverlay.appendChild(progressDiv);
   infoOverlay.appendChild(rewardDiv);
 
-  // Complete button
   const btn = document.createElement("button");
   btn.classList.add("completeQuestBtn");
-  btn.dataset.prefix = prefix;
-  
+  btn.dataset.questKey = questKey;
+  btn.dataset.questStoreKey = questStoreKey;
+
   const btnText = document.createElement("span");
   btnText.textContent = "Complete";
   btn.appendChild(btnText);
 
-  // Set initial button state
   updateQuestButton(btn, quest);
 
-  // Click listener
   btn.addEventListener("click", () => {
-    if (quest.isComplete) {
-      completeQuest(prefix);
+    const liveQuest = state.quests[questStoreKey]?.[questKey];
+    if (liveQuest && liveQuest.isComplete) {
+      const createFn = liveQuest.type === 'defeat_prefix' ? createPrefixQuest : createTypeQuest;
+      completeQuestGeneric(questStoreKey, questKey, createFn);
     }
   });
 
-  questCard.appendChild(imageDiv);
+
+
   questCard.appendChild(infoOverlay);
   questCard.appendChild(btn);
 
   return questCard;
 }
+
 
 /**
  * Update all quest cards (efficient update)
@@ -352,41 +455,47 @@ function updateQuestPanel() {
   const heroExpEl = document.getElementById('heroExp');
   const heroExpNeededEl = document.getElementById('heroExpNeeded');
 
-  if (heroLevelEl){ 
-    console.log('[questManager]: ', state.heroLevel);
-    console.log('heroLevelEl exists in DOM:', document.body.contains(heroLevelEl), ' | ', heroLevelEl.textContent);
-    heroLevelEl.textContent = state.heroLevel;}
+  if (heroLevelEl) heroLevelEl.textContent = state.heroLevel;
   if (heroExpEl) heroExpEl.textContent = Math.floor(state.heroExp);
   if (heroExpNeededEl) heroExpNeededEl.textContent = getExpForLevel(state.heroLevel + 1);
 
-  // Update each quest card
-  Object.keys(state.quests.prefixQuests || {}).forEach(prefix => {
-    updateQuestCard(prefix);
+  // Update all quest cards across all quest types
+  const questTypes = ['prefixQuests', 'typeQuests']; // Add more keys here as needed
+
+  questTypes.forEach(storeKey => {
+    const quests = state.quests[storeKey] || {};
+    Object.keys(quests).forEach(questKey => {
+      updateQuestCard(questKey, storeKey);
+    });
   });
 }
+
 
 /**
  * Update a specific quest card
  */
-function updateQuestCard(prefix) {
-  const quest = state.quests.prefixQuests[prefix];
+function updateQuestCard(questKey, questStoreKey) {
+  const quest = state.quests[questStoreKey]?.[questKey];
   if (!quest) return;
 
-  const card = document.querySelector(`.questCard[data-prefix="${prefix}"]`);
+  const card = document.querySelector(`.questCard[data-quest-key="${questKey}"]`);
   if (!card) return;
 
-  // Update progress text
+  // Ensure dataset stays in sync
+  card.dataset.questType = quest.type;
+
   const progressDiv = card.querySelector('.questProgress');
   if (progressDiv) {
     progressDiv.textContent = `Progress: ${quest.currentCount} / ${quest.targetCount}`;
   }
 
-  // Update button state
   const btn = card.querySelector('.completeQuestBtn');
   if (btn) {
     updateQuestButton(btn, quest);
   }
 }
+
+
 
 /**
  * Update quest button appearance based on completion status
@@ -417,6 +526,25 @@ function isPanelActive(panelId) {
   const panel = document.getElementById(panelId);
   return panel && panel.classList.contains('active');
 }
+
+export function renderQuestPanelAnimations() {
+  if (!isPanelActive('panelQuest')) return;
+
+  const heroLevelEl = document.querySelector(".hero-level"); // <-- select the right element
+  if (heroLevelEl) {
+    if (uiAnimations.heroLevelUp) {
+      heroLevelEl.classList.add("level-up-anim");
+      console.log("Level up animation triggered!", heroLevelEl);
+
+      // remove after animation ends so it can replay later
+      heroLevelEl.addEventListener("animationend", () => {
+        heroLevelEl.classList.remove("level-up-anim");
+      }, { once: true });
+    }
+  }
+}
+
+
 
 /**
  * Get all active quests (useful for debugging)

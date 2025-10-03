@@ -249,6 +249,7 @@ export function createEnemy(enemyId, wave, isBoss = false) {
     statusEffects: [],
     justDamaged: false,
     row: template.row,
+    type: template.type,
     elementType: template.elementType,
     resistances: { ...template.resistances },
     weaknesses: { ...template.weaknesses },

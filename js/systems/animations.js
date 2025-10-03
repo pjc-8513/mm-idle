@@ -4,6 +4,24 @@ import { emit, on } from '../events.js';
 import { getEnemyCanvasPosition } from "../area.js";
 import { abilities } from "../content/abilities.js";
 
+export const uiAnimations = {
+  heroLevelUp: null, // null or { remaining: seconds }
+  
+  triggerHeroLevelUp() {
+    this.heroLevelUp = { remaining: 1.2 }; // matches CSS animation duration
+  },
+
+  update(delta) {
+    if (this.heroLevelUp) {
+      this.heroLevelUp.remaining -= delta;
+      if (this.heroLevelUp.remaining <= 0) {
+        this.heroLevelUp = null;
+      }
+    }
+  }
+};
+
+
 export function initAnimations() {
   console.log('Animations initializing...');
   // Listen for game events

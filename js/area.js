@@ -293,9 +293,13 @@ window.addEventListener("resize", resizeEnemyEffectsCanvas);
 function renderEnemyCard(enemy, row, col) {
   const template = ENEMY_TEMPLATES[enemy.id];
   const hpPercentage = (enemy.hp / enemy.maxHp) * 100;
+
+  const elementClass = enemy.elementType || "default";
+  const bossClass = enemy.isBoss ? "boss" : "";
+
   
   return `
-    <div class="enemy-card" id="enemy-${row}-${col}">
+    <div class="enemy-card ${elementClass} ${bossClass}" id="enemy-${row}-${col}">
       <div class="enemy-name">${enemy.name || template.baseName}</div>
       <div class="enemy-level">Lv.${enemy.level}</div>
       <div class="enemy-type">${template.type}</div>
@@ -312,6 +316,7 @@ function renderEnemyCard(enemy, row, col) {
       }
     </div>
   `;
+
 }
 
 export function updateEnemiesGrid() {

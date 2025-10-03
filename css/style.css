@@ -727,6 +727,24 @@ body, html {
   transition: all 0.15s ease;
 }
 
+/* Element-based backgrounds */
+.enemy-card.fire    { background: linear-gradient(135deg, #81554c, #a83232); }
+.enemy-card.water   { background: linear-gradient(135deg, #707783, #1e70a8); }
+.enemy-card.air     { background: linear-gradient(135deg, #2d2d2d, #9ea9b8); }
+.enemy-card.earth   { background: linear-gradient(135deg, #3f352a, #6b4e2e); }
+.enemy-card.poison  { background: linear-gradient(135deg, #1a2d19, #3d8c40); }
+.enemy-card.physical{ background: linear-gradient(135deg, #8a8888, #666666); }
+.enemy-card.dark    { background: linear-gradient(135deg, #0b0b0f, #302a42); }
+.enemy-card.light   { background: linear-gradient(135deg, #dedfa3, #c3cf56); }
+.enemy-card.default { background: #807b72; }
+
+/* Boss border */
+.enemy-card.boss {
+  border: 2px solid gold;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+
 .enemy-card:hover {
   border-color: #334155;
   transform: translateY(-1px);
@@ -883,6 +901,19 @@ body, html {
   font-weight: bold;
   color: #1f2937;
 }
+
+/* Radiant Level Up Animation */
+@keyframes levelUpGlow {
+  0%   { transform: scale(1);   box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+  30%  { transform: scale(1.2); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); background: #c3cf56; }
+  60%  { transform: scale(0.95); box-shadow: 0 0 25px rgba(255, 255, 150, 0.9); background: #f7f1a0; }
+  100% { transform: scale(1);   box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+.hero-level.level-up-anim {
+  animation: levelUpGlow 1.2s ease-out;
+}
+
 
 /* Quest Grid - Similar to Party Grid */
 .questGrid {

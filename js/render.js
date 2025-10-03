@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import { on } from "./events.js";
 import { logMessage, logSuccess } from "./systems/log.js";
+import { formatNumber } from "./systems/math.js";
 
 export function initRender() {
   // Subscribe to resource updates
@@ -25,7 +26,9 @@ export function initRender() {
 }
 
 export function renderResourceBar() {
+  let displayGold = Math.floor(state.resources.gold);
+  displayGold = formatNumber(displayGold);
   document.getElementById("heroLevelResource").textContent = `Hero Level: ${state.heroLevel}`;
-  document.getElementById("gold").textContent = `Gold: ${Math.floor(state.resources.gold)}`;
+  document.getElementById("gold").textContent = `Gold: ${displayGold.text}`;
   document.getElementById("gems").textContent = `Gems: ${state.resources.gems.toFixed(0)}`;
 }
