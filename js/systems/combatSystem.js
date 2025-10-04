@@ -125,6 +125,28 @@ export function getAdjacentEnemies(row, col) {
 }
 
 /**
+ * Returns a random adjacent enemy position
+ * @param {*} row 
+ * @param {*} col 
+ * @returns 
+ */
+export function getRandomAdjacentEnemy(row, col) {
+  const adjacentEnemies = getAdjacentEnemies(row, col);
+  if (adjacentEnemies.length === 0) return null;
+  return adjacentEnemies[Math.floor(Math.random() * adjacentEnemies.length)];
+}
+
+/**
+ * Returns a random enemy from the entire grid
+ * @returns 
+ */
+export function getRandomEnemy() {
+  const enemies = state.enemies.flat().filter(enemy => enemy && enemy.hp > 0);
+  if (enemies.length === 0) return null;
+  return enemies[Math.floor(Math.random() * enemies.length)];
+}
+
+/**
  *  helper to get enemies in a column
  * @param {*} column 
  * @returns 
@@ -234,7 +256,7 @@ function calculateDamage(attacker, target) {
   // convert damage to resonance element damage
   const resonance = attacker.resonance || 'physical';
   const elementConvert = state.elementalDmgModifiers[resonance];
-  console.log(elementConvert);
+  // console.log(elementConvert);
   baseDamage = calculatePercentage(baseDamage, elementConvert);
   
   
@@ -247,7 +269,7 @@ function calculateDamage(attacker, target) {
     elementalPenetration,
     weaknessBonus
   );
-  console.log(target);
+  // console.log(target);
   // Get matchup type for logging/UI
   const matchup = getElementalMatchup(resonance, target.elementType);
   console.log(`[Elemental] ${resonance} vs ${target.elementType}: ${matchup} (${elementalMultiplier}x)`);
@@ -255,15 +277,7 @@ function calculateDamage(attacker, target) {
 
 
   let damageMultiplier = elementalMultiplier;
-  /*
-  if (target.resistances && target.resistances[resonance]) {
-    damageMultiplier *= (1 - target.resistances[resonance]);
-  }
-  
-  if (target.weaknesses && target.weaknesses[resonance]) {
-    damageMultiplier *= (1 + target.weaknesses[resonance]);
-  }
-  */
+
   if (!attacker.lastTarget){
     attacker.lastTarget = target.uniqueId;
     attacker.sameTargetStreak = 0;
@@ -273,9 +287,10 @@ function calculateDamage(attacker, target) {
   } else if (attacker.lastTarget === target.uniqueId){
     attacker.sameTargetStreak++;
   }
-  console.log("[attack] target: ", target, " sameTargetStreak: ", attacker.sameTargetStreak);
+  // console.log("[attack] target: ", target, " sameTargetStreak: ", attacker.sameTargetStreak);
   const context = {
     damage: baseDamage,
+    isCrit: isCritical,
     sameTargetStreak: attacker.sameTargetStreak || 0,
   };  
   
@@ -308,7 +323,7 @@ function calculateDamage(attacker, target) {
  * @param {*} target 
  * @returns 
  */
-export function calculateSkillDamage(attacker, skillBaseDamage, target) {
+export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
   console.log('[skill damage] skill base dmg: ', skillBaseDamage);
   let baseDamage = attacker.stats.attack + state.heroStats.attack || 30;
   let isCritical = false;
@@ -321,7 +336,6 @@ export function calculateSkillDamage(attacker, skillBaseDamage, target) {
   }
   
   // convert damage to resonance element damage
-  const resonance = attacker.resonance || 'physical';
   let elementDamage = state.elementalDmgModifiers[resonance];
   elementDamage += skillBaseDamage;
   console.log('[Skill Damage]: ', elementDamage);
@@ -394,7 +408,7 @@ export function executeAttack(attacker) {
   
   
   // Apply damage
-  const success = damageEnemy(position.row, position.col, damageResult.damage);
+  const success = damageEnemy(position.row, position.col, damageResult.damage, attacker.resonance);
 
   // Get canvas position for this enemy
   const pos = getEnemyCanvasPosition(position.row, position.col);
@@ -496,7 +510,7 @@ function handlePartyChanged() {
 function handleWaveCleared() {
   stopAutoAttack();
   combatState.currentTarget = null;
-  console.log('Wave cleared - combat stopped');
+  // console.log('Wave cleared - combat stopped');
 }
 
 function getEnemyAt(row, col) {

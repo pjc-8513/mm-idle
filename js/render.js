@@ -7,6 +7,7 @@ export function initRender() {
   // Subscribe to resource updates
   on("goldChanged", () => renderResourceBar());
   on("gemsChanged", () => renderResourceBar());
+  on("heroLevelUp", levelAnmiation);
 
     // Subscribe to recruitment events and log them
   on("classRecruited", (cls) => {
@@ -31,4 +32,7 @@ export function renderResourceBar() {
   document.getElementById("heroLevelResource").textContent = `Hero Level: ${state.heroLevel}`;
   document.getElementById("gold").textContent = `Gold: ${displayGold.text}`;
   document.getElementById("gems").textContent = `Gems: ${state.resources.gems.toFixed(0)}`;
+}
+function levelAnmiation(){
+  document.getElementById("heroLevelResource").classList.add
 }

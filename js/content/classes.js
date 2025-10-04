@@ -66,6 +66,16 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
+      abilities: [
+        { id: "weakSpot", unlockLevel: 1 },
+        { id: "poisonFlask", unlockLevel: 1 },
+        { id: "speedBoost", unlockLevel: 5 }
+      ],
+      skills: {
+        weakSpot: { active: true },
+        poisonFlask: { cooldownRemaining: 8000 },
+        speedBoost: { active: false, streak: 0 }
+      },
       baseStats: { hp: 12, mp: 5, attack: 5, defense: 2, criticalChance: 0.2, speed: 1.8 },
       growthPerLevel: { hp: 1, mp: 1, attack: 1, defense: 1 },
       attackCooldown: 0

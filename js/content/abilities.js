@@ -1,9 +1,10 @@
 import { state } from "../state.js";
-import { getEnemiesInColumn, calculateSkillDamage } from "../systems/combatSystem.js";
+import { getEnemiesInColumn, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
 import { handleSkillAnimation } from "../systems/animations.js";
 import { getEnemyCanvasPosition } from "../area.js";
 import { floatingTextManager } from "../systems/floatingtext.js";
+import { applyDOT } from "../systems/dotManager.js";
 
 export const abilities = [
     {
@@ -13,7 +14,7 @@ export const abilities = [
         class: "fighter",
         description: "Adds bonus damage % in physical damage per attack to base damage until target changes",
         spritePath: null,  // does not have an animation
-        cooldown: null, // active skills do not have cooldown
+        cooldown: null, // passive skills do not have cooldown
         defaultBonus: 1,
         perLevelBonus: 0.10,
         applyPassive: function (attacker, target, context) {
@@ -28,6 +29,7 @@ export const abilities = [
         id: "followThrough",
         name: "Follow Through",
         type: "active",
+        resonance: "physical",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
         spritePath: '../../assets/images/sprites/follow_through.png',  // does not have an animation
@@ -43,7 +45,7 @@ export const abilities = [
             enemies.forEach(({ enemy, row, col }) => {
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
-                const skillDamage = calculateSkillDamage(attacker, this.skillBaseDamage, enemy);
+                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
                 damageEnemy(row, col, skillDamage.damage);
                 handleSkillAnimation("followThrough", row, col);
                 showFloatingDamage(row, col, skillDamage); // show floating text
@@ -61,7 +63,67 @@ export const abilities = [
         defaultBonus: 0.10,
         class: "fighter"        
     },
+    {
+        id: "weakSpot",
+        name: "Weak Spot",
+        type: "passive",
+        class: "rogue",
+        description: "Adds bonus damage to critical hits per physical counter on enemy",
+        spritePath: null,  // does not have an animation
+        cooldown: null, // passive skills do not have cooldown
+        defaultBonus: 5,
+        perLevelBonus: 0.10,
+        applyPassive: function (attacker, target, context) {
+            // Ensure counters and level are valid
+            const physicalCounters = target.counters.physical || 0;
+            if (context.isCrit && target.counters && attacker.level !== undefined &&
+                physicalCounters > 0) {                
+                const finalBonus = (this.defaultBonus * (attacker.level * this.perLevelBonus)) * physicalCounters;
+                context.damage *= finalBonus;
+                console.log(`[Rogue weak spot] Physical counters: ${physicalCounters} finalBonus: ${finalBonus} context.damage: ${context.damage}`);
+                // Reset physical counters
+                target.counters.physical = 0; // Or delete target.counters.physical;
+            }
+        }        
+    },
+    {
+        id: "poisonFlask",
+        name: "Poison Flask",
+        type: "active",
+        resonance: "poison",
+        skillBaseDamage: 1500,
+        //description: `Deals ${skillBaseDamage}% of attack in poison damage over time to a random enemy`,
+        spritePath: '../../assets/images/sprites/follow_through.png',  // does not have an animation
+        cooldown: 8000,
+        class: "rogue",
+        activate: function (attacker, target, context) {
+            if (!target) return;
+            
+            const randomEnemy = getRandomEnemy();
+            if (!randomEnemy) return;
+
+            const skillDamage = calculateSkillDamage(
+            attacker, 
+            this.resonance, 
+            this.skillBaseDamage, 
+            randomEnemy
+            );
+            
+            // Pass attacker so passive bonuses are applied
+            console.log(`[DOT] Rogue applying DOT`);
+            applyDOT(randomEnemy, "poison", skillDamage, 6, attacker);
+            /*
+            // Optional: Visual feedback
+            floatingTextManager.addText(
+            randomEnemy.row, 
+            randomEnemy.col, 
+            "Poisoned!", 
+            "poison"
+            );
+            */
+        }
     
+    },
 
 ];
 

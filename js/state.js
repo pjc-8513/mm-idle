@@ -10,9 +10,10 @@ export const state = {
     woodIncomePerSecond: 0,
     oreIncomePerSecond: 0,
   },
-  heroLevel: 1,
+  heroLevel: 5,
   heroExp: 0,
   heroGains: { attack: 5 },
+  autoQuest: false,
   activeQuest: null, // Add this
   quests: {
     prefixQuests: {},

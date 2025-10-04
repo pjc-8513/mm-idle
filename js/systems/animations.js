@@ -8,6 +8,7 @@ export const uiAnimations = {
   heroLevelUp: null, // null or { remaining: seconds }
   
   triggerHeroLevelUp() {
+    emit("heroLevelUp");
     this.heroLevelUp = { remaining: 1.2 }; // matches CSS animation duration
   },
 
@@ -23,7 +24,7 @@ export const uiAnimations = {
 
 
 export function initAnimations() {
-  console.log('Animations initializing...');
+  // console.log('Animations initializing...');
   // Listen for game events
   on('coinAnimation', handleCoinAnimation);
   on('skillAnimation', handleSkillAnimation);
@@ -36,7 +37,7 @@ export function handleCoinAnimation(position) {
   const canvas = document.getElementById("enemyEffectsCanvas");
   
   if (!canvas) {
-    console.log("no canvas (animations)");
+    // console.log("no canvas (animations)");
     return;
   }
   
@@ -53,20 +54,20 @@ export function handleCoinAnimation(position) {
 }
 
 export function handleSkillAnimation(id, row, col) {
-  console.log('Triggering skill animation at: ', row, col);
+  // console.log('Triggering skill animation at: ', row, col);
   if (state.activePanel !== "panelArea") return;
   
   const pos = getEnemyCanvasPosition(row, col);
   const canvas = document.getElementById("enemyEffectsCanvas");
   
   if (!canvas) {
-    console.log("no canvas (animations)");
+    // console.log("no canvas (animations)");
     return;
   }
   
   if (state.ui?.spriteAnimations && pos) {
     const skillSpritePath = abilities.find((a) => a.id === id)?.spritePath;
-    console.log("[followThrough animation] spritePath: ", skillSpritePath);
+    // console.log("[followThrough animation] spritePath: ", skillSpritePath);
     
     if (!skillSpritePath) return;
     

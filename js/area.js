@@ -220,7 +220,7 @@ function renderPartyDisplay() {
     const cls = classes.find(c => c.id === member.id);
     if (cls) {
       partyHTML += renderPartyMember(member, cls);
-      console.log("Rendered party member:", member);
+      // console.log("Rendered party member:", member);
     }
   });
   
@@ -394,7 +394,7 @@ function updateEnemyCard(enemy, row, col) {
   // Set target on click
   card.onclick = () => {
     setTarget(row, col);
-    console.log(`Set target to enemy at [${row}, ${col}]`);
+    // console.log(`Set target to enemy at [${row}, ${col}]`);
   };
   
   // Add damage animation class if enemy was just damaged
@@ -803,7 +803,7 @@ export function removeEnemy(row, col) {
   // If wave cleared, emit
   if (isWaveCleared()) {
     emit("waveCleared");
-    console.log("Wave cleared!");
+    // console.log("Wave cleared!");
   }
 }
 
@@ -834,7 +834,7 @@ export function getEnemyCanvasPosition(row, col) {
 
   const slotRect = slot.getBoundingClientRect();
   const canvasRect = canvas.getBoundingClientRect();
-  console.log("slot: ", slotRect, "canvas: ", canvasRect);
+  // console.log("slot: ", slotRect, "canvas: ", canvasRect);
   const spriteWidth = 64;
   const spriteHeight = 94;
 
@@ -870,5 +870,5 @@ export function setupEnemyEffectsCanvas() {
   state.ui = state.ui || {};
   state.ui.spriteAnimations = new spriteAnimationManager(ctx, 64);
   
-  console.log('[Canvas] Sprite animation manager initialized');
+  // console.log('[Canvas] Sprite animation manager initialized');
 }

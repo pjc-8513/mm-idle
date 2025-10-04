@@ -24,6 +24,7 @@ const QUEST_CONFIG = {
  * Initialize quest system
  * Call this once when game loads
  */
+
 export function initQuestSystem() {
   // Add quest state if not exists
   if (!state.quests) {
@@ -44,9 +45,48 @@ export function initQuestSystem() {
   // Listen for hero level ups to unlock new prefix quests
   on('heroLevelUp', handleHeroLevelUp);
 
+  // Auto-quest handler
+  on('questCompleted', (quest) => {
+    if (state.autoQuest) {
+     // console.log("[AUTO QUEST] Auto-turning in quest:", quest);
+
+      // Extract the correct key and determine quest type
+      let questStoreKey;
+      let createFn;
+      let key;
+
+      if (quest.type === 'defeat_prefix') {
+        questStoreKey = 'prefixQuests';
+        createFn = createPrefixQuest;
+        key = quest.prefix; // ✅ Use the prefix property
+      } else if (quest.type === 'defeat_type') {
+        questStoreKey = 'typeQuests';
+        createFn = createTypeQuest;
+        key = quest.enemyType; // ✅ Use the enemyType property
+      }
+
+      if (questStoreKey && createFn && key) {
+        // console.log("[AUTO QUEST] Calling completeQuestGeneric with:", questStoreKey, key);
+        completeQuestGeneric(questStoreKey, key, createFn);
+      } else {
+        console.warn("[AUTO QUEST] Missing required data:", { questStoreKey, createFn, key, quest });
+      }
+    }
+  });
+  
+  // When auto-quest is toggled ON, complete all waiting quests
+  on('autoQuestToggled', (enabled) => {
+    if (enabled) {
+      // console.log("[AUTO QUEST] Bulk completing all ready quests...");
+      completeAllReadyQuests();
+    }
+  });
+
   // Set up UI
   setupQuestUI();
 }
+
+
 
 function generateQuests({ questType, sourceList, keyExtractor, questStoreKey, createQuestFn }) {
   sourceList.forEach(item => {
@@ -87,7 +127,7 @@ function generateTypeQuests() {
 
 function createQuest({ idPrefix, questType, key, configKey }) {
   const config = QUEST_CONFIG[configKey];
-  console.log(config);
+  // console.log(config);
   return {
     id: `${idPrefix}_${key}_${Date.now()}`,
     type: questType,
@@ -127,35 +167,39 @@ function handleEnemyDefeated({ enemy }) {
     { store: 'prefixQuests', key: enemy.prefix, type: 'defeat_prefix' },
     { store: 'typeQuests', key: enemy.type, type: 'defeat_type' }
   ];
-  console.log(enemy);
+  
+  // console.log(enemy);
+  
   questTypes.forEach(({ store, key, type }) => {
     const quest = state.quests[store]?.[key];
     if (quest && !quest.isComplete) {
       quest.currentCount++;
-      console.log(enemy);
+      // console.log(enemy);
+      
       if (quest.currentCount >= quest.targetCount) {
         quest.isComplete = true;
         emit('questCompleted', quest);
-        flashSidePanel(quest);
+        
+        // Use setTimeout to ensure flash happens AFTER auto-complete
+        setTimeout(() => flashSidePanel(quest), 0);
       }
-
+      
       emit('questProgressUpdated', quest);
-
+      
       if (isPanelActive('panelQuest')) {
-        console.log(enemy);
-        updateQuestCard(key, store); // ✅ Pass both key and store
+        // console.log(enemy);
+        updateQuestCard(key, store);
       }
     }
   });
 }
 
 
-
 /**
  * Handle hero level up - unlock new prefix quests
  */
 function handleHeroLevelUp() {
-  console.log("[handleHeroLevelUp] Hero leveled up → regenerating quests...");
+  // console.log("[handleHeroLevelUp] Hero leveled up → regenerating quests...");
 
   // Regenerate prefix quests
   generateQuests({
@@ -192,18 +236,18 @@ export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
     return;
   }
 
-  console.log("[COMPLETE QUEST] Starting turn-in:", questCategory, questKey, oldQuest);
+  // console.log("[COMPLETE QUEST] Starting turn-in:", questCategory, questKey, oldQuest);
 
   const prevLevel = state.heroLevel;
 
   // Grant rewards
   addHeroExp(oldQuest.expReward);
-  console.log("[COMPLETE QUEST] After EXP:", { heroLevel: state.heroLevel, heroExp: state.heroExp });
+  // console.log("[COMPLETE QUEST] After EXP:", { heroLevel: state.heroLevel, heroExp: state.heroExp });
 
   // Replace quest with a fresh one
   const newQuest = createQuestFn(questKey);
   questStore[questKey] = newQuest;
-  console.log("[COMPLETE QUEST] New quest created:", newQuest);
+  // console.log("[COMPLETE QUEST] New quest created:", newQuest);
 
   emit('questTurnedIn', {
     questType: oldQuest.type,
@@ -214,21 +258,41 @@ export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
 
   // Refresh UI
   if (isPanelActive('panelQuest')) {
-    //fullRenderQuestPanel();
     updateQuestPanel();
   }
 
-  // Check if any *other* quests are still complete
-  const hasActiveQuests = Object.values(questStore).some(q => q.isComplete);
-  console.log("[COMPLETE QUEST] Active quests left?", hasActiveQuests, questStore);
-
-  if (!hasActiveQuests) {
+  // Check if ANY quests across ALL categories are still complete
+  const anyQuestsComplete = Object.values(state.quests).some(questStore => 
+    Object.values(questStore).some(q => q.isComplete)
+  );
+  
+  // console.log("[COMPLETE QUEST] Any quests complete across all categories?", anyQuestsComplete);
+  
+  if (!anyQuestsComplete) {
     const panelQuestButton = document.getElementById('panelQuestButton');
     panelQuestButton?.classList.remove('quest-complete');
   }
 }
 
+/**
+ * Complete all ready quests (used when toggling auto-quest ON)
+ */
+function completeAllReadyQuests() {
+  const questConfig = [
+    { category: 'prefixQuests', createFn: createPrefixQuest, getKey: (q) => q.prefix },
+    { category: 'typeQuests', createFn: createTypeQuest, getKey: (q) => q.enemyType }
+  ];
 
+  questConfig.forEach(({ category, createFn, getKey }) => {
+    const questStore = state.quests[category];
+    Object.entries(questStore).forEach(([questKey, quest]) => {
+      if (quest.isComplete) {
+        // console.log(`[AUTO QUEST] Bulk completing ${category}:`, questKey);
+        completeQuestGeneric(category, questKey, createFn);
+      }
+    });
+  });
+}
 
 
 /**
@@ -247,11 +311,11 @@ function addHeroExp(amount) {
     expNeeded = getExpForLevel(state.heroLevel + 1);
   }
 
-  console.log("[EXP] Final hero state:", { 
+ /* console.log("[EXP] Final hero state:", { 
     level: state.heroLevel, 
     exp: state.heroExp, 
     nextNeeded: getExpForLevel(state.heroLevel + 1) 
-  });
+  }); */
 
   updateQuestPanel();
   if (state.heroLevel > oldLevel) {
@@ -331,6 +395,9 @@ export function renderQuestPanel() {
 /**
  * Full render of quest panel (called once or when structure changes)
  */
+/**
+ * Full render of quest panel (called once or when structure changes)
+ */
 function fullRenderQuestPanel() {
   const panel = document.getElementById("panelQuest");
 
@@ -345,24 +412,31 @@ function fullRenderQuestPanel() {
         </div>
       </div>
     </div>
+
+    <!-- Autoquest toggle sits BELOW hero-info -->
+    <div id="autoquestToggle">
+      <label class="switch">
+        <input type="checkbox" id="autoquestCheckbox">
+        <span class="slider round"></span>
+      </label>
+      <span class="switch-label">Auto Complete</span>
+    </div>
   `;
 
+  // container for quest cards
   const container = document.createElement("div");
   container.classList.add("questGrid");
 
   const questTypes = [
     { key: 'prefixQuests', label: 'Prefix' },
     { key: 'typeQuests', label: 'Type' }
-    // Add more types here as needed
   ];
 
   let totalQuests = 0;
 
-  questTypes.forEach(({ key, label }) => {
+  questTypes.forEach(({ key }) => {
     const quests = state.quests[key] || {};
-    const entries = Object.entries(quests);
-
-    entries.forEach(([questKey, quest]) => {
+    Object.entries(quests).forEach(([questKey, quest]) => {
       const questCard = createQuestCard(questKey, quest, key);
       container.appendChild(questCard);
       totalQuests++;
@@ -377,6 +451,17 @@ function fullRenderQuestPanel() {
   }
 
   panel.appendChild(container);
+
+    // ✅ attach listener to the checkbox input
+  const autoQuestCheckbox = document.getElementById("autoquestCheckbox");
+  autoQuestCheckbox.addEventListener("change", (e) => {
+    state.autoQuest = e.target.checked;
+    //console.log("[AUTO QUEST] Auto-complete is now:", state.autoQuest);
+    
+    // Emit event so questManager can handle bulk completion
+    emit('autoQuestToggled', state.autoQuest);
+  });
+
   updateQuestPanel();
 }
 
@@ -512,11 +597,37 @@ function updateQuestButton(btn, quest) {
   }
 }
 
-function flashSidePanel(quest){
-    logMessage(`${quest} waiting to be turned in!`);
-    if (!quest || !quest.isComplete) return;
-    const panelQuestButton = document.getElementById('panelQuestButton');
-    panelQuestButton.classList.add('quest-complete');
+function flashSidePanel(quest) {
+  // If auto-quest is enabled, don't flash - quest will be auto-completed
+  if (state.autoQuest) {
+  //  console.log("[FLASH] Skipping flash - auto-quest enabled");
+    return;
+  }
+  
+  // Double-check the quest still exists and is still complete in state
+  // (it might have been auto-completed already)
+  let questStore;
+  let questKey;
+  
+  if (quest.type === 'defeat_prefix') {
+    questStore = state.quests.prefixQuests;
+    questKey = quest.prefix;
+  } else if (quest.type === 'defeat_type') {
+    questStore = state.quests.typeQuests;
+    questKey = quest.enemyType;
+  }
+  
+  const currentQuest = questStore?.[questKey];
+  
+  if (!currentQuest || !currentQuest.isComplete) {
+   // console.log("[FLASH] Quest no longer complete, skipping flash");
+    return;
+  }
+  
+  logMessage(`${questKey} quest waiting to be turned in!`);
+  //console.log("[FLASH] Adding quest-complete class for:", questKey);
+  const panelQuestButton = document.getElementById('panelQuestButton');
+  panelQuestButton?.classList.add('quest-complete');
 }
 
 /**
@@ -534,7 +645,7 @@ export function renderQuestPanelAnimations() {
   if (heroLevelEl) {
     if (uiAnimations.heroLevelUp) {
       heroLevelEl.classList.add("level-up-anim");
-      console.log("Level up animation triggered!", heroLevelEl);
+      //console.log("Level up animation triggered!", heroLevelEl);
 
       // remove after animation ends so it can replay later
       heroLevelEl.addEventListener("animationend", () => {

@@ -8,6 +8,7 @@ import { abilities } from "./content/abilities.js";
 import { combatState, executeAttack, calculateAttackInterval, stopAutoAttack, startAutoAttack } from "./systems/combatSystem.js";
 import { floatingTextManager } from './systems/floatingtext.js';
 import { renderQuestPanelAnimations } from "./questManager.js";
+import { updateDOTs } from "./systems/dotManager.js";
 import { uiAnimations } from './systems/animations.js';
 //import { calculateGemIncome } from "./incomeSystem.js";
 
@@ -50,6 +51,10 @@ function update(delta) {
       }
     });
   }
+  
+  // update DOTs
+  updateDOTs(delta);
+
   // Update sprite animations
   if (state.ui?.spriteAnimations) {
     state.ui.spriteAnimations.update();
@@ -70,20 +75,20 @@ function updateSkills(delta) {
     for (const skillId in member.skills) {
       const skillDef = abilities.find(a => a.id === skillId);
       const skillState = member.skills[skillId];
-      //console.log("[loop skill] remaining: ", skillState.cooldownRemaining);
 
       if (skillDef.type === "active" && skillDef.cooldown) {
+        const previousRemaining = skillState.cooldownRemaining;
         skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - delta * 1000);
-        if (skillState.cooldownRemaining === 0){
-          //console.log("[loop skill]", member, skillDef);
+        
+        // Check if we just crossed zero (was positive, now is zero)
+        if (previousRemaining > 0 && skillState.cooldownRemaining === 0) {
+          console.log("[loop skill]", member, skillDef);
           stopAutoAttack();
           emit("skillReady", {member: state.party.find(p => p.id === member.id), skillId: skillDef.id});
           skillState.cooldownRemaining = skillDef.cooldown; // reset cooldown
           startAutoAttack();
         }
       }
-
-      // Passive effects can be applied here or during attack
     }
   });
 }

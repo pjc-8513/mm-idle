@@ -250,6 +250,8 @@ export function createEnemy(enemyId, wave, isBoss = false) {
     justDamaged: false,
     row: template.row,
     type: template.type,
+    counters: {}, // map: type, value
+    DOT: [], // map: type, value
     elementType: template.elementType,
     resistances: { ...template.resistances },
     weaknesses: { ...template.weaknesses },
@@ -272,24 +274,25 @@ export function checkWaveCleared() {
 }
 
 // Export for use in combat/damage systems
-export function damageEnemy(row, col, damage) {
+export function damageEnemy(row, col, damage, element) {
   const enemy = state.enemies[row][col];
   if (!enemy || enemy.hp <= 0) return false;
-  
-  enemy.hp = Math.max(0, enemy.hp - damage);
+  const applyDmg = Math.round(damage);
+  enemy.hp = Math.max(0, enemy.hp - applyDmg);
   enemy.justDamaged = true;
   
-  emit("enemyDamaged", { row, col, enemy, damage });
+  emit("enemyDamaged", { row, col, enemy, applyDmg });
   
   // Check if enemy died
   if (enemy.hp <= 0) {
     emit("enemyDefeated", { row, col, enemy });
-    
+  } else {
+    enemy.counters[element] = (enemy.counters[element] || 0) + 1;
+  }
     // Small delay then check if wave is cleared
     setTimeout(() => {
       checkWaveCleared();
     }, 100);
-  }
   
   return true;
 }
