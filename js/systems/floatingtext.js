@@ -1,6 +1,6 @@
 // floatingText.js
 import { formatNumber, suffixColors } from './math.js';
-
+import { getEnemyCanvasPosition } from '../area.js';
 /**
  * Floating text animation system for combat feedback
  */
@@ -144,6 +144,22 @@ class FloatingTextManager {
       this.addText('RESIST', x, y, '#ff4444', 1200, 24, 'normal'); // Red
     }
     // No text for neutral
+  }
+
+  addDOTText(row, col, damage, isCritical=false) {
+    const pos = getEnemyCanvasPosition(row, col);
+    const formatted = formatNumber(Math.floor(damage));
+    const color = suffixColors[formatted.suffix] || 'white';
+    const fontSize = isCritical ? 32 : 28;
+    const type = isCritical ? 'critical' : 'damage';
+    const duration = isCritical ? 1400 : 1200;
+    if (!pos) return;
+
+    const offsetY = pos.y + 20;
+    // Offset damage numbers slightly to the left
+    const offsetX = pos.x - 15;
+    //console.log(formatted.text, offsetX, pos.y, color, duration, fontSize, type);
+    this.addText(formatted.text, offsetX, offsetY, color, duration, fontSize, type);
   }
 
   update(delta) {

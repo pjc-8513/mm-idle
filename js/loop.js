@@ -81,7 +81,7 @@ function updateSkills(delta) {
         skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - delta * 1000);
         
         // Check if we just crossed zero (was positive, now is zero)
-        if (previousRemaining > 0 && skillState.cooldownRemaining === 0) {
+        if ((previousRemaining > 0 && skillState.cooldownRemaining <= 0) || previousRemaining <= 0) {
           console.log("[loop skill]", member, skillDef);
           stopAutoAttack();
           emit("skillReady", {member: state.party.find(p => p.id === member.id), skillId: skillDef.id});

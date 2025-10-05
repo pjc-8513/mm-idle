@@ -1,6 +1,7 @@
 import { state } from "../state.js";
 import { abilities } from "../content/abilities.js";
 import { damageEnemy } from "../waveManager.js";
+import { floatingTextManager } from "./floatingtext.js";
 // DOT Configuration
 const DOT_TICK_INTERVAL = 1.0; // Apply DOT damage every 1 second
 const DOT_BASE_DURATION = 6.0; // Base DOT duration in seconds
@@ -109,7 +110,7 @@ function applyDOTDamage(enemy, row, col, deltaTime) {
     
     // Visual feedback
     const tickDamage = Math.round(damagePerTick * DOT_TICK_INTERVAL);
-    //floatingTextManager.addDOTText(row, col, tickDamage, type);
+    floatingTextManager.addDOTText(row, col, tickDamage);
   });
   
   // Remove expired DOTs (in reverse order to maintain indices)

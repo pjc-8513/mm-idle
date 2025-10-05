@@ -37,6 +37,13 @@ export const classes = [
       resonance: "physical",
       baseStats: { hp: 20, mp: 0, attack: 4, defense: 3, criticalChance: 0.15, speed: 1.5 },
       growthPerLevel: { hp: 1, mp: 0, attack: 1, defense: 1 },
+      abilities: [
+        { id: "leadership", unlockLevel: 1 },
+        
+      ],
+      skills: {
+        leadership: { active: true },
+      },
       attackCooldown: 0
     },
     { id: "mage", 
@@ -69,12 +76,12 @@ export const classes = [
       abilities: [
         { id: "weakSpot", unlockLevel: 1 },
         { id: "poisonFlask", unlockLevel: 1 },
-        { id: "speedBoost", unlockLevel: 5 }
+        { id: "lethalDose", unlockLevel: 5 }
       ],
       skills: {
         weakSpot: { active: true },
         poisonFlask: { cooldownRemaining: 8000 },
-        speedBoost: { active: false, streak: 0 }
+        lethalDose: { active: false }
       },
       baseStats: { hp: 12, mp: 5, attack: 5, defense: 2, criticalChance: 0.2, speed: 1.8 },
       growthPerLevel: { hp: 1, mp: 1, attack: 1, defense: 1 },

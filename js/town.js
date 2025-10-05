@@ -2,6 +2,8 @@ import { state } from "./state.js";
 import { emit, on } from "./events.js";
 import { buildings } from "./content/buildingDefs.js";
 import { attachRequirementTooltip } from "./tooltip.js";
+import { updateUnlockedSkills } from "./party.js";
+import { calculateStats } from "./systems/math.js";
 
 // Store the last state to detect changes
 let lastBuildingState = {
@@ -360,22 +362,28 @@ function upgradeBuilding(buildingId) {
       const upgraded = Array.isArray(building.upgradedClasses)
         ? building.upgradedClasses
         : [building.upgradedClasses];
-      //console.log("[upgrade] Building upgrades classes:", building.upgradedClasses);
-      //console.log("[upgrade] Building upgrades classes:", upgraded);
+
       upgraded.forEach(uc => {
         const classId = uc.id;
-        //console.log("[upgrade] Upgrading linked class:", uc);
 
-        // Increment global tracker
         state.classLevels[classId] = (state.classLevels[classId] || 1) + 1;
 
-        // If already unlocked, bump the instance too
+        const newLevel = state.classLevels[classId];
+
+        // Update unlocked class reference
         const unlockedClass = state.unlockedClasses.find(c => c.id === classId);
-        if (unlockedClass) {
-          unlockedClass.level = state.classLevels[classId];
+        if (unlockedClass) unlockedClass.level = newLevel;
+
+        // 🔥 NEW: Update party member if present
+        const partyMember = state.party.find(p => p.id === classId);
+        if (partyMember) {
+          partyMember.level = newLevel;
+          updateUnlockedSkills(partyMember); // check for skill unlocks
+          partyMember.stats = calculateStats(partyMember, newLevel);
+          emit("partyMemberUpdated", partyMember);
         }
 
-        emit("classUpgraded", { id: classId, level: state.classLevels[classId] });
+        emit("classUpgraded", { id: classId, level: newLevel });
       });
     }
     // Emit upgrade event with building data

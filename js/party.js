@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { logMessage } from "./systems/log.js";
 import { emit, on } from "./events.js";
 import { calculateStats } from "./systems/math.js";
 import { classes } from "./content/classes.js";
@@ -320,6 +321,10 @@ function togglePartyMember(classId) {
     if (state.unlockedClasses.includes(classId)) {
       // Calculate stats before adding
       clone.stats = calculateStats(clone, level);
+
+      // 🔥 NEW: ensure correct skills are active
+      updateUnlockedSkills(clone);
+
       console.log("Adding to party:", clone);
       state.party.push(clone);
       updateResonance();
@@ -351,4 +356,35 @@ function updateResonance() {
     state.elementalDmgModifiers[resonance] = (state.elementalDmgModifiers[resonance] || 0) + bonus;
   });
   console.log('[party resonance]: ', state.elementalDmgModifiers);
+}
+
+/**
+ * Updates a class's skills based on its abilities and current level.
+ * Activates any that meet unlockLevel, disables those that don't.
+ * @param {object} classObj - The class object (e.g. rogue)
+ */
+export function updateUnlockedSkills(classObj) {
+  if (!classObj.abilities || !classObj.skills) return;
+
+  classObj.abilities.forEach(ability => {
+    const { id, unlockLevel } = ability;
+
+    // If skill is newly unlocked
+    if (classObj.level >= unlockLevel && !classObj.skills[id]?.active) {
+      if (!classObj.skills[id]) classObj.skills[id] = {};
+      classObj.skills[id].active = true;
+
+      // 🟢 Log to the game log
+      logMessage(`${classObj.name} unlocked skill: ${id}!`, "success");
+
+      // Optional: emit event for UI
+      emit("skillUnlocked", { classId: classObj.id, skillId: id });
+    }
+
+    // Disable skills that are above current level (e.g., if level temporarily reduced)
+    if (classObj.level < unlockLevel) {
+      if (!classObj.skills[id]) classObj.skills[id] = {};
+      classObj.skills[id].active = false;
+    }
+  });
 }

@@ -137,14 +137,34 @@ export function getRandomAdjacentEnemy(row, col) {
 }
 
 /**
- * Returns a random enemy from the entire grid
- * @returns 
+ * Returns a random enemy from the entire grid along with its position
+ * @returns {{ enemy: object, row: number, col: number } | null}
  */
 export function getRandomEnemy() {
+  // Flatten the grid to get all active enemies
   const enemies = state.enemies.flat().filter(enemy => enemy && enemy.hp > 0);
   if (enemies.length === 0) return null;
-  return enemies[Math.floor(Math.random() * enemies.length)];
+
+  // Select one randomly
+  const randomEnemy = enemies[Math.floor(Math.random() * enemies.length)];
+
+  // Find its row and column in the 2D grid
+  let row = null;
+  let col = null;
+
+  for (let i = 0; i < state.enemies.length; i++) {
+    const index = state.enemies[i].indexOf(randomEnemy);
+    if (index !== -1) {
+      row = i;
+      col = index;
+      break;
+    }
+  }
+
+  // Return both the enemy and its position
+  return { enemy: randomEnemy, row, col };
 }
+
 
 /**
  *  helper to get enemies in a column
