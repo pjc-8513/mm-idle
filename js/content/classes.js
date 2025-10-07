@@ -39,10 +39,12 @@ export const classes = [
       growthPerLevel: { hp: 1, mp: 0, attack: 1, defense: 1 },
       abilities: [
         { id: "leadership", unlockLevel: 1 },
+        { id: "flameArch", unlockLevel: 1 }
         
       ],
       skills: {
         leadership: { active: true },
+        flameArch: { cooldownRemaining: 6500 }
       },
       attackCooldown: 0
     },

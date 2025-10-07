@@ -1,5 +1,5 @@
 import { state } from "../state.js";
-import { getEnemiesInColumn, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
+import { getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
 import { handleSkillAnimation } from "../systems/animations.js";
 import { getEnemyCanvasPosition } from "../area.js";
@@ -33,7 +33,7 @@ export const abilities = [
         resonance: "physical",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
-        spritePath: '../../assets/images/sprites/follow_through.png',  // does not have an animation
+        spritePath: '../../assets/images/sprites/follow_through.png',
         cooldown: 7000,
         class: "fighter",
         activate: function (attacker, target, context) {
@@ -47,7 +47,7 @@ export const abilities = [
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
                 const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(row, col, skillDamage.damage);
+                damageEnemy(row, col, skillDamage.damage, this.resonance);
                 handleSkillAnimation("followThrough", row, col);
                 showFloatingDamage(row, col, skillDamage); // show floating text
             });
@@ -128,52 +128,93 @@ export const abilities = [
   class: "rogue",
   affects: ["poisonFlask"], // 💡 declares its target skills
   description: "Adds % of enemy's total health to poison flask skill as instant damage.",
+  resonance: "poison",
   spritePath: null,
   cooldown: null,
-  defaultBonus: 10,
+  defaultBonus: 20,
   perLevelBonus: 0.10,
-  applyUtility(enemy, attacker) {
-    if (!enemy || !attacker) return 0;
-    const bonusPercent = this.defaultBonus + (this.perLevelBonus * attacker.level);
-    return Math.floor((enemy.maxHp * bonusPercent) / 100);
-  }
+    applyUtility(enemy, attacker) {
+        if (!enemy || !attacker) return { bonusPercent: 0, resonance: this.resonance };
+
+        // Step 1: Calculate total percent damage
+        // Example: at level 50 -> 20 + (0.1 * 50) = 25%
+        const totalPercent = this.defaultBonus + (this.perLevelBonus * attacker.level);
+
+        // Step 2: Convert to HP-based damage
+        // e.g. 25% of enemy max HP
+        const bonusDamage = enemy.maxHp * (totalPercent / 100);
+
+        return { 
+            bonusDamage,             // absolute HP-based damage
+            percent: totalPercent,   // for reference/logging
+            resonance: this.resonance
+        };
+    }
 },
 
-    {
-        id: "leadership",
-        name: "Leadership",
-        type: "passive",
-        class: "knight",
-        description: "Reduces all skill cooldowns by a small amount on autoattack.",
-        spritePath: null,
-        cooldown: null,
-        defaultBonus: 200, // milliseconds reduced per auto-attack
-        perLevelBonus: 10, // additional ms per level
-        applyPassive: function (attacker) {
-            const amount = this.defaultBonus + (attacker.level * this.perLevelBonus);
-            // Simply reduce cooldowns - let updateSkills handle the rest
-            state.party.forEach(member => {
-                if (!member.skills) return;
+{
+    id: "leadership",
+    name: "Leadership",
+    type: "passive",
+    class: "knight",
+    description: "Reduces all skill cooldowns by a small amount on autoattack.",
+    spritePath: null,
+    cooldown: null,
+    defaultBonus: 200, // milliseconds reduced per auto-attack
+    perLevelBonus: 10, // additional ms per level
+    applyPassive: function (attacker) {
+        const amount = this.defaultBonus + (attacker.level * this.perLevelBonus);
+        // Simply reduce cooldowns - let updateSkills handle the rest
+        state.party.forEach(member => {
+            if (!member.skills) return;
+            
+            for (const skillId in member.skills) {
+                const skillDef = abilities.find(a => a.id === skillId);
+                const skillState = member.skills[skillId];
                 
-                for (const skillId in member.skills) {
-                    const skillDef = abilities.find(a => a.id === skillId);
-                    const skillState = member.skills[skillId];
-                    
-                    if (skillDef.type === "active" && skillDef.cooldown) {
-                        // Only reduce the cooldown, don't trigger or reset
-                        // Only reduce if cooldown is still active (> 0)
-                        // This prevents interfering with updateSkills' transition detection
-                        if (skillState.cooldownRemaining > 0) {
-                            console.log('[leadership] ', skillId, 'before: ', skillState.cooldownRemaining);
-                            skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - amount);
-                            console.log('[leadership]: ', skillId, 'after: ', skillState.cooldownRemaining);
-                        }
-                    
+                if (skillDef.type === "active" && skillDef.cooldown) {
+                    // Only reduce the cooldown, don't trigger or reset
+                    // Only reduce if cooldown is still active (> 0)
+                    // This prevents interfering with updateSkills' transition detection
+                    if (skillState.cooldownRemaining > 0) {
+                        console.log('[leadership] ', skillId, 'before: ', skillState.cooldownRemaining);
+                        skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - amount);
+                        console.log('[leadership]: ', skillId, 'after: ', skillState.cooldownRemaining);
                     }
+                
                 }
+            }
+        });
+    }
+    },
+    {
+        id: "flameArch",
+        name: "Flame Arch",
+        type: "active",
+        resonance: "fire",
+        skillBaseDamage: 380,
+        //description: `Deals ${skillBaseDamage}% of attack in fire damage to every enemy on the same row as target`,
+        spritePath: '../../assets/images/sprites/flame_arch.png',
+        cooldown: 6500,
+        class: "knight",
+        activate: function (attacker, target, context) {
+            if (!target) return;
+            console.log(`[flameArch] ${Date.now()}`);
+            // Deal damage to all enemies in target column
+            const enemies = getEnemiesInRow(target.position.row);
+           // console.log("[followThrough] activated! target column: ", target.position.col);
+           // console.log("[followThrough] enemies: ", enemies);
+            enemies.forEach(({ enemy, row, col }) => {
+                //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
+           //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
+                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
+                damageEnemy(row, col, skillDamage.damage, this.resonance);
+                handleSkillAnimation("flameArch", row, col);
+                showFloatingDamage(row, col, skillDamage); // show floating text
             });
         }
-    }
+          
+    },
 ];
 
 
@@ -225,21 +266,28 @@ export function applyUtilityEffects(attacker, skillId, enemy, row, col) {
     if (ability.type === "utility" && ability.affects?.includes(skillId)) {
       const utilityState = attacker.skills[ability.id];
       if (utilityState?.active && typeof ability.applyUtility === "function") {
-        const bonusDamage = ability.applyUtility(enemy, attacker);
+        const response = ability.applyUtility(enemy, attacker);
+        const bonusDamage = response.bonusDamage;
+        const resonance = response.resonance;
+
         if (bonusDamage > 0) {
+            /*
           const bonusSkillDamage = {
             damage: bonusDamage,
             isCritical: false,
             elementalMatchup: "neutral",
           };
-
-          damageEnemy(row, col, bonusDamage);
-          showFloatingDamage(row, col, bonusSkillDamage);
+          */
+          const finalDamage = calculateSkillDamage(attacker, resonance, bonusDamage, enemy);
+          damageEnemy(row, col, finalDamage.damage);
+          showFloatingDamage(row, col, finalDamage);
 
           logMessage(
-            `${attacker.name}'s ${ability.name} triggers for ${bonusDamage} bonus damage!`,
+            `${attacker.name}'s ${ability.name} triggers for ${finalDamage.damage} bonus damage!`,
             "success"
           );
+          console.log(
+            `${attacker.name}'s ${ability.name} triggers for ${finalDamage.damage} bonus damage!`);
         }
       }
     }

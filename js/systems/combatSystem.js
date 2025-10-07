@@ -344,57 +344,47 @@ function calculateDamage(attacker, target) {
  * @returns 
  */
 export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
-  console.log('[skill damage] skill base dmg: ', skillBaseDamage);
-  let baseDamage = attacker.stats.attack + state.heroStats.attack || 30;
+  // Base attack
+  let baseDamage = (attacker.stats.attack || 30) + (state.heroStats.attack || 0);
   let isCritical = false;
-  
-  // Check for critical hit
+
+  // Critical hits
   const critChance = attacker.stats.criticalChance || 0;
   if (Math.random() < critChance) {
     isCritical = true;
     baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
   }
-  
-  // convert damage to resonance element damage
-  let elementDamage = state.elementalDmgModifiers[resonance];
-  elementDamage += skillBaseDamage;
-  console.log('[Skill Damage]: ', elementDamage);
-  baseDamage = calculatePercentage(baseDamage, elementDamage);
-  
-  
-  // Apply elemental resistances/weaknesses
-  const elementalPenetration = attacker.stats.elementalPenetration || 0;
-  const weaknessBonus = attacker.stats.weaknessBonus || 0;
+
+  console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
+
+  // Step 1: Core skill damage
+  let skillDamage = baseDamage * (skillBaseDamage / 100);
+
+  // Step 2: Elemental bonus
+  const elementBonus = (state.elementalDmgModifiers[resonance] || 0) / 100;
+  skillDamage *= (1 + elementBonus);
+
+  // Step 3: Apply resistances and weaknesses
   const elementalMultiplier = getElementalMultiplier(
     resonance,
     target.elementType,
-    elementalPenetration,
-    weaknessBonus
+    attacker.stats.elementalPenetration || 0,
+    attacker.stats.weaknessBonus || 0
   );
-  console.log(target);
-  // Get matchup type for logging/UI
-  const matchup = getElementalMatchup(resonance, target.elementType);
-  console.log(`[Elemental] ${resonance} vs ${target.elementType}: ${matchup} (${elementalMultiplier}x)`);
 
+  const finalDamage = Math.max(1, Math.floor(skillDamage * elementalMultiplier));
 
-
-  let damageMultiplier = elementalMultiplier;
-  
-  const context = {
-    damage: baseDamage,
-    sameTargetStreak: attacker.sameTargetStreak || 0,
-  };  
-  
-  const finalDamage = Math.max(1, Math.floor(baseDamage * damageMultiplier));
+  console.log(`[Skill Damage] Final: ${finalDamage} (${resonance} vs ${target.elementType})`);
   
   return {
     damage: finalDamage,
     isCritical,
     resonance,
-    multiplier: damageMultiplier,
-    elementalMatchup: matchup
+    multiplier: elementalMultiplier,
+    elementalMatchup: getElementalMatchup(resonance, target.elementType)
   };
 }
+
 
 /**
  * Execute attack from party member to current target
