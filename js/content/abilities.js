@@ -6,6 +6,7 @@ import { getEnemyCanvasPosition } from "../area.js";
 import { floatingTextManager } from "../systems/floatingtext.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
+import { calculatePercentage } from "../systems/math.js";
 
 export const abilities = [
     {
@@ -38,7 +39,7 @@ export const abilities = [
         class: "fighter",
         activate: function (attacker, target, context) {
             if (!target) return;
-            console.log(`[followThrough] ${Date.now()}`);
+            //console.log(`[followThrough] ${Date.now()}`);
             // Deal damage to all enemies in target column
             const enemies = getEnemiesInColumn(target.position.col);
            // console.log("[followThrough] activated! target column: ", target.position.col);
@@ -199,7 +200,7 @@ export const abilities = [
         class: "knight",
         activate: function (attacker, target, context) {
             if (!target) return;
-            console.log(`[flameArch] ${Date.now()}`);
+            
             // Deal damage to all enemies in target column
             const enemies = getEnemiesInRow(target.position.row);
            // console.log("[followThrough] activated! target column: ", target.position.col);
@@ -215,6 +216,32 @@ export const abilities = [
         }
           
     },
+    {
+        id: "plague",
+        name: "Plague",
+        type: "passive",
+        class: "zombie",
+        description: "Adds 200% of attack damage as poison damage.",
+        spritePath: null,  // does not have an animation
+        cooldown: null, // passive skills do not have cooldown
+        defaultBonus: 200,
+        perLevelBonus: 0.25,
+        resonance: "poison",
+        applyPassive: function (attacker, target, context) {
+          console.log('[Plague]: ', context.damage);
+
+          const bonusPercent = this.defaultBonus + (this.perLevelBonus * attacker.level);
+          console.log('[plague] bonusPercent: ', bonusPercent); // e.g. 100.25
+
+          const finalDamage = Math.round((bonusPercent / 100) * context.damage);
+          console.log('[plague] finalDamage: ', finalDamage);
+          console.log('[plague] target: ', target);
+          // damageEnemy(target.position.row, target.position.col, finalDamage, this.resonance);
+          applyDOT(target, "poison", finalDamage, 8, attacker);
+          
+
+      }
+    }        
 ];
 
 

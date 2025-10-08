@@ -5,16 +5,18 @@
 
 // Elemental relationship table
 const ELEMENTAL_RELATIONSHIPS = {
-  fire: { weakness: 'water' },
-  water: { weakness: 'air' },
-  air: { weakness: 'earth' },
-  earth: { weakness: 'fire' },
-  poison: { weakness: 'water' },
-  physical: { weakness: 'poison' },
-  dark: { weakness: 'light' },
-  light: { weakness: 'dark' },
-  pest: { weakness: 'physical' },
+  fire: { weakness: ['water'] },
+  water: { weakness: ['air'] },
+  air: { weakness: ['earth'] },
+  earth: { weakness: ['fire'] },
+  poison: { weakness: ['water'] },
+  physical: { weakness: ['poison', 'undead'] },
+  dark: { weakness: ['light'] },
+  light: { weakness: ['dark'] },
+  pest: { weakness: ['physical'] },
+  undead: { weakness: ['light', 'fire', 'water'] },
 };
+
 
 // Base resistance/weakness values
 const ELEMENTAL_CONFIG = {
@@ -47,22 +49,17 @@ export function getElementalMultiplier(
 
   // Check if target is weak to this attack element
   const targetRelationship = ELEMENTAL_RELATIONSHIPS[targetLower];
-  if (targetRelationship?.weakness === attackLower) {
-    // Target is weak to this element
+  if (targetRelationship?.weakness?.includes(attackLower)) {
     return ELEMENTAL_CONFIG.WEAKNESS_MULTIPLIER + weaknessBonus;
   }
 
   // Check if target resists this attack element (attacker is weak to target's element)
-  const attackRelationship = ELEMENTAL_RELATIONSHIPS[attackLower];
-  if (attackRelationship?.weakness === targetLower) {
-    // Target resists this element
-    const baseResistance = ELEMENTAL_CONFIG.RESISTANCE_MULTIPLIER;
-    
-    // Apply elemental penetration to reduce resistance
-    // Penetration increases the multiplier toward 1.0
-    const penetrationEffect = elementalPenetration * (1.0 - baseResistance);
-    return baseResistance + penetrationEffect;
-  }
+const attackRelationship = ELEMENTAL_RELATIONSHIPS[attackLower];
+if (attackRelationship?.weakness?.includes(targetLower)) {
+  const baseResistance = ELEMENTAL_CONFIG.RESISTANCE_MULTIPLIER;
+  const penetrationEffect = elementalPenetration * (1.0 - baseResistance);
+  return baseResistance + penetrationEffect;
+}
 
   // Neutral matchup
   return ELEMENTAL_CONFIG.NEUTRAL_MULTIPLIER;
@@ -80,15 +77,16 @@ export function getElementalMatchup(attackElement, targetElement) {
   const attackLower = attackElement.toLowerCase();
   const targetLower = targetElement.toLowerCase();
 
-  const targetRelationship = ELEMENTAL_RELATIONSHIPS[targetLower];
-  if (targetRelationship?.weakness === attackLower) {
-    return 'weakness';
-  }
+const targetRelationship = ELEMENTAL_RELATIONSHIPS[targetLower];
+if (targetRelationship?.weakness?.includes(attackLower)) {
+  return 'weakness';
+}
 
-  const attackRelationship = ELEMENTAL_RELATIONSHIPS[attackLower];
-  if (attackRelationship?.weakness === targetLower) {
-    return 'resistance';
-  }
+const attackRelationship = ELEMENTAL_RELATIONSHIPS[attackLower];
+if (attackRelationship?.weakness?.includes(targetLower)) {
+  return 'resistance';
+}
+
 
   return 'neutral';
 }

@@ -109,11 +109,11 @@ export const classes = [
       image: "../assets/images/classes/necromancer.png", 
       level: 1,
       goldCost: 60,
-      gemCost: 10, 
+      gemCost: 0, 
       goldIncomePerHit: 0.5,
       gemPerSecond: 0, 
       buildingRequired: [
-        {id: "mageGuild", level: 10 },
+        {id: "mageGuild", level: 1 },
         {id: "darkTower", level: 1 }
       ],
       lastTarget: null,

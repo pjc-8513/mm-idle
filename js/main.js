@@ -12,6 +12,8 @@ import { initMath } from "./systems/math.js";
 import {  initCombatSystem } from "./systems/combatSystem.js";
 import { initAnimations } from "./systems/animations.js";
 import { initQuestSystem, renderQuestPanel } from './questManager.js';
+import { initSummonSystem } from "./systems/summonSystem.js";
+
 
 window.addEventListener("DOMContentLoaded", () => {
   // Initialize all systems
@@ -20,6 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initPartyPanel();
   initBuildingPanel();
   initAreaPanel();
+  initSummonSystem();
   initWaveManager(); // Initialize wave management
   initMath(); // Initialize math system
   initCombatSystem(); // Initialize combat system

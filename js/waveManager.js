@@ -202,6 +202,9 @@ export function spawnWave() {
   
   // Place all enemies
   enemiesToSpawn.forEach(({ enemy, row, col }) => {
+    // ✅ Assign position to the enemy object
+    enemy.position = { row, col };
+
     state.enemies[row][col] = enemy;
     console.log(`Placed enemy ${enemy.name} (Lvl ${enemy.level}) at [${row}, ${col}]`);
   });
@@ -285,7 +288,10 @@ export function damageEnemy(row, col, damage, element) {
   
   // Check if enemy died
   if (enemy.hp <= 0) {
-    emit("enemyDefeated", { row, col, enemy });
+    emit("enemyDefeated", {
+      enemy: enemy,
+      wave: state.currentWave, 
+      row, col, enemy });
   } else {
     enemy.counters[element] = (enemy.counters[element] || 0) + 1;
   }

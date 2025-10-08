@@ -7,6 +7,7 @@ import { classes } from "./content/classes.js";
 import { spriteAnimationManager } from "./systems/spriteAnimationSystem.js ";
 import { setTarget } from "./systems/combatSystem.js";
 import { floatingTextManager } from "./systems/floatingtext.js";
+import { summonsState } from "./systems/summonSystem.js";
 
 /* -------------------------
    Wave Timer Management
@@ -116,6 +117,19 @@ export function initAreaPanel() {
     renderPartyDisplay();
     updateAreaPanel();
   });
+
+  // In your initAreaPanel or similar initialization function:
+  on("summonCreated", () => {
+    updatePartyDisplay();
+  });
+
+  on("summonStacked", () => {
+    updatePartyDisplay();
+  });
+
+  on("summonExpired", () => {
+    updatePartyDisplay();
+  });  
 /*
   // Start timer when wave starts
   on("waveStarted", () => {
@@ -209,6 +223,7 @@ export function updateAreaPanel() {
 }
 
 
+// Updated renderPartyDisplay function
 function renderPartyDisplay() {
   if (!state.party || state.party.length === 0) {
     return '<div class="no-party">No party members</div>';
@@ -217,10 +232,14 @@ function renderPartyDisplay() {
   let partyHTML = '';
   console.log("Rendering party members:", state.party);
   state.party.forEach(member => {
-    const cls = classes.find(c => c.id === member.id);
-    if (cls) {
-      partyHTML += renderPartyMember(member, cls);
-      // console.log("Rendered party member:", member);
+    // For summons, we don't look up in classes array
+    if (member.isSummon) {
+      partyHTML += renderSummonMember(member);
+    } else {
+      const cls = classes.find(c => c.id === member.id);
+      if (cls) {
+        partyHTML += renderPartyMember(member, cls);
+      }
     }
   });
   
@@ -245,11 +264,62 @@ function renderPartyMember(member, cls) {
   `;
 }
 
+// NEW: Render summon members with special styling
+function renderSummonMember(member) {
+  const summonData = summonsState.active.find(s => s.id === member.id);
+  const durationPercent = summonData ? (summonData.duration / summonData.maxDuration) * 100 : 0;
+  const timeRemaining = summonData ? Math.ceil(summonData.duration) : 0;
+  
+  return `
+    <div class="party-member-vertical summon-member" data-class-id="${member.id}">
+      <div class="party-image-vertical">
+        <img src="${member.image}" alt="${member.name}" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="party-placeholder-vertical" style="display: none;">${member.name[0]}</div>
+        ${summonData ? `<div class="summon-timer">⏱️${timeRemaining}s</div>` : ''}
+      </div>
+      <div class="party-info-vertical">
+        <div class="party-name-vertical summon-name">${member.name}</div>
+        <div class="party-level-vertical">Summon</div>
+      </div>
+      ${summonData ? `
+        <div class="summon-duration-bar">
+          <div class="summon-duration-fill" style="width: ${durationPercent}%"></div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 function updatePartyDisplay() {
   const partyDisplay = document.getElementById("partyDisplay");
   if (partyDisplay) {
     partyDisplay.innerHTML = renderPartyDisplay();
   }
+}
+
+// NEW: Efficiently update only summon timers/bars without full re-render
+export function updateSummonTimers() {
+  if (summonsState.active.length === 0) return;
+  
+  summonsState.active.forEach(summonData => {
+    const memberCard = document.querySelector(`.party-member-vertical[data-class-id="${summonData.id}"]`);
+    if (!memberCard) return;
+    
+    // Update timer text
+    const timerEl = memberCard.querySelector('.summon-timer');
+    if (timerEl) {
+      const timeRemaining = Math.ceil(summonData.duration);
+      timerEl.textContent = `⏱️${timeRemaining}s`;
+    }
+    
+    // Update duration bar
+    const durationFill = memberCard.querySelector('.summon-duration-fill');
+    if (durationFill) {
+      const durationPercent = (summonData.duration / summonData.maxDuration) * 100;
+      durationFill.style.width = `${durationPercent}%`;
+    }
+  });
 }
 
 function renderEnemiesGrid() {

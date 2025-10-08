@@ -9,7 +9,9 @@ import { combatState, executeAttack, calculateAttackInterval, stopAutoAttack, st
 import { floatingTextManager } from './systems/floatingtext.js';
 import { renderQuestPanelAnimations } from "./questManager.js";
 import { updateDOTs } from "./systems/dotManager.js";
+import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
+import { updateSummonTimers } from "./area.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
 
 
@@ -51,6 +53,8 @@ function update(delta) {
       }
     });
   }
+  // Update summons - ADD THIS LINE
+  updateSummons(delta);
   
   // update DOTs
   updateDOTs(delta);
@@ -102,6 +106,11 @@ function render() {
   if (activePanel && activePanel.id === "panelParty") {
     renderPartyPanel();
   }  
+
+  // Update summon timers/bars in area panel (efficient, no full re-render)
+  if (activePanel && activePanel.id === "panelArea") {
+    updateSummonTimers();
+  }
 
   renderQuestPanelAnimations();
 

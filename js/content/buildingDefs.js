@@ -89,7 +89,7 @@ export const buildings = [
     reqHeroLevel: 3,
     level: 0,
     goldCost: 100,
-    gemCost: 10,
+    gemCost: 0,
     goldIncomePerHit: 0,
     gemPerSecond: 0,
     upgradedClasses: { id: "mage"},
@@ -136,20 +136,42 @@ export const buildings = [
       { id: "mageGuild", level: 5 }
     ]
   },
+  {
+    id: "graveyard",
+    name: "Graveyard",
+    reqHeroLevel: 5,
+    level: 0,
+    goldCost: 300,
+    gemCost: 0,
+    goldIncomePerHit: 0,
+    gemPerSecond: 0,
+    description: "Increases summon duration, higher tier summon rates, and summon attack power",
+    buildingRequired: [
+      { id: "farm", level: 5 },
+      { id: "inn", level: 1 },
+      { id: "temple", level: 1 }
+    ],
+    effects: [
+      { type: "summonDuration", value: 2 }, // +2 seconds per level
+      { type: "summonAttack", value: 0.5 },  // +0.5 attack per level
+      { type: "summonRarity", value: 0.01 }  // +1% rare, +0.5% legendary per level
+    ]
+  },
   { id: "darkTower",
     name: "Dark Tower",
     image: "../assets/images/buildings/darktower.png",
-    reqHeroLevel: 15,
+    reqHeroLevel: 5,
     level: 0,
     goldCost: 200,
-    gemCost: 20,
+    gemCost: 0,
     goldIncomePerHit: 0,
     gemPerSecond: 0,
     upgradedClasses: { id: "necromancer"},
     // Example of multiple requirements (as array)
     buildingRequired: [
-      { id: "mageGuild", level: 5 },
-      { id: "temple", level: 5 }
+      { id: "mageGuild", level: 1 },
+      { id: "temple", level: 1 },
+      { id: "graveyard", level: 1 }
     ]
   },
   { id: "castle",

@@ -1,7 +1,7 @@
 export const state = {
   tick: 0,
   resources: {
-    gold: 500,
+    gold: 5000,
     gems: 0,
     wood: 0,
     ore: 0,
@@ -54,7 +54,8 @@ export const state = {
   party: [],
   heroStats: { hp: 0, mp: 0, attack: 30, defense: 0 },
   elementalDmgModifiers: { physical: 100, fire: 100, water: 100, 
-                   air: 100, poison: 100, light: 100, dark: 100 },
+                   air: 100, poison: 100, light: 100, dark: 100, 
+                   undead: 100 },
   buildings: [],
   spells: [],
   equipment: [],

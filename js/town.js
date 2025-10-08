@@ -287,7 +287,7 @@ function hideRequirementTooltip(button) {
 */
 
 // Helper function to get building level
-function getBuildingLevel(buildingId) {
+export function getBuildingLevel(buildingId) {
   if (!state.buildings) return 0;
   const buildingData = state.buildings.find(b => b.id === buildingId);
   return buildingData ? buildingData.level : 0;

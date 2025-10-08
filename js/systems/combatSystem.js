@@ -275,8 +275,9 @@ function calculateDamage(attacker, target) {
   
   // convert damage to resonance element damage
   const resonance = attacker.resonance || 'physical';
+
   const elementConvert = state.elementalDmgModifiers[resonance];
-  // console.log(elementConvert);
+ // console.log('elementConvert: ', elementConvert);
   baseDamage = calculatePercentage(baseDamage, elementConvert);
   
   
@@ -313,7 +314,7 @@ function calculateDamage(attacker, target) {
     isCrit: isCritical,
     sameTargetStreak: attacker.sameTargetStreak || 0,
   };  
-  
+  // console.log('[undead]: ', baseDamage);
   for (const skillId in attacker.skills) {
     const skillDef = abilities.find(a => a.id === skillId);
     if (skillDef.type === "passive" && skillDef.applyPassive) {

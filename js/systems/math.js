@@ -86,6 +86,7 @@ export function updateElementalModifiers() {
     poison: 100,
     light: 100,
     dark: 100,
+    undead: 100
   };
 
   // Count how many members share each resonance
