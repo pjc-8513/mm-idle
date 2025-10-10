@@ -14,6 +14,7 @@ export const summonTemplates = {
     baseDuration: 15, // seconds
     baseStats: { hp: 8, mp: 0, attack: 3, defense: 1, criticalChance: 0.05, speed: 1.0 },
     summonChance: 0.4, // 40% base chance
+    hasAutoAttack: true,
     image: "../assets/images/summons/skeleton.png"
   },
   zombie: {
@@ -25,12 +26,15 @@ export const summonTemplates = {
     level: 1,
     baseStats: { hp: 15, mp: 0, attack: 5, defense: 2, criticalChance: 0.03, speed: 0.8 },
     summonChance: 0.25, // 25% base chance
+    hasAutoAttack: false,
     image: "../assets/images/summons/zombie.png",
     abilities: [
-        { id: "plague", unlockLevel: 1}
+        { id: "plague", unlockLevel: 1 },
+        { id: "zombieAmbush", unlockLevel: 1 }
     ],
     skills: {
-        plague: { active: true }
+        plague: { active: true },
+        zombieAmbush: { cooldownRemaining: 3500 }
     }
   },
   vampire: {
@@ -41,6 +45,7 @@ export const summonTemplates = {
     baseDuration: 25,
     baseStats: { hp: 12, mp: 5, attack: 8, defense: 3, criticalChance: 0.15, speed: 1.3 },
     summonChance: 0.08, // 8% base chance
+    hasAutoAttack: false,
     image: "../assets/images/summons/vampire.png"
   },
   ghostDragon: {
@@ -51,6 +56,7 @@ export const summonTemplates = {
     baseDuration: 30,
     baseStats: { hp: 25, mp: 10, attack: 12, defense: 5, criticalChance: 0.2, speed: 1.5 },
     summonChance: 0.02, // 2% base chance
+    hasAutoAttack: false,
     image: "../assets/images/summons/ghostdragon.png"
   }
 };
@@ -168,6 +174,7 @@ function createOrStackSummon(summonKey, necromancer, graveyardLevel) {
       attackCooldown: 0,
       isSummon: true,
       resonance: template.resonance,
+      hasAutoAttack: template.hasAutoAttack,
         // ✅ Include abilities and skills
         abilities: template.abilities ? [...template.abilities] : [],
         skills: template.skills ? { ...template.skills } : {}
@@ -218,6 +225,7 @@ function addSummonToParty(summon) {
     isSummon: true,
     image: template.image,
     resonance: template.resonance,
+    hasAutoAttack: template.hasAutoAttack,
     // ✅ Include abilities and skills
     abilities: template.abilities ? [...template.abilities] : [],
     skills: template.skills ? { ...template.skills } : {}

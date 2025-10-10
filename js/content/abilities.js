@@ -139,7 +139,7 @@ export const abilities = [
 
         // Step 1: Calculate total percent damage
         // Example: at level 50 -> 20 + (0.1 * 50) = 25%
-        const totalPercent = this.defaultBonus + (this.perLevelBonus * attacker.level);
+        const totalPercent = state.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
 
         // Step 2: Convert to HP-based damage
         // e.g. 25% of enemy max HP
@@ -214,34 +214,73 @@ export const abilities = [
                 showFloatingDamage(row, col, skillDamage); // show floating text
             });
         }
-          
     },
     {
-        id: "plague",
-        name: "Plague",
-        type: "passive",
+        id: "zombieAmbush",
+        name: "Zombie Ambush",
+        type: "active",
+        resonance: "undead",
+        skillBaseDamage: 180,
+        //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
+        spritePath: '../../assets/images/sprites/zombie_ambush.png',
+        cooldown: 3500,
         class: "zombie",
-        description: "Adds 200% of attack damage as poison damage.",
-        spritePath: null,  // does not have an animation
-        cooldown: null, // passive skills do not have cooldown
-        defaultBonus: 200,
-        perLevelBonus: 0.25,
-        resonance: "poison",
-        applyPassive: function (attacker, target, context) {
-          console.log('[Plague]: ', context.damage);
-
-          const bonusPercent = this.defaultBonus + (this.perLevelBonus * attacker.level);
-          console.log('[plague] bonusPercent: ', bonusPercent); // e.g. 100.25
-
-          const finalDamage = Math.round((bonusPercent / 100) * context.damage);
-          console.log('[plague] finalDamage: ', finalDamage);
-          console.log('[plague] target: ', target);
-          // damageEnemy(target.position.row, target.position.col, finalDamage, this.resonance);
-          applyDOT(target, "poison", finalDamage, 8, attacker);
+        activate: function (attacker, target, context) {
+            const randomEnemyObject = getRandomEnemy();
+            if (!randomEnemyObject) return;
+            const { enemy, enemyRow, enemyCol } = randomEnemyObject;
+            //console.log(`[followThrough] ${Date.now()}`);
+            // Deal damage to all enemies in target column
+            console.log('[zombieAmbush] enemy: ', enemy);
+            const enemies = getEnemiesInColumn(enemy.position.col);
+            console.log("[zombieAmbush] activated! target column: ", enemy.position.col);
+            console.log("[zombieAmbush] enemies: ", enemies);
+            enemies.forEach(({ enemy, row, col }) => {
+                //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
+           //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
+                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
+                damageEnemy(row, col, skillDamage.damage, this.resonance);
+                handleSkillAnimation("zombieAmbush", row, col);
+                showFloatingDamage(row, col, skillDamage); // show floating text
+                applyUtilityEffects(attacker, this.id, enemy, row, col);
+            });
+        }
           
+    },
+  {
+    id: "plague",
+    name: "Plague",
+    type: "utility",
+    class: "zombie",
+    affects: ["zombieAmbush"],
+    description: "Has a chance to apply poison DOT to enemies hit by Zombie Ambush.",
+    spritePath: null,
+    cooldown: null,
+    defaultBonus: 200,
+    perLevelBonus: 0.25,
+    resonance: "poison",
+    applyUtility(enemy, attacker) {
+      if (!enemy || !attacker) return { bonusDamage: 0, resonance: this.resonance };
 
+      const chancePercent = 10 + attacker.level; // 10% base + 1% per level
+      const roll = Math.random() * 100;
+
+      if (roll <= chancePercent) {
+        const bonusPercent = state.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
+        const baseDamage = attacker.stats.attack;
+        const finalDamage = Math.round((bonusPercent / 100) * baseDamage);
+
+        applyDOT(enemy, this.resonance, finalDamage, 8, attacker);
+
+        logMessage(`${attacker.name}'s ${this.name} infects ${enemy.name} with poison!`, "info");
+        console.log(`[Plague] DOT applied to ${enemy.name}: ${finalDamage} poison over 8s`);
       }
-    }        
+
+      // Return zero bonusDamage to avoid triggering extra damage logic
+      return { bonusDamage: 0, resonance: this.resonance };
+    }
+}
+        
 ];
 
 

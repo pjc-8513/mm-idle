@@ -7,6 +7,7 @@ export const classes = [
       goldIncomePerHit: 0.5, 
       gemPerSecond: 0,
       buildingRequired: null,
+      hasAutoAttack: true,
       image: "../assets/images/classes/fighter.png",
       description: "Scrappy brawler that gains damage per hit to the same target and pressures columns.",
       abilities: [
@@ -35,6 +36,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
+      hasAutoAttack: true,
       baseStats: { hp: 20, mp: 0, attack: 4, defense: 3, criticalChance: 0.15, speed: 1.5 },
       growthPerLevel: { hp: 1, mp: 0, attack: 1, defense: 1 },
       abilities: [
@@ -60,6 +62,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "fire",
+      hasAutoAttack: true,
       baseStats: { hp: 10, mp: 10, attack: 6, defense: 2, criticalChance: 0.1, speed: 1.2 },
       growthPerLevel: { hp: 1, mp: 2, attack: 2, defense: 1 },
       attackCooldown: 0 
@@ -75,6 +78,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
+      hasAutoAttack: true,
       abilities: [
         { id: "weakSpot", unlockLevel: 1 },
         { id: "poisonFlask", unlockLevel: 1 },
@@ -100,6 +104,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "light",
+      hasAutoAttack: true,
       baseStats: { hp: 14, mp: 8, attack: 4, defense: 3, criticalChance: 0.1, speed: 1.3 },
       growthPerLevel: { hp: 1, mp: 2, attack: 1, defense: 1 },
       attackCooldown: 0
@@ -119,6 +124,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "dark",
+      hasAutoAttack: false,
       baseStats: { hp: 12, mp: 15, attack: 7, defense: 2, criticalChance: 0.1, speed: 1.2 },
       growthPerLevel: { hp: 1, mp: 3, attack: 2, defense: 1 },
       attackCooldown: 0
@@ -135,6 +141,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "earth",
+      hasAutoAttack: true,
       baseStats: { hp: 12, mp: 12, attack: 5, defense: 3, criticalChance: 0.1, speed: 1.3 },
       growthPerLevel: { hp: 1, mp: 2, attack: 1, defense: 1 },
       attackCooldown: 0
@@ -154,6 +161,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "light",
+      hasAutoAttack: true,
       baseStats: { hp: 25, mp: 5, attack: 5, defense: 5, criticalChance: 0.1, speed: 1.2 },
       growthPerLevel: { hp: 2, mp: 1, attack: 1, defense: 2 },
       attackCooldown: 0
@@ -170,6 +178,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
+      hasAutoAttack: true,
       baseStats: { hp: 12, mp: 5, attack: 6, defense: 2, criticalChance: 0.15, speed: 1.5 },
       growthPerLevel: { hp: 1, mp: 1, attack: 1, defense: 1 },
       attackCooldown: 0 
@@ -190,6 +199,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
+      hasAutoAttack: true,
       baseStats: { hp: 15, mp: 8, attack: 7, defense: 3, criticalChance: 0.15, speed: 1.6 },
       growthPerLevel: { hp: 1, mp: 1, attack: 1, defense: 1 },
       attackCooldown: 0 
@@ -210,6 +220,7 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "dark",
+      hasAutoAttack: true,
       baseStats: { hp: 14, mp: 8, attack: 8, defense: 2, criticalChance: 0.25, speed: 1.8 },
       growthPerLevel: { hp: 1, mp: 1, attack: 2, defense: 1 },
       attackCooldown: 0 

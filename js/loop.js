@@ -47,7 +47,7 @@ function update(delta) {
     state.party.forEach(member => {
       member.attackCooldown -= delta;
 
-      if (member.attackCooldown <= 0) {
+      if (member.hasAutoAttack && member.attackCooldown <= 0) {
         executeAttack(member); // Your existing attack logic
         member.attackCooldown = calculateAttackInterval(member) / 1000; // convert ms to seconds
       }
