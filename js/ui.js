@@ -3,6 +3,8 @@ import { renderPartyPanel } from "./party.js";
 import { renderBuildingPanel } from "./town.js";
 import { renderAreaPanel, setupEnemyEffectsCanvas } from "./area.js";
 import { renderQuestPanel } from "./questManager.js";
+import { on } from "./events.js";
+import { floatingTextManager } from "./systems/floatingtext.js";
 
 export function initUI() {
   // panel switching
@@ -13,6 +15,27 @@ export function initUI() {
       showPanel(target);
     });
   });
+
+on("healTriggered", ({ amount }) => {
+  if (state.activePanel !== "panelArea") return;
+  const timerBar = document.getElementById("waveTimerBar");
+  const canvas = document.getElementById("enemyEffectsCanvas");
+  if (!timerBar || !canvas) return;
+
+  const rect = timerBar.getBoundingClientRect();
+  const canvasRect = canvas.getBoundingClientRect();
+
+  // Position floating text above timer
+  const x = (rect.left + rect.right) / 2 - canvasRect.left;
+  const y = rect.top - canvasRect.top - 20;
+  const color = "#7eff7e";
+
+  floatingTextManager.addText(`+${amount}s`, x, y, color, 1200, 28, "normal");
+
+  // 🔆 Add heal pulse animation to the timer bar
+  timerBar.classList.add("heal-pulse");
+  setTimeout(() => timerBar.classList.remove("heal-pulse"), 1200);
+});
 
   // show default
   document.getElementById("game").classList.add("area-bg");

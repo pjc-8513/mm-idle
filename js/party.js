@@ -178,7 +178,8 @@ const isUnlocked = state.unlockedClasses.includes(cls.id);
 const isInParty = state.party.some(member => member.id === cls.id);
 const canAfford = state.resources.gold >= cls.goldCost && state.resources.gems >= (cls.gemCost || 0);
 const buildingReqMet = checkBuildingRequirements(cls);
-const partyFull = state.party.length >= state.maxPartySize;
+const activeMembers = state.party.filter(member => !member.isSummon);
+const partyFull = activeMembers.length >= state.maxPartySize;
 
 btn.classList.remove("recruited", "blocked", "unaffordable", "affordable");
 
@@ -316,21 +317,27 @@ function togglePartyMember(classId) {
     state.party.splice(idx, 1);
     emit("partyChanged", state.party);
     updateResonance();
-  } else if (state.party.length < state.maxPartySize) {
-    // Add to party (only if unlocked)
-    if (state.unlockedClasses.includes(classId)) {
-      // Calculate stats before adding
-      clone.stats = calculateStats(clone, level);
+    } else {
+      // Count only non-summon members when checking space
+      const nonSummons = state.party.filter(m => !m.isSummon);
+      if (nonSummons.length < state.maxPartySize) {
+        // Add to party (only if unlocked)
+        if (state.unlockedClasses.includes(classId)) {
+          // Calculate stats before adding
+          clone.stats = calculateStats(clone, level);
 
-      // 🔥 NEW: ensure correct skills are active
-      updateUnlockedSkills(clone);
+          // 🔥 Ensure correct skills are active
+          updateUnlockedSkills(clone);
 
-      console.log("Adding to party:", clone);
-      state.party.push(clone);
-      updateResonance();
-      emit("partyChanged", state.party);
+          console.log("Adding to party:", clone);
+          state.party.push(clone);
+          updateResonance();
+          emit("partyChanged", state.party);
+        }
+      } else {
+        console.warn("Party is full (ignoring summons).");
+      }
     }
-  }
 }
 
 // Party resonance logic

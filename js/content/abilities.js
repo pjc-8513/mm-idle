@@ -1,4 +1,5 @@
 import { state } from "../state.js";
+import { emit, on } from "../events.js";
 import { getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
 import { handleSkillAnimation } from "../systems/animations.js";
@@ -6,6 +7,8 @@ import { getEnemyCanvasPosition } from "../area.js";
 import { floatingTextManager } from "../systems/floatingtext.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
+import { addWaveTime } from "../area.js";
+import { spawnRadiantBurst } from "../systems/radiantEffect.js";
 import { calculatePercentage } from "../systems/math.js";
 
 export const abilities = [
@@ -267,10 +270,11 @@ export const abilities = [
 
       if (roll <= chancePercent) {
         const bonusPercent = state.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
-        const baseDamage = attacker.stats.attack;
+        const baseDamage = attacker.stats.attack + state.heroStats.attack;
         const finalDamage = Math.round((bonusPercent / 100) * baseDamage);
+        const skillDamage = calculateSkillDamage(attacker, this.resonance, finalDamage, enemy);
 
-        applyDOT(enemy, this.resonance, finalDamage, 8, attacker);
+        applyDOT(enemy, this.resonance, skillDamage, 8, attacker);
 
         logMessage(`${attacker.name}'s ${this.name} infects ${enemy.name} with poison!`, "info");
         console.log(`[Plague] DOT applied to ${enemy.name}: ${finalDamage} poison over 8s`);
@@ -279,7 +283,54 @@ export const abilities = [
       // Return zero bonusDamage to avoid triggering extra damage logic
       return { bonusDamage: 0, resonance: this.resonance };
     }
-}
+},
+  {
+    id: "heal",
+    name: "Heal",
+    type: "passive",
+    class: "cleric",
+    description: "Restores 5 secs + 1 sec per class level (max 40 secs) to the clock the first time a column is cleared during a wave.",
+    resonance: "light",
+    spritePath: null,
+    cooldown: null,
+    defaultRestore: 5,
+    perLevelBonus: 1,
+    skillBaseDamage: 250,
+    triggeredThisWave: false, // track per wave
+
+    triggerOnColumnClear: function (context) {
+      if (this.triggeredThisWave) return; // only once per wave
+      
+      const cleric = state.party.find(c => c.id === "cleric");
+      if (!cleric) return;
+      
+      const finalDamage = this.skillBaseDamage + state.heroStats.attack + cleric.baseStats.attack;
+      const restoreAmount = Math.min(this.defaultRestore + cleric.level * this.perLevelBonus, 40);
+      addWaveTime(restoreAmount);
+      this.triggeredThisWave = true;
+
+      emit("healTriggered", { amount: restoreAmount });
+      for (let row = 0; row < state.enemies.length; row++) {
+        for (let col = 0; col < state.enemies[row].length; col++) {
+          const enemy = state.enemies[row][col];
+          if (!enemy || enemy.hp <= 0) continue;
+          const skillDamage = calculateSkillDamage(cleric, this.resonance, finalDamage, enemy);
+          damageEnemy(row, col, skillDamage.damage, this.resonance);
+          
+          // trigger twice on undead
+          if (enemy.type === "undead"){
+            damageEnemy(row, col, skillDamage.damage, this.resonance);
+          }
+                
+          showFloatingDamage(row, col, skillDamage); // show floating text
+          // 🌟 Radiant burst effect
+          spawnRadiantBurst(row, col);
+          console.log('[cleric] cleric dealt: ', skillDamage);
+        }
+      }
+
+    },
+  },
         
 ];
 

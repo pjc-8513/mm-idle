@@ -96,6 +96,20 @@ export const ENEMY_TEMPLATES = {
     goldFormula: (level) => Math.floor(10 + level * 1.5),
     xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1))
   },
+    skeletonArcher: {
+    id: "skeletonArcher",
+    baseName: "Skeleton Archer",
+    type: "undead",
+    elementType: "undead",
+    tier: 1,
+    speed: 1.5,
+    row: 2,
+    isMagic: false,
+    hpFormula: (level) => Math.floor(20 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
+    attackFormula: (level) => Math.floor(7 + level * 1.4),
+    goldFormula: (level) => Math.floor(10 + level * 1.5),
+    xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1))
+  },
     swarm: {
       id: "swarm",
       baseName: "Swarm",

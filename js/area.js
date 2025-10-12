@@ -525,6 +525,27 @@ function addEnemiesGridCSS() {
       min-width: 30px;
       text-align: center;
     }
+
+  /* Heal pulse effect */
+  @keyframes healPulse {
+    0% {
+      box-shadow: 0 0 6px rgba(126, 255, 126, 0.5), 0 0 12px rgba(126, 255, 126, 0.3);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 14px rgba(126, 255, 126, 0.9), 0 0 30px rgba(126, 255, 126, 0.5);
+      transform: scale(1.02);
+    }
+    100% {
+      box-shadow: 0 0 6px rgba(126, 255, 126, 0.5), 0 0 12px rgba(126, 255, 126, 0.3);
+      transform: scale(1);
+    }
+  }
+
+  .timer-bar.heal-pulse {
+    animation: healPulse 1.2s ease-out;
+  }
+
     
     
     .area-header {

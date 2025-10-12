@@ -12,6 +12,7 @@ import { updateDOTs } from "./systems/dotManager.js";
 import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
 import { updateSummonTimers } from "./area.js";
+import { updateRadiantEffects } from "./systems/radiantEffect.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
 
 
@@ -98,7 +99,7 @@ function updateSkills(delta) {
 }
 
 
-function render() {
+function render(delta) {
   renderResourceBar();
   // If we wanted: auto-refresh Party buttons when gold changes
   // (efficient approach would be event-based, but for now this is fine)
@@ -124,7 +125,8 @@ function render() {
   if (state.ui?.spriteAnimations) {
     state.ui.spriteAnimations.draw();
   }
-  
+
+  updateRadiantEffects(delta);
   floatingTextManager.render();
 }
 

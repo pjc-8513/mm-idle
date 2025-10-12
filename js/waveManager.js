@@ -1,6 +1,7 @@
 // waveManager.js - Centralized wave management
 import { state } from "./state.js";
 import { emit, on } from "./events.js";
+import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
 import { getBonusGoldMultiplier } from "./area.js";
@@ -46,6 +47,26 @@ export function initWaveManager() {
   on("areaChanged", handleAreaChanged);
   on("gameStarted", handleGameStart);
 }
+
+on("enemyDefeated", ({ col }) => {
+  // Check if all rows in this column are cleared
+  const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
+  
+  if (columnCleared) {
+    const cleric = state.party.find(c => c.id === "cleric");
+    if (cleric){
+      const heal = abilities.find(a => a.id === "heal");
+      if (heal && !heal.triggeredThisWave) {
+        heal.triggerOnColumnClear({ col });
+      }
+    }
+  }
+});
+
+on("waveStarted", () => {
+  const heal = abilities.find(a => a.id === "heal");
+  if (heal) heal.triggeredThisWave = false;
+});
 
 export function handleGameStart() {
   // Start the first wave when game begins
