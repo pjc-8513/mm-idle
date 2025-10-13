@@ -44,7 +44,7 @@ export function showRequirementTooltip(container, entity, helpers) {
   const currentBuildingLevel = getBuildingLevel(entity.id);
   const heroLevel = getHeroLevel();
 
-  console.log('entity: ', entity);
+  // console.log('entity: ', entity);
 
   const buildingRequirements = entity.buildingRequired
     ? Array.isArray(entity.buildingRequired)

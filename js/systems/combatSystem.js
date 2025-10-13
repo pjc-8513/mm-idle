@@ -165,6 +165,14 @@ export function getRandomEnemy() {
   return { enemy: randomEnemy, row, col };
 }
 
+/**
+ * 
+ * @returns active enemies
+ */
+export function getActiveEnemies() {
+  return state.enemies.flat().filter(enemy => enemy && enemy.hp > 0);
+}
+
 
 /**
  *  helper to get enemies in a column
@@ -204,7 +212,7 @@ export function setTarget(row, col) {
     enemy: targetEnemy 
   });
   
-  console.log(`Target set to enemy at position: ${row}, ${col}`);
+  // console.log(`Target set to enemy at position: ${row}, ${col}`);
   return true;
 }
 
@@ -293,7 +301,7 @@ function calculateDamage(attacker, target) {
   // console.log(target);
   // Get matchup type for logging/UI
   const matchup = getElementalMatchup(resonance, target.elementType);
-  console.log(`[Elemental] ${resonance} vs ${target.elementType}: ${matchup} (${elementalMultiplier}x)`);
+  // console.log(`[Elemental] ${resonance} vs ${target.elementType}: ${matchup} (${elementalMultiplier}x)`);
 
 
 
@@ -356,7 +364,7 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
     baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
   }
 
-  console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
+  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
 
   // Step 1: Core skill damage
   let skillDamage = baseDamage * (skillBaseDamage / 100);
@@ -375,7 +383,7 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
 
   const finalDamage = Math.max(1, Math.floor(skillDamage * elementalMultiplier));
 
-  console.log(`[Skill Damage] Final: ${finalDamage} (${resonance} vs ${target.elementType})`);
+  // console.log(`[Skill Damage] Final: ${finalDamage} (${resonance} vs ${target.elementType})`);
   
   return {
     damage: finalDamage,
@@ -460,7 +468,7 @@ export function executeAttack(attacker) {
     if (state.combatLog.length > 50) {
       state.combatLog.shift();
     }
-    console.log(`Attack executed:`, attackInfo);
+    // console.log(`Attack executed:`, attackInfo);
     state.lastAction = attackInfo;
     emit('attackExecuted', attackInfo);
   }

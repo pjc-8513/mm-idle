@@ -3,6 +3,7 @@ import { state } from "../state.js";
 import { emit, on } from "../events.js";
 import { getBuildingLevel } from "../town.js";
 import { logMessage } from "./log.js";
+import { abilities } from "../content/abilities.js";
 
 // Summon definitions
 export const summonTemplates = {
@@ -42,10 +43,18 @@ export const summonTemplates = {
     name: "Vampire",
     rarity: "rare",
     resonance: "undead",
-    baseDuration: 25,
-    baseStats: { hp: 12, mp: 5, attack: 8, defense: 3, criticalChance: 0.15, speed: 1.3 },
+    baseDuration: 15,
+    baseStats: { hp: 12, mp: 5, attack: 20, defense: 3, criticalChance: 0.15, speed: 1.3 },
     summonChance: 0.08, // 8% base chance
     hasAutoAttack: false,
+    level: 1,
+    abilities: [
+      { id: "feastOfAges", unlockLevel: 1}
+    ],
+    skills:{
+      feastOfAges: { cooldownRemaining: 5000 }
+    },
+    //storedHP: 0,
     image: "../assets/images/summons/vampire.png"
   },
   ghostDragon: {
@@ -174,6 +183,7 @@ function createOrStackSummon(summonKey, necromancer, graveyardLevel) {
       attackCooldown: 0,
       isSummon: true,
       resonance: template.resonance,
+      //storedHP: template.storedHP || 0,
       hasAutoAttack: template.hasAutoAttack,
         // ✅ Include abilities and skills
         abilities: template.abilities ? [...template.abilities] : [],
@@ -225,6 +235,7 @@ function addSummonToParty(summon) {
     isSummon: true,
     image: template.image,
     resonance: template.resonance,
+    //storedHP: template.storedHP || 0,
     hasAutoAttack: template.hasAutoAttack,
     // ✅ Include abilities and skills
     abilities: template.abilities ? [...template.abilities] : [],
@@ -286,7 +297,7 @@ function removeSummon(summon) {
   }
   
   console.log(`${template.name} expired`);
-  emit("summonExpired", { summon });
+  emit("summonExpired", summon);
 }
 
 // Check if necromancer is still in party

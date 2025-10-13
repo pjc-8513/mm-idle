@@ -48,6 +48,7 @@ export function initWaveManager() {
   on("gameStarted", handleGameStart);
 }
 
+// waveManager.js
 on("enemyDefeated", ({ col }) => {
   // Check if all rows in this column are cleared
   const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
@@ -68,6 +69,17 @@ on("waveStarted", () => {
   if (heal) heal.triggeredThisWave = false;
 });
 
+// NEW: Listen for ANY heal event and trigger cleric's damage
+on("healTriggered", (healEvent) => {
+  const cleric = state.party.find(c => c.id === "cleric");
+  if (!cleric) return;
+  
+  const heal = abilities.find(a => a.id === "heal");
+  if (heal && heal.triggerOnHeal) {
+    heal.triggerOnHeal(healEvent);
+  }
+});
+
 export function handleGameStart() {
   // Start the first wave when game begins
   if (state.currentArea && state.currentWave === 1) {
@@ -86,12 +98,15 @@ export function handleWaveCleared() {
   const currentArea = AREA_TEMPLATES[state.currentArea];
   if (!currentArea) return;
   stopAutoAttack();
+  if (!state.activeWave) return;
+  state.activeWave = false;
+  state.alreadySpawned = false;
   // Calculate bonus gold based on time remaining
   const bonusMultiplier = getBonusGoldMultiplier(); // From area.js
   const bonusGold = Math.floor(50 * bonusMultiplier * state.areaWave);
   state.resources.gold += bonusGold;
   
-  console.log(`Wave ${state.currentWave} cleared! Bonus: ${bonusGold} gold`);
+  // console.log(`Wave ${state.currentWave} cleared! Bonus: ${bonusGold} gold`);
 
 
   // Check if this was the final wave (boss wave)
@@ -102,19 +117,24 @@ export function handleWaveCleared() {
     state.currentWave++;
     state.areaWave++;
     setTimeout(() => {
+      
       startWave();
     }, 2000); // 2 second delay between waves
   }
 }
 
 export function handleWaveTimeout() {
-  console.log("Wave timed out! Restarting area...");
+  if (!state.activeWave) return;
+  state.activeWave = false;
+  state.alreadySpawned = false;
+  // console.log("Wave timed out! Restarting area...");
   stopAutoAttack();
   // Reset to wave 1
   state.areaWave = 1;
   
   // Small delay then restart
   setTimeout(() => {
+    
     startWave();
   }, 1500);
   
@@ -123,7 +143,7 @@ export function handleWaveTimeout() {
 
 export function handleAreaCompleted() {
   const currentArea = AREA_TEMPLATES[state.currentArea];
-  console.log(`Area ${currentArea.name} completed!`);
+  // console.log(`Area ${currentArea.name} completed!`);
 
     emit("areaCompleted", {
     areaId: state.currentArea,
@@ -147,7 +167,9 @@ export function handleAreaCompleted() {
 }
 
 export function startWave() {
-  console.log(`Starting wave ${state.areaWave} in ${state.currentArea}`);
+  if (state.alreadySpawned) return;
+  state.alreadySpawned = true;
+  // console.log(`Starting wave ${state.areaWave} in ${state.currentArea}`);
   
   // Clear existing enemies
   state.enemies = [
@@ -161,8 +183,9 @@ export function startWave() {
   
   // Emit wave started event (this triggers timer)
   emit("waveStarted", state.areaWave);
-  startAutoAttack();
   setTarget(2, 0);
+  startAutoAttack();
+  state.activeWave = true;
 }
 
 export function spawnWave() {
@@ -227,11 +250,11 @@ export function spawnWave() {
     enemy.position = { row, col };
 
     state.enemies[row][col] = enemy;
-    console.log(`Placed enemy ${enemy.name} (Lvl ${enemy.level}) at [${row}, ${col}]`);
+    // console.log(`Placed enemy ${enemy.name} (Lvl ${enemy.level}) at [${row}, ${col}]`);
   });
   
-  console.log(`Spawned ${enemiesToSpawn.length} enemies for wave ${state.currentWave}`);
-  emit("waveStarted");
+  // console.log(`Spawned ${enemiesToSpawn.length} enemies for wave ${state.currentWave}`);
+  //emit("waveStarted"); don't do this twice :(
 }
 
 let enemyCounter = 0;

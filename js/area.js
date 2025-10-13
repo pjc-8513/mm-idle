@@ -230,7 +230,7 @@ function renderPartyDisplay() {
   }
   
   let partyHTML = '';
-  console.log("Rendering party members:", state.party);
+  //console.log("Rendering party members:", state.party);
   state.party.forEach(member => {
     // For summons, we don't look up in classes array
     if (member.isSummon) {

@@ -43,7 +43,7 @@ export function getElementalMultiplier(
   if (!attackElement || !targetElement) {
     return ELEMENTAL_CONFIG.NEUTRAL_MULTIPLIER;
   }
-  console.log("[target] element:", targetElement, typeof targetElement);
+  // console.log("[target] element:", targetElement, typeof targetElement);
   const attackLower = attackElement.toLowerCase();
   const targetLower = targetElement.toLowerCase();
 

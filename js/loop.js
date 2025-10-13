@@ -29,7 +29,7 @@ export function startGameLoop() {
     floatingTextManager.initialize('enemyEffectsCanvas');
 
     update(delta);
-    updateSkills(delta);
+    if (state.activeWave) updateSkills(delta);
     render(delta); // Make sure this is called!
     requestAnimationFrame(loop);
   }
@@ -69,6 +69,7 @@ function update(delta) {
   floatingTextManager.update(delta);
 
   // UI animations
+  updateRadiantEffects(delta);
   uiAnimations.update(delta);
 
 }
@@ -126,7 +127,7 @@ function render(delta) {
     state.ui.spriteAnimations.draw();
   }
 
-  updateRadiantEffects(delta);
+  
   floatingTextManager.render();
 }
 

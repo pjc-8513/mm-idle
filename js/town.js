@@ -161,7 +161,7 @@ function updateBuildingPanel() {
 
     // --- Update building level (only if buildings changed) ---
     if (buildingsChanged) {
-      console.log("Updating building card for:", buildingId, "to level", currentLevel);
+   //   console.log("Updating building card for:", buildingId, "to level", currentLevel);
       const levelDiv = card.querySelector('.buildingLevel');
       levelDiv.textContent = `Level ${currentLevel}`;
     }

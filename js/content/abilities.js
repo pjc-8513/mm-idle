@@ -1,6 +1,6 @@
 import { state } from "../state.js";
 import { emit, on } from "../events.js";
-import { getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
+import { getActiveEnemies, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
 import { handleSkillAnimation } from "../systems/animations.js";
 import { getEnemyCanvasPosition } from "../area.js";
@@ -8,8 +8,24 @@ import { floatingTextManager } from "../systems/floatingtext.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
 import { addWaveTime } from "../area.js";
-import { spawnRadiantBurst } from "../systems/radiantEffect.js";
+import { createVampireMist, createRadiantBurst, createRadiantPulse } from "../systems/radiantEffect.js";
 import { calculatePercentage } from "../systems/math.js";
+
+on("summonExpired", handleSummonExpired);
+
+function handleSummonExpired(summon){
+  if (summon.name === "Vampire") {
+    console.log("handling vampire expired"); 
+    
+    // ✅ Find the ability in the array first
+    const feastOfAges = abilities.find(a => a.id === "feastOfAges");
+    
+    // ✅ Then call the function on that ability
+    if (feastOfAges && feastOfAges.onVampireExpire) {
+      feastOfAges.onVampireExpire(summon);
+    }
+  }
+}
 
 export const abilities = [
     {
@@ -175,15 +191,21 @@ export const abilities = [
             for (const skillId in member.skills) {
                 const skillDef = abilities.find(a => a.id === skillId);
                 const skillState = member.skills[skillId];
+
+                // ✅ Add defensive check
+                if (!skillDef) {
+                    console.warn(`[leadership] Skill definition not found for: ${skillId}`);
+                    continue;
+                }
                 
                 if (skillDef.type === "active" && skillDef.cooldown) {
                     // Only reduce the cooldown, don't trigger or reset
                     // Only reduce if cooldown is still active (> 0)
                     // This prevents interfering with updateSkills' transition detection
                     if (skillState.cooldownRemaining > 0) {
-                        console.log('[leadership] ', skillId, 'before: ', skillState.cooldownRemaining);
+                       // console.log('[leadership] ', skillId, 'before: ', skillState.cooldownRemaining);
                         skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - amount);
-                        console.log('[leadership]: ', skillId, 'after: ', skillState.cooldownRemaining);
+                       // console.log('[leadership]: ', skillId, 'after: ', skillState.cooldownRemaining);
                     }
                 
                 }
@@ -234,10 +256,10 @@ export const abilities = [
             const { enemy, enemyRow, enemyCol } = randomEnemyObject;
             //console.log(`[followThrough] ${Date.now()}`);
             // Deal damage to all enemies in target column
-            console.log('[zombieAmbush] enemy: ', enemy);
+           // console.log('[zombieAmbush] enemy: ', enemy);
             const enemies = getEnemiesInColumn(enemy.position.col);
-            console.log("[zombieAmbush] activated! target column: ", enemy.position.col);
-            console.log("[zombieAmbush] enemies: ", enemies);
+           // console.log("[zombieAmbush] activated! target column: ", enemy.position.col);
+           // console.log("[zombieAmbush] enemies: ", enemies);
             enemies.forEach(({ enemy, row, col }) => {
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
@@ -277,60 +299,146 @@ export const abilities = [
         applyDOT(enemy, this.resonance, skillDamage, 8, attacker);
 
         logMessage(`${attacker.name}'s ${this.name} infects ${enemy.name} with poison!`, "info");
-        console.log(`[Plague] DOT applied to ${enemy.name}: ${finalDamage} poison over 8s`);
+      //  console.log(`[Plague] DOT applied to ${enemy.name}: ${finalDamage} poison over 8s`);
       }
 
       // Return zero bonusDamage to avoid triggering extra damage logic
       return { bonusDamage: 0, resonance: this.resonance };
     }
 },
-  {
-    id: "heal",
-    name: "Heal",
-    type: "passive",
-    class: "cleric",
-    description: "Restores 5 secs + 1 sec per class level (max 40 secs) to the clock the first time a column is cleared during a wave.",
-    resonance: "light",
-    spritePath: null,
-    cooldown: null,
-    defaultRestore: 5,
-    perLevelBonus: 1,
-    skillBaseDamage: 250,
-    triggeredThisWave: false, // track per wave
+// content/abilities.js
+{
+  id: "heal",
+  name: "Heal",
+  type: "passive",
+  class: "cleric",
+  description: "Restores 5 secs + 1 sec per class level (max 40 secs) to the clock the first time a column is cleared during a wave. Deals radiant damage to all enemies whenever any heal is performed.",
+  resonance: "light",
+  spritePath: null,
+  cooldown: null,
+  defaultRestore: 5,
+  perLevelBonus: 1,
+  skillBaseDamage: 250,
+  triggeredThisWave: false, // track per wave
 
-    triggerOnColumnClear: function (context) {
-      if (this.triggeredThisWave) return; // only once per wave
-      
-      const cleric = state.party.find(c => c.id === "cleric");
-      if (!cleric) return;
-      
-      const finalDamage = this.skillBaseDamage + state.heroStats.attack + cleric.baseStats.attack;
-      const restoreAmount = Math.min(this.defaultRestore + cleric.level * this.perLevelBonus, 40);
-      addWaveTime(restoreAmount);
-      this.triggeredThisWave = true;
+  // Triggered ONLY on column clear (once per wave)
+  triggerOnColumnClear: function (context) {
+    if (this.triggeredThisWave) return; // only once per wave
+    
+    const cleric = state.party.find(c => c.id === "cleric");
+    if (!cleric) return;
+    
+    const restoreAmount = Math.min(this.defaultRestore + cleric.level * this.perLevelBonus, 40);
+    addWaveTime(restoreAmount);
+    this.triggeredThisWave = true;
+    
+    // Emit the heal event - this will trigger the damage
+    emit("healTriggered", { 
+      amount: restoreAmount,
+      source: "cleric",
+      sourceCharacter: cleric
+    });
+  },
 
-      emit("healTriggered", { amount: restoreAmount });
-      for (let row = 0; row < state.enemies.length; row++) {
-        for (let col = 0; col < state.enemies[row].length; col++) {
-          const enemy = state.enemies[row][col];
-          if (!enemy || enemy.hp <= 0) continue;
-          const skillDamage = calculateSkillDamage(cleric, this.resonance, finalDamage, enemy);
+  // Triggered ANY TIME a heal happens (no wave limit)
+  triggerOnHeal: function(healEvent) {
+    const cleric = state.party.find(c => c.id === "cleric");
+    if (!cleric) return;
+    
+    // Create radiant pulse effect
+    if (state.activePanel === "areaPanel"){
+      createRadiantPulse();
+    }
+    
+    const finalDamage = this.skillBaseDamage + state.heroStats.attack + cleric.baseStats.attack;
+    
+    // Deal damage to all enemies
+    for (let row = 0; row < state.enemies.length; row++) {
+      for (let col = 0; col < state.enemies[row].length; col++) {
+        const enemy = state.enemies[row][col];
+        if (!enemy || enemy.hp <= 0) continue;
+        
+        const skillDamage = calculateSkillDamage(cleric, this.resonance, finalDamage, enemy);
+        damageEnemy(row, col, skillDamage.damage, this.resonance);
+        
+        // Trigger twice on undead
+        if (enemy.type === "undead"){
           damageEnemy(row, col, skillDamage.damage, this.resonance);
-          
-          // trigger twice on undead
-          if (enemy.type === "undead"){
-            damageEnemy(row, col, skillDamage.damage, this.resonance);
+        }
+              
+        showFloatingDamage(row, col, skillDamage);
+        
+        // Radiant burst effect
+        if (state.activePanel === 'areaPanel'){
+          const pos = getEnemyCanvasPosition(row, col);
+          if (pos) {
+            createRadiantBurst(pos.x, pos.y);
           }
-                
-          showFloatingDamage(row, col, skillDamage); // show floating text
-          // 🌟 Radiant burst effect
-          spawnRadiantBurst(row, col);
-          console.log('[cleric] cleric dealt: ', skillDamage);
         }
       }
-
-    },
+    }
+    
+    console.log('[cleric] Radiant damage triggered by heal from:', healEvent.source);
   },
+},
+
+    {
+        id: "feastOfAges",
+        name: "Feast of Ages",
+        type: "active",
+        resonance: "undead",
+        skillBaseDamage: 180,
+        //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
+        spritePath: '../../assets/images/sprites/life_drain.png',
+        cooldown: 5000,
+        storedHP: 0,
+        class: "vampire",
+        activate: function (attacker, target, context) {
+            const enemies = getActiveEnemies();
+            if (!enemies.length) return;
+            let totalDrained = 0;
+            enemies.forEach(enemy => {
+              // Drain 5% of each enemy's current HP
+              const drained = (enemy.hp * 0.05) + attacker.stats.attack;
+              console.log(`[vampire] drained each enemy for ${drained}`);
+              damageEnemy(enemy.position.row, enemy.position.col, drained, this.resonance);
+              totalDrained += drained;
+              handleSkillAnimation("feastOfAges", enemy.position.row, enemy.position.col);
+              //showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
+              });
+          // Store drained HP for later conversion
+          //if (!attacker.storedHP) return;
+          this.storedHP += totalDrained;
+
+          // Small visual/log feedback
+          logMessage(`🩸 Vampire feasts, draining ${Math.round(totalDrained)} HP total.`);
+        },
+
+      onVampireExpire: function(summon){
+        console.log("💀 Vampire expires: releasing stored essence.");
+          // Convert stored HP into time (e.g., 1s per 500 HP drained)
+        const secondsRestored = Math.floor(this.storedHP / 300);
+        console.log(`Vampire returns ${secondsRestored}s of stolen time using ${this.storedHP} worth of storedHP.`);
+        if (secondsRestored > 0) {
+          addWaveTime(secondsRestored);
+          logMessage(`⏳ Vampire returns ${secondsRestored}s of stolen time.`);
+
+          // 🧛 Create the spooky mist effect
+          if (state.activePanel === 'areaPanel') {
+            createVampireMist(secondsRestored);
+          }
+
+          // Emit the heal event - this will trigger the damage
+          emit("healTriggered", { 
+            amount: secondsRestored,
+            source: "vampire",
+            sourceCharacter: summon
+          });
+        }
+        this.storedHP = 0;
+      }
+          
+    },
         
 ];
 
@@ -403,8 +511,8 @@ export function applyUtilityEffects(attacker, skillId, enemy, row, col) {
             `${attacker.name}'s ${ability.name} triggers for ${finalDamage.damage} bonus damage!`,
             "success"
           );
-          console.log(
-            `${attacker.name}'s ${ability.name} triggers for ${finalDamage.damage} bonus damage!`);
+         // console.log(
+         //   `${attacker.name}'s ${ability.name} triggers for ${finalDamage.damage} bonus damage!`);
         }
       }
     }
