@@ -2,6 +2,8 @@
 // Creates radiant glow and pulse effects for Cleric's light attacks
 // Also creates vampire mist effects
 // Works with the existing enemyEffectsCanvas
+import { state } from "../state.js";
+import { getEnemyCanvasPosition } from "../area.js";
 
 const radiantBursts = [];
 let radiantPulse = null;
@@ -162,7 +164,7 @@ export function updateRadiantEffects(delta) {
     // Interpolate position from start to target
     const currentX = p.x + (p.targetX - p.x) * easeProgress;
     const currentY = p.y + (p.targetY - p.y) * easeProgress;
-    
+   
     // Add wavy horizontal motion
     const sway = Math.sin(p.swayOffset + p.life * p.swaySpeed) * 20 * (1 - progress);
     

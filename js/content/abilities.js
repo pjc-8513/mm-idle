@@ -8,7 +8,8 @@ import { floatingTextManager } from "../systems/floatingtext.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
 import { addWaveTime } from "../area.js";
-import { createVampireMist, createRadiantBurst, createRadiantPulse } from "../systems/radiantEffect.js";
+import { applyVisualEffect } from "../systems/effects.js";
+//import { createVampireMist, createRadiantBurst, createRadiantPulse, spawnRadiantBurst } from "../systems/radiantEffect.js";
 import { calculatePercentage } from "../systems/math.js";
 
 on("summonExpired", handleSummonExpired);
@@ -23,6 +24,12 @@ function handleSummonExpired(summon){
     // ✅ Then call the function on that ability
     if (feastOfAges && feastOfAges.onVampireExpire) {
       feastOfAges.onVampireExpire(summon);
+    }
+  } else if (summon.name === "Ghost Dragon") {
+    console.log("handling ghost dragon expired");
+    const soulDetonation = abilities.find(a => a.id === "soulDetonation");
+    if (soulDetonation && soulDetonation.onGhostDragonExpire){
+      soulDetonation.onGhostDragonExpire(summon);
     }
   }
 }
@@ -345,13 +352,22 @@ export const abilities = [
     const cleric = state.party.find(c => c.id === "cleric");
     if (!cleric) return;
     
+    /*
     // Create radiant pulse effect
-    if (state.activePanel === "areaPanel"){
-      createRadiantPulse();
+    if (state.activePanel === "panelArea"){
+      //createRadiantPulse();
+      spawnRadiantBurst()
     }
-    
+    */
+
     const finalDamage = this.skillBaseDamage + state.heroStats.attack + cleric.baseStats.attack;
-    
+
+    // Apply light flash effect to all enemies
+    if (state.activePanel === 'panelArea') {
+      console.log('light flash');
+      applyVisualEffect('light-flash', 0.6);
+    }
+
     // Deal damage to all enemies
     for (let row = 0; row < state.enemies.length; row++) {
       for (let col = 0; col < state.enemies[row].length; col++) {
@@ -367,14 +383,16 @@ export const abilities = [
         }
               
         showFloatingDamage(row, col, skillDamage);
-        
+        enemy.strobeEffect = { duration: 0.4, elapsed: 0 };
         // Radiant burst effect
-        if (state.activePanel === 'areaPanel'){
+        /*
+        if (state.activePanel === 'panelArea'){
           const pos = getEnemyCanvasPosition(row, col);
           if (pos) {
             createRadiantBurst(pos.x, pos.y);
           }
         }
+        */
       }
     }
     
@@ -424,9 +442,11 @@ export const abilities = [
           logMessage(`⏳ Vampire returns ${secondsRestored}s of stolen time.`);
 
           // 🧛 Create the spooky mist effect
-          if (state.activePanel === 'areaPanel') {
+          /*
+          if (state.activePanel === 'panelArea') {
             createVampireMist(secondsRestored);
           }
+          */
 
           // Emit the heal event - this will trigger the damage
           emit("healTriggered", { 
@@ -439,6 +459,44 @@ export const abilities = [
       }
           
     },
+    {
+      id: "soulDetonation",
+      name: "Soul Detonation",
+      type: "onExpire",
+      class: "ghostDragon",
+      description: "When Ghost Dragon expires, it explodes, dealing undead damage to all enemies based on their undead counters.",
+      spritePath: null,
+      cooldown: null,
+      resonance: "undead",
+      defaultBonus: 300, // base % damage per counter
+      perLevelBonus: 50, // extra % per level
+      onGhostDragonExpire: function (summon) {
+        const attacker = summon;
+        const resonance = this.resonance;
+        const basePercent = this.defaultBonus + (this.perLevelBonus * (attacker.level || 1));
+        //applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
+        applyVisualEffect('dark-flash', 0.8);
+
+        for (let row = 0; row < state.enemies.length; row++) {
+          for (let col = 0; col < state.enemies[row].length; col++) {
+            const enemy = state.enemies[row][col];
+            if (!enemy || enemy.hp <= 0) continue;
+
+            const undeadStacks = enemy.counters["undead"] || 0;
+            if (undeadStacks <= 0) continue;
+
+            const damagePayload = calculateSkillDamage(attacker, resonance, basePercent * undeadStacks, enemy);
+            damageEnemy(row, col, damagePayload.damage, resonance);
+            //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt ${damagePayload.damage} damage based on undead counters.`);
+            // Reset undead counters
+            enemy.counters["undead"] = 0;
+          }
+        }
+
+        //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt damage based on undead counters.`);
+      }
+  }
+
         
 ];
 

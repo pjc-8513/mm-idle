@@ -427,7 +427,7 @@ export function updateEnemiesGrid() {
   resizeEnemyEffectsCanvas();
 }
 
-function updateEnemyCard(enemy, row, col) {
+export function updateEnemyCard(enemy, row, col) {
   const card = document.getElementById(`enemy-${row}-${col}`);
   if (!card) return;
   
@@ -466,7 +466,7 @@ function updateEnemyCard(enemy, row, col) {
     setTarget(row, col);
     // console.log(`Set target to enemy at [${row}, ${col}]`);
   };
-  
+  /*  
   // Add damage animation class if enemy was just damaged
   if (enemy.justDamaged) {
     card.classList.add('damaged');
@@ -475,6 +475,20 @@ function updateEnemyCard(enemy, row, col) {
       enemy.justDamaged = false;
     }, 500);
   }
+  */
+  // Handle visual effects (light, strobe, dark)
+  const effectTypes = ['light-flash', 'strobe-flash', 'dark-flash'];
+  effectTypes.forEach(effectType => {
+    if (enemy.visualEffect === effectType) {
+      if (!card.classList.contains(effectType)) {
+        card.classList.add(effectType);
+      }
+      console.log(`[light flash] creating flash at ${row}, ${col}`);
+    } else {
+      card.classList.remove(effectType);
+    }
+  });
+
 }
 
 function addEnemiesGridCSS() {

@@ -12,7 +12,8 @@ import { updateDOTs } from "./systems/dotManager.js";
 import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
 import { updateSummonTimers } from "./area.js";
-import { updateRadiantEffects } from "./systems/radiantEffect.js";
+import { updateVisualEffects } from "./systems/effects.js";
+//import { updateRadiantEffects } from "./systems/radiantEffect.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
 
 
@@ -59,6 +60,7 @@ function update(delta) {
   
   // update DOTs
   updateDOTs(delta);
+  updateVisualEffects(delta); // ADD THIS LINE
 
   // Update sprite animations
   if (state.ui?.spriteAnimations) {
@@ -69,7 +71,7 @@ function update(delta) {
   floatingTextManager.update(delta);
 
   // UI animations
-  updateRadiantEffects(delta);
+  //updateRadiantEffects(delta);
   uiAnimations.update(delta);
 
 }

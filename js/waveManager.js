@@ -300,6 +300,7 @@ export function createEnemy(enemyId, wave, isBoss = false) {
     counters: {}, // map: type, value
     DOT: [], // map: type, value
     elementType: template.elementType,
+    strobeEffect: null, // { duration: 0.4, elapsed: 0 }
     resistances: { ...template.resistances },
     weaknesses: { ...template.weaknesses },
     specialAbilities: template.specialAbilities ? [...template.specialAbilities] : [],
