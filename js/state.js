@@ -1,3 +1,17 @@
+export const partyState = {
+  heroLevel: 5,
+  heroExp: 0,
+  heroGains: { attack: 5 },
+  unlockedClasses: [],
+  classLevels: {}, // map: { fighter: 1, cleric: 2 }
+  party: [],
+  heroStats: { hp: 10, attack: 30, defense: 0 },
+  elementalDmgModifiers: { physical: 100, fire: 100, water: 100, 
+                   air: 100, poison: 100, light: 100, dark: 100, 
+                   undead: 100 },
+  totalStats: {},
+  maxPartySize: 4,
+}
 export const state = {
   tick: 0,
   resources: {
@@ -10,9 +24,6 @@ export const state = {
     woodIncomePerSecond: 0,
     oreIncomePerSecond: 0,
   },
-  heroLevel: 5,
-  heroExp: 0,
-  heroGains: { attack: 5 },
   autoQuest: false,
   activeQuest: null, // Add this
   quests: {
@@ -49,13 +60,6 @@ export const state = {
       isComplete: false
     }
   },
-  unlockedClasses: [],
-  classLevels: {}, // map: { fighter: 1, cleric: 2 }
-  party: [],
-  heroStats: { hp: 0, mp: 0, attack: 30, defense: 0 },
-  elementalDmgModifiers: { physical: 100, fire: 100, water: 100, 
-                   air: 100, poison: 100, light: 100, dark: 100, 
-                   undead: 100 },
   buildings: [],
   spells: [],
   equipment: [],
@@ -72,7 +76,6 @@ export const state = {
   [null, null, null], // row 1
   [null, null, null], // row 2
   ],
-  maxPartySize: 4,
   // Combat/damage tracking (for future use)
   combatLog: [],
   lastAction: null,
@@ -85,4 +88,19 @@ export const state = {
 
 export function initState() {
   console.log("Game state initialized");
+}
+
+export function updateTotalStats() {
+  const totals = { hp: 0, attack: 0, defense: 0 };
+
+  for (const member of partyState.party) {
+    if (!member.stats) continue;
+    totals.hp += Number(member.stats.hp) || 0;
+    totals.attack += Number(member.stats.attack) || 0;
+    totals.defense += Number(member.stats.defense) || 0;
+  }
+
+  totals.attack += Number(partyState.heroGains.attack) || 0;
+
+  partyState.totalStats = totals;
 }

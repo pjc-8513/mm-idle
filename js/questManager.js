@@ -1,5 +1,5 @@
 // questManager.js
-import { state } from './state.js';
+import { state, partyState } from './state.js';
 import { ENEMY_TEMPLATES } from './content/enemyDefs.js';
 import { emit, on } from './events.js';
 import { prefixes } from './content/definitions.js';
@@ -103,7 +103,7 @@ function generateQuests({ questType, sourceList, keyExtractor, questStoreKey, cr
 }
 
 function generatePrefixQuests() {
-  const unlockedPrefixes = prefixes.filter(p => state.heroLevel >= p.unlocks);
+  const unlockedPrefixes = prefixes.filter(p => partyState.heroLevel >= p.unlocks);
   generateQuests({
     questType: 'defeat_prefix',
     sourceList: unlockedPrefixes,
@@ -134,7 +134,7 @@ function createQuest({ idPrefix, questType, key, configKey }) {
     [questType === 'defeat_prefix' ? 'prefix' : 'enemyType']: key,
     targetCount: config.enemiesRequired,
     currentCount: 0,
-    expReward: config.baseExpReward + (state.heroLevel * config.expPerLevel),
+    expReward: config.baseExpReward + (partyState.heroLevel * config.expPerLevel),
     isComplete: false
   };
 }
@@ -238,11 +238,11 @@ export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
 
   // console.log("[COMPLETE QUEST] Starting turn-in:", questCategory, questKey, oldQuest);
 
-  const prevLevel = state.heroLevel;
+  const prevLevel = partyState.heroLevel;
 
   // Grant rewards
   addHeroExp(oldQuest.expReward);
-  // console.log("[COMPLETE QUEST] After EXP:", { heroLevel: state.heroLevel, heroExp: state.heroExp });
+  // console.log("[COMPLETE QUEST] After EXP:", { heroLevel: partyState.heroLevel, heroExp: partyState.heroExp });
 
   // Replace quest with a fresh one
   const newQuest = createQuestFn(questKey);
@@ -253,7 +253,7 @@ export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
     questType: oldQuest.type,
     key: questKey,
     expGained: oldQuest.expReward,
-    leveledUp: state.heroLevel > prevLevel
+    leveledUp: partyState.heroLevel > prevLevel
   });
 
   // Refresh UI
@@ -299,30 +299,30 @@ function completeAllReadyQuests() {
  * Add experience to hero and handle leveling
  */
 function addHeroExp(amount) {
-  const oldLevel = state.heroLevel;
-  state.heroExp += amount;
+  const oldLevel = partyState.heroLevel;
+  partyState.heroExp += amount;
 
   // Calculate exp needed for next level
-  let expNeeded = getExpForLevel(state.heroLevel + 1);
+  let expNeeded = getExpForLevel(partyState.heroLevel + 1);
 
   // Handle level ups (can be multiple levels)
-  while (state.heroExp >= expNeeded) {
+  while (partyState.heroExp >= expNeeded) {
     levelUpHero();
-    expNeeded = getExpForLevel(state.heroLevel + 1);
+    expNeeded = getExpForLevel(partyState.heroLevel + 1);
   }
 
  /* console.log("[EXP] Final hero state:", { 
-    level: state.heroLevel, 
-    exp: state.heroExp, 
-    nextNeeded: getExpForLevel(state.heroLevel + 1) 
+    level: partyState.heroLevel, 
+    exp: partyState.heroExp, 
+    nextNeeded: getExpForLevel(partyState.heroLevel + 1) 
   }); */
 
   updateQuestPanel();
-  if (state.heroLevel > oldLevel) {
+  if (partyState.heroLevel > oldLevel) {
     emit('heroExpChanged', {
-      exp: state.heroExp,
+      exp: partyState.heroExp,
       oldLevel,
-      newLevel: state.heroLevel
+      newLevel: partyState.heroLevel
     });
   }
 }
@@ -339,18 +339,18 @@ function getExpForLevel(level) {
  * Level up the hero
  */
 function levelUpHero() {
-  const expNeeded = getExpForLevel(state.heroLevel + 1);
-  state.heroExp -= expNeeded;  // expNeeded is correct here (requirement for NEXT level)
-  state.heroLevel++;
+  const expNeeded = getExpForLevel(partyState.heroLevel + 1);
+  partyState.heroExp -= expNeeded;  // expNeeded is correct here (requirement for NEXT level)
+  partyState.heroLevel++;
 
   // But safeguard: don’t let exp go negative
-  if (state.heroExp < 0) state.heroExp = 0;
+  if (partyState.heroExp < 0) partyState.heroExp = 0;
 
   // Apply stat gains
-  if (state.heroGains) {
-    for (const [stat, value] of Object.entries(state.heroGains)) {
-      if (state.heroStats[stat] !== undefined) {
-        state.heroStats[stat] += value;
+  if (partyState.heroGains) {
+    for (const [stat, value] of Object.entries(partyState.heroGains)) {
+      if (partyState.heroStats[stat] !== undefined) {
+        partyState.heroStats[stat] += value;
       }
     }
   }
@@ -358,8 +358,8 @@ function levelUpHero() {
   uiAnimations.triggerHeroLevelUp();
 
   emit('heroLevelUp', {
-    level: state.heroLevel,
-    gains: state.heroGains
+    level: partyState.heroLevel,
+    gains: partyState.heroGains
   });
 }
 
@@ -405,10 +405,10 @@ function fullRenderQuestPanel() {
     <div class="quest-panel-header">
       <h2>Quests</h2>
       <div class="quest-hero-info">
-        <div class="hero-level">Hero Level: <span id="heroLevel">${state.heroLevel}</span></div>
+        <div class="hero-level">Hero Level: <span id="heroLevel">${partyState.heroLevel}</span></div>
         <div class="hero-exp">
-          Experience: <span id="heroExp">${Math.floor(state.heroExp)}</span> / 
-          <span id="heroExpNeeded">${getExpForLevel(state.heroLevel + 1)}</span>
+          Experience: <span id="heroExp">${Math.floor(partyState.heroExp)}</span> / 
+          <span id="heroExpNeeded">${getExpForLevel(partyState.heroLevel + 1)}</span>
         </div>
       </div>
     </div>
@@ -540,9 +540,9 @@ function updateQuestPanel() {
   const heroExpEl = document.getElementById('heroExp');
   const heroExpNeededEl = document.getElementById('heroExpNeeded');
 
-  if (heroLevelEl) heroLevelEl.textContent = state.heroLevel;
-  if (heroExpEl) heroExpEl.textContent = Math.floor(state.heroExp);
-  if (heroExpNeededEl) heroExpNeededEl.textContent = getExpForLevel(state.heroLevel + 1);
+  if (heroLevelEl) heroLevelEl.textContent = partyState.heroLevel;
+  if (heroExpEl) heroExpEl.textContent = Math.floor(partyState.heroExp);
+  if (heroExpNeededEl) heroExpNeededEl.textContent = getExpForLevel(partyState.heroLevel + 1);
 
   // Update all quest cards across all quest types
   const questTypes = ['prefixQuests', 'typeQuests']; // Add more keys here as needed

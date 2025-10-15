@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, partyState, updateTotalStats } from "./state.js";
 import { emit, on } from "./events.js";
 import { buildings } from "./content/buildingDefs.js";
 import { attachRequirementTooltip } from "./tooltip.js";
@@ -103,7 +103,7 @@ function fullRenderBuildingPanel() {
     btn.appendChild(costSpan);
 
     // Tooltip (persistent child of the button)
-    attachRequirementTooltip(btn, building, { checkBuildingRequirements, getBuildingLevel, getHeroLevel: () => state.heroLevel });
+    attachRequirementTooltip(btn, building, { checkBuildingRequirements, getBuildingLevel, getHeroLevel: () => partyState.heroLevel });
 
     // Click listener (once)
     btn.addEventListener("click", () => {
@@ -136,7 +136,7 @@ function updateBuildingPanel() {
   const currentGold = Math.floor(state.resources.gold);
   const currentGems = state.resources.gems;
   const currentBuildings = [...(state.buildings || [])];
-  const currentHeroLevel = state.heroLevel;
+  const currentHeroLevel = partyState.heroLevel;
 
   // Detect changes
   const heroLevelChanged = currentHeroLevel !== (lastBuildingState.heroLevel || 0);
@@ -196,7 +196,7 @@ function updateBuildingPanel() {
       const canAfford = state.resources.gold >= nextLevelCost.gold &&
                        state.resources.gems >= nextLevelCost.gems;
       const meetsRequirements = checkBuildingRequirements(building) &&
-                                currentLevel < state.heroLevel &&
+                                currentLevel < partyState.heroLevel &&
                                 currentHeroLevel >= (building.reqHeroLevel || 0);
 
       // Reset state-related classes (but don’t wipe children like tooltips)
@@ -338,7 +338,7 @@ function upgradeBuilding(buildingId) {
 
   if (state.resources.gold >= upgradeCost.gold &&
       state.resources.gems >= upgradeCost.gems && 
-      currentLevel < state.heroLevel &&
+      currentLevel < partyState.heroLevel &&
       checkBuildingRequirements(building)) {
     
     state.resources.gold -= upgradeCost.gold;
@@ -366,21 +366,22 @@ function upgradeBuilding(buildingId) {
       upgraded.forEach(uc => {
         const classId = uc.id;
 
-        state.classLevels[classId] = (state.classLevels[classId] || 1) + 1;
+        partyState.classLevels[classId] = (partyState.classLevels[classId] || 1) + 1;
 
-        const newLevel = state.classLevels[classId];
+        const newLevel = partyState.classLevels[classId];
 
         // Update unlocked class reference
-        const unlockedClass = state.unlockedClasses.find(c => c.id === classId);
+        const unlockedClass = partyState.unlockedClasses.find(c => c.id === classId);
         if (unlockedClass) unlockedClass.level = newLevel;
 
         // 🔥 NEW: Update party member if present
-        const partyMember = state.party.find(p => p.id === classId);
+        const partyMember = partyState.party.find(p => p.id === classId);
         if (partyMember) {
           partyMember.level = newLevel;
           updateUnlockedSkills(partyMember); // check for skill unlocks
           partyMember.stats = calculateStats(partyMember, newLevel);
           emit("partyMemberUpdated", partyMember);
+          updateTotalStats(); // 🔥 update totals after removing
         }
 
         emit("classUpgraded", { id: classId, level: newLevel });

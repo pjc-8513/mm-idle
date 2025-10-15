@@ -4,7 +4,7 @@
  * Follows separation of UI and game logic principles
  */
 
-import { state } from '../state.js';
+import { state, partyState } from '../state.js';
 import { calculatePercentage } from '../systems/math.js';
 import { emit, on } from '../events.js';
 import { damageEnemy, checkWaveCleared } from '../waveManager.js';
@@ -62,7 +62,7 @@ export function startAutoAttack() {
 
   combatState.isAutoAttacking = true;
 
-  state.party.forEach(member => {
+  partyState.party.forEach(member => {
     if (member.stats.hp > 0) {
       member.attackCooldown = 0; // attack immediately
     }
@@ -271,7 +271,7 @@ export function calculateAttackInterval(partyMember) {
  */
 function calculateDamage(attacker, target) {
   
-  let baseDamage = attacker.stats.attack + state.heroStats.attack || 30;
+  let baseDamage = attacker.stats.attack + partyState.heroStats.attack || 30;
   let isCritical = false;
   
   // Check for critical hit
@@ -284,7 +284,7 @@ function calculateDamage(attacker, target) {
   // convert damage to resonance element damage
   const resonance = attacker.resonance || 'physical';
 
-  const elementConvert = state.elementalDmgModifiers[resonance];
+  const elementConvert = partyState.elementalDmgModifiers[resonance];
  // console.log('elementConvert: ', elementConvert);
   baseDamage = calculatePercentage(baseDamage, elementConvert);
   
@@ -354,7 +354,7 @@ function calculateDamage(attacker, target) {
  */
 export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
   // Base attack
-  let baseDamage = (attacker.stats.attack || 30) + (state.heroStats.attack || 0);
+  let baseDamage = (attacker.stats.attack || 30) + (partyState.heroStats.attack || 0);
   let isCritical = false;
 
   // Critical hits
@@ -370,7 +370,7 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
   let skillDamage = baseDamage * (skillBaseDamage / 100);
 
   // Step 2: Elemental bonus
-  const elementBonus = (state.elementalDmgModifiers[resonance] || 0) / 100;
+  const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;
   skillDamage *= (1 + elementBonus);
 
   // Step 3: Apply resistances and weaknesses
@@ -509,7 +509,7 @@ function setInitialTarget() {
 // Event Handlers
 function handleGameLoaded() {
   setInitialTarget();
-  if (state.party.length > 0) {
+  if (partyState.party.length > 0) {
     startAutoAttack();
   }
 }
@@ -518,7 +518,7 @@ function handlePartyChanged() {
   if (combatState.isAutoAttacking) {
     // Restart auto-attack to account for party changes
     stopAutoAttack();
-    if (state.party.length > 0) {
+    if (partyState.party.length > 0) {
       startAutoAttack();
     }
   } else {

@@ -1,4 +1,4 @@
-import { state } from "../state.js";
+import { partyState } from "../state.js";
 import { emit, on } from "../events.js";
 import { classes } from "../content/classes.js";
 
@@ -24,9 +24,9 @@ export function chance(prob) {
 // Calculate stats based on class levels
 export function calculateTotalStats() {
   const totalStats = { hp: 0, mp: 0, attack: 0, defense: 0, criticalChance: 0, speed: 0 };
-  state.party.forEach(member => {
+  partyState.party.forEach(member => {
     const cls = getClassById(member.id);
-    const level = state.classLevels[member.id] || 1;
+    const level = partyState.classLevels[member.id] || 1;
     if (cls && cls.baseStates && cls.growthPerLevel) {
       totalStats.hp += cls.baseStates.hp + cls.growthPerLevel.hp * (level - 1);
       totalStats.mp += cls.baseStates.mp + cls.growthPerLevel.mp * (level - 1);
@@ -75,7 +75,7 @@ export function calculateStats(character, level) {
   return calculatedStats;
 }
 
-// Calculate elemental stats in state.elementalDmgModifiers from resonance
+// Calculate elemental stats in partyState.elementalDmgModifiers from resonance
 
 export function updateElementalModifiers() {
   const baseModifiers = {
@@ -91,7 +91,7 @@ export function updateElementalModifiers() {
 
   // Count how many members share each resonance
   const resonanceCounts = {};
-  for (const member of state.party) {
+  for (const member of partyState.party) {
     const res = member.resonance;
     if (res) {
       resonanceCounts[res] = (resonanceCounts[res] || 0) + 1;
@@ -108,9 +108,9 @@ export function updateElementalModifiers() {
 
     baseModifiers[element] += bonus;
   }
-  state.elementalDmgModifiers = { ...baseModifiers };
-  emit("elementalModifiersUpdated", state.elementalDmgModifiers);
-  console.log("Updated elemental modifiers:", state.elementalDmgModifiers);
+  partyState.elementalDmgModifiers = { ...baseModifiers };
+  emit("elementalModifiersUpdated", partyState.elementalDmgModifiers);
+  console.log("Updated elemental modifiers:", partyState.elementalDmgModifiers);
 }
 
 

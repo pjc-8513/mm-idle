@@ -1,5 +1,5 @@
 // area.js
-import { state } from "./state.js";
+import { state, partyState } from "./state.js";
 import { emit, on } from "./events.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
@@ -10,44 +10,85 @@ import { floatingTextManager } from "./systems/floatingtext.js";
 import { summonsState } from "./systems/summonSystem.js";
 
 /* -------------------------
-   Wave Timer Management
+   Wave Timer Management (Delta Time)
    -------------------------*/
-let waveTimer = null;
+
 let timeRemaining = 40;
 let maxTime = 40;
+let waveActive = false;
+let paused = false;
 
-function startWaveTimer() {
-  stopWaveTimer(); // Clear any existing timer
-  timeRemaining = maxTime;
-  updateTimerDisplay();
+export function startWaveTimer() {
+  stopWaveTimer(); // just to be safe
+
+  // 🧮 Calculate duration from party HP
+  const partyHP = Number(partyState.totalStats.hp) || 0;
   
-  waveTimer = setInterval(() => {
-    timeRemaining--;
-    updateTimerDisplay();
-    
-    if (timeRemaining <= 0) {
-      stopWaveTimer();
-      emit("waveTimedOut");
-    }
-  }, 1000);
+  // Prevent NaN or zero-time waves
+  maxTime = Math.max(20, partyHP); // 5s minimum fallback
+  timeRemaining = maxTime;
+
+  waveActive = true;
+  paused = false;
+
+  updateTimerDisplay();
 }
 
-function stopWaveTimer() {
-  if (waveTimer) {
-    clearInterval(waveTimer);
-    waveTimer = null;
+export function stopWaveTimer() {
+  waveActive = false;
+  paused = false;
+  timeRemaining = 0;
+  updateTimerDisplay();
+}
+
+export function pauseWaveTimer() {
+  paused = true;
+}
+
+export function resumeWaveTimer() {
+  if (waveActive) paused = false;
+}
+
+/**
+ * Called every frame from the main game loop.
+ * @param {number} delta - time passed in seconds
+ */
+export function updateWaveTimer(delta) {
+  if (!waveActive || paused) return;
+
+  timeRemaining -= delta;
+  if (timeRemaining <= 0) {
+    timeRemaining = 0;
+    waveActive = false;
+    emit("waveTimedOut");
   }
+
+  updateTimerDisplay();
+}
+
+export function addWaveTime(seconds) {
+  timeRemaining = Math.min(timeRemaining + seconds, maxTime * 2);
+  updateTimerDisplay();
+}
+
+export function getTimeRemaining() {
+  return timeRemaining;
+}
+
+export function getBonusGoldMultiplier() {
+  const timeBonus = timeRemaining / maxTime;
+  return 1 + (timeBonus * 0.5);
 }
 
 function updateTimerDisplay() {
   const timerBar = document.getElementById("waveTimerBar");
   const timerText = document.getElementById("waveTimerText");
-  
+
   if (timerBar && timerText) {
-    const percentage = (timeRemaining / maxTime) * 100;
+    const percentage = Math.max(0, (timeRemaining / maxTime) * 100);
     timerBar.style.width = `${percentage}%`;
-    timerText.textContent = `${timeRemaining}s`;
-    
+    timerText.textContent = `${Math.ceil(timeRemaining)}s`;
+
     // Color changes based on time remaining
     if (percentage > 50) {
       timerBar.style.background = "linear-gradient(90deg, #2196f3 0%, #03a9f4 100%)";
@@ -59,20 +100,6 @@ function updateTimerDisplay() {
   }
 }
 
-export function addWaveTime(seconds) {
-  timeRemaining = Math.min(timeRemaining + seconds, maxTime * 2); // Cap at 2x max time
-  updateTimerDisplay();
-}
-
-export function getTimeRemaining() {
-  return timeRemaining;
-}
-
-export function getBonusGoldMultiplier() {
-  // More time remaining = more bonus gold
-  const timeBonus = timeRemaining / maxTime;
-  return 1 + (timeBonus * 0.5); // Up to 50% bonus for clearing quickly
-}
 
 /* -------------------------
    Public init / render API
@@ -90,7 +117,8 @@ export function initAreaPanel() {
     "playerHealed",
     "waveCleared",
     "waveTimedOut",
-    "partyChanged" // Add party change event
+    "partyChanged", // Add party change event
+    "partyMemberUpdated"
   ];
   events.forEach(ev => on(ev, () => {
     const panel = document.getElementById("panelArea");
@@ -114,6 +142,11 @@ export function initAreaPanel() {
   });
 
   on ("partyChanged", () => {
+    renderPartyDisplay();
+    updateAreaPanel();
+  });
+
+    on ("partyMemberUpdated", () => {
     renderPartyDisplay();
     updateAreaPanel();
   });
@@ -225,13 +258,13 @@ export function updateAreaPanel() {
 
 // Updated renderPartyDisplay function
 function renderPartyDisplay() {
-  if (!state.party || state.party.length === 0) {
+  if (!partyState.party || partyState.party.length === 0) {
     return '<div class="no-party">No party members</div>';
   }
   
   let partyHTML = '';
-  //console.log("Rendering party members:", state.party);
-  state.party.forEach(member => {
+  //console.log("Rendering party members:", partyState.party);
+  partyState.party.forEach(member => {
     // For summons, we don't look up in classes array
     if (member.isSummon) {
       partyHTML += renderSummonMember(member);
@@ -247,7 +280,7 @@ function renderPartyDisplay() {
 }
 
 function renderPartyMember(member, cls) {
-  const level = state.classLevels[cls.id] || 1;
+  const level = partyState.classLevels[cls.id] || 1;
   
   return `
     <div class="party-member-vertical" data-class-id="${cls.id}">
@@ -483,7 +516,7 @@ export function updateEnemyCard(enemy, row, col) {
       if (!card.classList.contains(effectType)) {
         card.classList.add(effectType);
       }
-      console.log(`[light flash] creating flash at ${row}, ${col}`);
+      //console.log(`[light flash] creating flash at ${row}, ${col}`);
     } else {
       card.classList.remove(effectType);
     }
@@ -924,9 +957,9 @@ function getPooledPartyStats() {
   // Placeholder pooled stats – replace with your pooled calc logic
   // For now we use heroLevel for level and fallback HP values in state
   return {
-    level: state.heroLevel || 1,
-    hp: state.partyHp ?? 100,
-    maxHp: state.partyMaxHp ?? 100
+    level: partyState.heroLevel || 1,
+    hp: partyState.partyHp ?? 100,
+    maxHp: partyState.partyMaxHp ?? 100
   };
 }
 

@@ -1,4 +1,4 @@
-import { state } from "../state.js";
+import { state, partyState } from "../state.js";
 import { emit, on } from "../events.js";
 import { getActiveEnemies, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
@@ -165,7 +165,7 @@ export const abilities = [
 
         // Step 1: Calculate total percent damage
         // Example: at level 50 -> 20 + (0.1 * 50) = 25%
-        const totalPercent = state.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
+        const totalPercent = partyState.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
 
         // Step 2: Convert to HP-based damage
         // e.g. 25% of enemy max HP
@@ -192,7 +192,7 @@ export const abilities = [
     applyPassive: function (attacker) {
         const amount = this.defaultBonus + (attacker.level * this.perLevelBonus);
         // Simply reduce cooldowns - let updateSkills handle the rest
-        state.party.forEach(member => {
+        partyState.party.forEach(member => {
             if (!member.skills) return;
             
             for (const skillId in member.skills) {
@@ -225,7 +225,7 @@ export const abilities = [
         name: "Flame Arch",
         type: "active",
         resonance: "fire",
-        skillBaseDamage: 380,
+        skillBaseDamage: 200,
         //description: `Deals ${skillBaseDamage}% of attack in fire damage to every enemy on the same row as target`,
         spritePath: '../../assets/images/sprites/flame_arch.png',
         cooldown: 6500,
@@ -298,9 +298,8 @@ export const abilities = [
       const roll = Math.random() * 100;
 
       if (roll <= chancePercent) {
-        const bonusPercent = state.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
-        const baseDamage = attacker.stats.attack + state.heroStats.attack;
-        const finalDamage = Math.round((bonusPercent / 100) * baseDamage);
+        const bonusPercent = partyState.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
+        const finalDamage = Math.round((bonusPercent / 100) * partyState.heroStats.attack);
         const skillDamage = calculateSkillDamage(attacker, this.resonance, finalDamage, enemy);
 
         applyDOT(enemy, this.resonance, skillDamage, 8, attacker);
@@ -332,7 +331,7 @@ export const abilities = [
   triggerOnColumnClear: function (context) {
     if (this.triggeredThisWave) return; // only once per wave
     
-    const cleric = state.party.find(c => c.id === "cleric");
+    const cleric = partyState.party.find(c => c.id === "cleric");
     if (!cleric) return;
     
     const restoreAmount = Math.min(this.defaultRestore + cleric.level * this.perLevelBonus, 40);
@@ -349,7 +348,7 @@ export const abilities = [
 
   // Triggered ANY TIME a heal happens (no wave limit)
   triggerOnHeal: function(healEvent) {
-    const cleric = state.party.find(c => c.id === "cleric");
+    const cleric = partyState.party.find(c => c.id === "cleric");
     if (!cleric) return;
     
     /*
@@ -359,8 +358,6 @@ export const abilities = [
       spawnRadiantBurst()
     }
     */
-
-    const finalDamage = this.skillBaseDamage + state.heroStats.attack + cleric.baseStats.attack;
 
     // Apply light flash effect to all enemies
     if (state.activePanel === 'panelArea') {
@@ -374,14 +371,14 @@ export const abilities = [
         const enemy = state.enemies[row][col];
         if (!enemy || enemy.hp <= 0) continue;
         
-        const skillDamage = calculateSkillDamage(cleric, this.resonance, finalDamage, enemy);
+        const skillDamage = calculateSkillDamage(cleric, this.resonance, this.skillBaseDamage, enemy);
         damageEnemy(row, col, skillDamage.damage, this.resonance);
         
         // Trigger twice on undead
         if (enemy.type === "undead"){
           damageEnemy(row, col, skillDamage.damage, this.resonance);
         }
-              
+        //console.log(`[soul cleric] healEvent dealt ${skillDamage.damage}`);      
         showFloatingDamage(row, col, skillDamage);
         enemy.strobeEffect = { duration: 0.4, elapsed: 0 };
         // Radiant burst effect
@@ -474,8 +471,8 @@ export const abilities = [
         const attacker = summon;
         const resonance = this.resonance;
         const basePercent = this.defaultBonus + (this.perLevelBonus * (attacker.level || 1));
-        //applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
-        applyVisualEffect('dark-flash', 0.8);
+        applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
+        //applyVisualEffect('dark-flash', 0.8);
 
         for (let row = 0; row < state.enemies.length; row++) {
           for (let col = 0; col < state.enemies[row].length; col++) {

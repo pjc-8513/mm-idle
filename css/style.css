@@ -35,6 +35,10 @@ body, html {
   margin: auto;
 }
 
+#partyTotals {
+  color: tomato;
+}
+
 #resourceBar.town-bg {
   background: url('../assets/images/town-top.png') no-repeat center center;
   background-size: cover;
@@ -873,7 +877,7 @@ body, html {
     box-shadow: 0 0 0px rgba(255, 245, 150, 0);
   }
 }
-
+/*
 @keyframes strobeFlash {
   0%, 100% { 
     filter: brightness(1) contrast(1);
@@ -907,6 +911,14 @@ body, html {
     filter: brightness(2.8) contrast(1.5);
     box-shadow: 0 0 25px rgba(200, 255, 200, 0.9);
   }
+}
+*/
+@keyframes strobeFlash {
+  0%   { filter: invert(0); }
+  25%  { filter: invert(1); }
+  50%  { filter: invert(0); }
+  75%  { filter: invert(1); }
+  100% { filter: invert(0); }
 }
 
 @keyframes darkFlash {

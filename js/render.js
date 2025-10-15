@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, partyState } from "./state.js";
 import { on } from "./events.js";
 import { logMessage, logSuccess } from "./systems/log.js";
 import { formatNumber } from "./systems/math.js";
@@ -28,10 +28,17 @@ export function initRender() {
 
 export function renderResourceBar() {
   let displayGold = Math.floor(state.resources.gold);
+  let displayAttack;
+  if (partyState.party.length !== 0) {
+    displayAttack = formatNumber(partyState.totalStats.attack || 0);
+  } else {
+    displayAttack = { text: "0", suffix: "" };
+  }
   displayGold = formatNumber(displayGold);
-  document.getElementById("heroLevelResource").textContent = `Hero Level: ${state.heroLevel}`;
+  document.getElementById("heroLevelResource").textContent = `Hero Level: ${partyState.heroLevel}`;
   document.getElementById("gold").textContent = `Gold: ${displayGold.text}`;
   document.getElementById("gems").textContent = `Gems: ${state.resources.gems.toFixed(0)}`;
+  document.getElementById("partyTotals").textContent = `Attack: ${displayAttack.text}`;
 }
 function levelAnmiation(){
   document.getElementById("heroLevelResource").classList.add

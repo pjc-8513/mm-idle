@@ -1,5 +1,5 @@
 // waveManager.js - Centralized wave management
-import { state } from "./state.js";
+import { state, partyState } from "./state.js";
 import { emit, on } from "./events.js";
 import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
@@ -54,7 +54,7 @@ on("enemyDefeated", ({ col }) => {
   const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
   
   if (columnCleared) {
-    const cleric = state.party.find(c => c.id === "cleric");
+    const cleric = partyState.party.find(c => c.id === "cleric");
     if (cleric){
       const heal = abilities.find(a => a.id === "heal");
       if (heal && !heal.triggeredThisWave) {
@@ -71,7 +71,7 @@ on("waveStarted", () => {
 
 // NEW: Listen for ANY heal event and trigger cleric's damage
 on("healTriggered", (healEvent) => {
-  const cleric = state.party.find(c => c.id === "cleric");
+  const cleric = partyState.party.find(c => c.id === "cleric");
   if (!cleric) return;
   
   const heal = abilities.find(a => a.id === "heal");
@@ -266,7 +266,9 @@ export function createEnemy(enemyId, wave, isBoss = false) {
   const template = ENEMY_TEMPLATES[enemyId];
   if (!template) return null;
 
-  const { heroLevel, currentArea } = state;
+  //const { heroLevel, currentArea } = state;
+  const heroLevel = partyState.heroLevel;
+  const currentArea = state.currentArea;
 
   // 1. Get HP and Attack scaling
   const hp = getEnemyHP(wave, isBoss);

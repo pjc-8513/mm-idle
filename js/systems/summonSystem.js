@@ -1,5 +1,5 @@
 // summonSystem.js
-import { state } from "../state.js";
+import { partyState, updateTotalStats } from "../state.js";
 import { emit, on } from "../events.js";
 import { getBuildingLevel } from "../town.js";
 import { logMessage } from "./log.js";
@@ -13,7 +13,7 @@ export const summonTemplates = {
     rarity: "common",
     resonance: "undead",
     baseDuration: 15, // seconds
-    baseStats: { hp: 8, mp: 0, attack: 10, defense: 1, criticalChance: 0.05, speed: 1.0 },
+    baseStats: { hp: partyState.heroStats.hp * 0.1, attack: partyState.heroStats.attack * 0.5, defense: 1, criticalChance: 0.05, speed: 1.0 },
     hasAutoAttack: true,
     image: "../assets/images/summons/skeleton.png",
     order: 1 // Position in progression chain
@@ -25,7 +25,7 @@ export const summonTemplates = {
     resonance: "undead",
     baseDuration: 20,
     level: 1,
-    baseStats: { hp: 15, mp: 0, attack: 20, defense: 2, criticalChance: 0.03, speed: 0.8 },
+    baseStats: { hp: partyState.heroStats.hp * 0.2, attack: partyState.heroStats.attack * 0.75, defense: 1, criticalChance: 0.03, speed: 0.8 },
     hasAutoAttack: false,
     image: "../assets/images/summons/zombie.png",
     abilities: [
@@ -44,7 +44,7 @@ export const summonTemplates = {
     rarity: "rare",
     resonance: "undead",
     baseDuration: 15,
-    baseStats: { hp: 12, mp: 5, attack: 30, defense: 3, criticalChance: 0.15, speed: 1.3 },
+    baseStats: { hp: partyState.heroStats.hp * 0.3, attack: partyState.heroStats.attack, defense: 1, criticalChance: 0.15, speed: 1.3 },
     hasAutoAttack: false,
     level: 1,
     abilities: [
@@ -61,8 +61,8 @@ export const summonTemplates = {
     name: "Ghost Dragon",
     rarity: "legendary",
     resonance: "undead",
-    baseDuration: 30,
-    baseStats: { hp: 25, mp: 10, attack: 50, defense: 5, criticalChance: 0.2, speed: 1.5 },
+    baseDuration: 10,
+    baseStats: { hp: partyState.heroStats.hp * 0.5, attack: partyState.heroStats.attack * 1.5, defense: 1, criticalChance: 0.2, speed: 1.5 },
     hasAutoAttack: false,
     image: "../assets/images/summons/ghostdragon.png",
     order: 4
@@ -98,7 +98,7 @@ export function initSummonSystem() {
 // Handle enemy defeated event - check for summons
 function handleEnemyDefeated(data) {
   // Find all necromancers in party
-  const necromancers = state.party.filter(member => member.id === "necromancer");
+  const necromancers = partyState.party.filter(member => member.id === "necromancer");
   
   if (necromancers.length === 0) return;
   
@@ -111,31 +111,35 @@ function handleEnemyDefeated(data) {
 // Attempt to summon a unit based on progression chain
 function attemptSummon(necromancer) {
   const graveyardLevel = getBuildingLevel("graveyard") || 0;
+  const summonChance = 60 + graveyardLevel;
+  const roll = Math.random() * 100;
   
-  // Check what summons are currently active
-  const activeSummonTypes = summonsState.active.map(s => s.templateId);
-  
-  // Define the progression chain in order
-  const progressionChain = ['skeleton', 'zombie', 'vampire', 'ghostDragon'];
-  
-  // Find the first missing summon in the chain
-  let summonToCreate = null;
-  
-  for (const summonKey of progressionChain) {
-    if (!activeSummonTypes.includes(summonKey)) {
-      summonToCreate = summonKey;
-      break;
+  if (roll <= summonChance) {
+    // Check what summons are currently active
+    const activeSummonTypes = summonsState.active.map(s => s.templateId);
+    
+    // Define the progression chain in order
+    const progressionChain = ['skeleton', 'zombie', 'vampire', 'ghostDragon'];
+    
+    // Find the first missing summon in the chain
+    let summonToCreate = null;
+    
+    for (const summonKey of progressionChain) {
+      if (!activeSummonTypes.includes(summonKey)) {
+        summonToCreate = summonKey;
+        break;
+      }
     }
+    
+    // If all summons are active, do nothing
+    if (!summonToCreate) {
+      console.log("All summons already active - no new summon created");
+      return;
+    }
+    
+    // Create the summon
+    createSummon(summonToCreate, necromancer, graveyardLevel);
   }
-  
-  // If all summons are active, do nothing
-  if (!summonToCreate) {
-    console.log("All summons already active - no new summon created");
-    return;
-  }
-  
-  // Create the summon
-  createSummon(summonToCreate, necromancer, graveyardLevel);
 }
 
 // Create a new summon
@@ -208,8 +212,9 @@ function addSummonToParty(summon) {
   };
   
   console.log(`[SUMMON] ${summon.templateId} added to party`);
-  state.party.push(partyMember);
-  emit("partyChanged", state.party);
+  partyState.party.push(partyMember);
+  emit("partyChanged", partyState.party);
+  updateTotalStats(); // 🔥 update totals after removing
 }
 
 // Update summon durations (called from main game loop)
@@ -243,10 +248,11 @@ function removeSummon(summon) {
   }
   
   // Remove from party
-  const partyIndex = state.party.findIndex(m => m.id === summon.id);
+  const partyIndex = partyState.party.findIndex(m => m.id === summon.id);
   if (partyIndex !== -1) {
-    state.party.splice(partyIndex, 1);
-    emit("partyChanged", state.party);
+    partyState.party.splice(partyIndex, 1);
+    emit("partyChanged", partyState.party);
+    updateTotalStats(); // 🔥 update totals after removing
   }
   
   console.log(`${template.name} expired`);

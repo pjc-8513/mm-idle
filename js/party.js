@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, partyState, updateTotalStats } from "./state.js";
 import { logMessage } from "./systems/log.js";
 import { emit, on } from "./events.js";
 import { calculateStats } from "./systems/math.js";
@@ -86,7 +86,7 @@ function fullRenderPartyPanel() {
     const nameDiv = document.createElement("div");
     nameDiv.classList.add("partyName");
     nameDiv.textContent = cls.name;
-    nameDiv.textContent += ` (Lvl ${state.classLevels[cls.id] || 1})`;
+    nameDiv.textContent += ` (Lvl ${partyState.classLevels[cls.id] || 1})`;
 
     // Production info
 
@@ -108,7 +108,7 @@ function fullRenderPartyPanel() {
     btn.appendChild(costSpan);
 
     // Tooltip (persistent child)
-    attachRequirementTooltip(btn, cls, { checkBuildingRequirements, getBuildingLevel, getHeroLevel: () => state.heroLevel });
+    attachRequirementTooltip(btn, cls, { checkBuildingRequirements, getBuildingLevel, getHeroLevel: () => partyState.heroLevel });
 
     // Click listener once
     btn.addEventListener("click", () => {
@@ -130,8 +130,8 @@ function fullRenderPartyPanel() {
 function updatePartyPanel() {
   const currentGold = Math.floor(state.resources.gold);
   const currentGems = state.resources.gems;
-  const currentPartySize = state.party.length;
-  const currentPartyMembers = [...state.party];
+  const currentPartySize = partyState.party.length;
+  const currentPartyMembers = [...partyState.party];
 
   // Detect changes
   const goldChanged = currentGold !== lastPartyState.gold;
@@ -168,18 +168,18 @@ function updatePartyPanel() {
     // --- Update level display ---
     const nameDiv = card.querySelector('.partyName');
     nameDiv.textContent = cls.name;
-    nameDiv.textContent += ` (Lvl ${state.classLevels[cls.id] || 1})`;
+    nameDiv.textContent += ` (Lvl ${partyState.classLevels[cls.id] || 1})`;
 
     // --- Update purchase button ---
     const btn = card.querySelector('.purchaseBtn');
     const costSpan = btn.querySelector('.purchase-cost');
 
-const isUnlocked = state.unlockedClasses.includes(cls.id);
-const isInParty = state.party.some(member => member.id === cls.id);
+const isUnlocked = partyState.unlockedClasses.includes(cls.id);
+const isInParty = partyState.party.some(member => member.id === cls.id);
 const canAfford = state.resources.gold >= cls.goldCost && state.resources.gems >= (cls.gemCost || 0);
 const buildingReqMet = checkBuildingRequirements(cls);
-const activeMembers = state.party.filter(member => !member.isSummon);
-const partyFull = activeMembers.length >= state.maxPartySize;
+const activeMembers = partyState.party.filter(member => !member.isSummon);
+const partyFull = activeMembers.length >= partyState.maxPartySize;
 
 btn.classList.remove("recruited", "blocked", "unaffordable", "affordable");
 
@@ -272,7 +272,7 @@ function recruitClass(classId) {
   const cls = classes.find(c => c.id === classId);
   if (!cls) return;
 
-  const alreadyUnlocked = state.unlockedClasses.includes(classId);
+  const alreadyUnlocked = partyState.unlockedClasses.includes(classId);
   const buildingReqMet = checkBuildingRequirements(cls);
 
   if (!alreadyUnlocked &&
@@ -290,11 +290,11 @@ function recruitClass(classId) {
     if (!clsTemplate) return;
     const clone = JSON.parse(JSON.stringify(clsTemplate));
     // Use current global level (default 1)
-    const level = state.classLevels[classId] || 1;
+    const level = partyState.classLevels[classId] || 1;
     clone.level = level;
 
-    state.classLevels[classId] = level;
-    state.unlockedClasses.push(classId);
+    partyState.classLevels[classId] = level;
+    partyState.unlockedClasses.push(classId);
     console.log("Class unlocked:", clone);
     emit("classUnlocked", cls);
     emit("goldChanged", state.resources.gold);
@@ -304,25 +304,26 @@ function recruitClass(classId) {
 
 // --- Add/Remove from active party ---
 function togglePartyMember(classId) {
-  const idx = state.party.findIndex(member => member.id === classId);
+  const idx = partyState.party.findIndex(member => member.id === classId);
   const clsTemplate = classes.find(c => c.id === classId);
   if (!clsTemplate) return;
   const clone = JSON.parse(JSON.stringify(clsTemplate));
   // Use current global level (default 1)
-  const level = state.classLevels[classId] || 1;
+  const level = partyState.classLevels[classId] || 1;
   clone.level = level;
 
   if (idx !== -1) {
     // Remove from party
-    state.party.splice(idx, 1);
-    emit("partyChanged", state.party);
+    partyState.party.splice(idx, 1);
+    emit("partyChanged", partyState.party);
+    updateTotalStats(); // 🔥 update totals after removing
     updateResonance();
     } else {
       // Count only non-summon members when checking space
-      const nonSummons = state.party.filter(m => !m.isSummon);
-      if (nonSummons.length < state.maxPartySize) {
+      const nonSummons = partyState.party.filter(m => !m.isSummon);
+      if (nonSummons.length < partyState.maxPartySize) {
         // Add to party (only if unlocked)
-        if (state.unlockedClasses.includes(classId)) {
+        if (partyState.unlockedClasses.includes(classId)) {
           // Calculate stats before adding
           clone.stats = calculateStats(clone, level);
 
@@ -330,9 +331,10 @@ function togglePartyMember(classId) {
           updateUnlockedSkills(clone);
 
           console.log("Adding to party:", clone);
-          state.party.push(clone);
+          partyState.party.push(clone);
           updateResonance();
-          emit("partyChanged", state.party);
+          emit("partyChanged", partyState.party);
+          updateTotalStats(); // 🔥 update totals after removing
         }
       } else {
         console.warn("Party is full (ignoring summons).");
@@ -351,7 +353,7 @@ function updateResonance() {
   const resonanceCounts = {};
 
   // Count resonance occurrences
-  state.party.forEach(member => {
+  partyState.party.forEach(member => {
     const resonance = member.resonance;
     resonanceCounts[resonance] = (resonanceCounts[resonance] || 0) + 1;
   });
@@ -360,9 +362,9 @@ function updateResonance() {
   Object.keys(resonanceCounts).forEach(resonance => {
     const count = resonanceCounts[resonance];
     const bonus = resonanceBonuses[count] || 0;
-    state.elementalDmgModifiers[resonance] = (state.elementalDmgModifiers[resonance] || 0) + bonus;
+    partyState.elementalDmgModifiers[resonance] = (partyState.elementalDmgModifiers[resonance] || 0) + bonus;
   });
-  console.log('[party resonance]: ', state.elementalDmgModifiers);
+  console.log('[party resonance]: ', partyState.elementalDmgModifiers);
 }
 
 /**

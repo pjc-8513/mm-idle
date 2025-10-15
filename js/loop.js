@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, partyState } from "./state.js";
 import { renderResourceBar } from "./render.js";
 import { emit } from "./events.js";
 import { renderPartyPanel } from "./party.js";
@@ -11,7 +11,7 @@ import { renderQuestPanelAnimations } from "./questManager.js";
 import { updateDOTs } from "./systems/dotManager.js";
 import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
-import { updateSummonTimers } from "./area.js";
+import { updateSummonTimers, updateWaveTimer } from "./area.js";
 import { updateVisualEffects } from "./systems/effects.js";
 //import { updateRadiantEffects } from "./systems/radiantEffect.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
@@ -46,7 +46,7 @@ function update(delta) {
   // combat updates
 
   if (combatState.isAutoAttacking) {
-    state.party.forEach(member => {
+    partyState.party.forEach(member => {
       member.attackCooldown -= delta;
 
       if (member.hasAutoAttack && member.attackCooldown <= 0) {
@@ -61,6 +61,7 @@ function update(delta) {
   // update DOTs
   updateDOTs(delta);
   updateVisualEffects(delta); // ADD THIS LINE
+  if (partyState.party.length !== 0) updateWaveTimer(delta); // ✅ add this line
 
   // Update sprite animations
   if (state.ui?.spriteAnimations) {
@@ -77,7 +78,7 @@ function update(delta) {
 }
 
 function updateSkills(delta) {
-  state.party.forEach(member => {
+  partyState.party.forEach(member => {
     if (!member.skills) return;
 
     for (const skillId in member.skills) {
@@ -92,7 +93,7 @@ function updateSkills(delta) {
         if ((previousRemaining > 0 && skillState.cooldownRemaining <= 0) || previousRemaining <= 0) {
           console.log("[loop skill]", member, skillDef);
           stopAutoAttack();
-          emit("skillReady", {member: state.party.find(p => p.id === member.id), skillId: skillDef.id});
+          emit("skillReady", {member: partyState.party.find(p => p.id === member.id), skillId: skillDef.id});
           skillState.cooldownRemaining = skillDef.cooldown; // reset cooldown
           startAutoAttack();
         }
@@ -138,7 +139,7 @@ function calculateGemIncome() {
   let lastTotal = state.resources.gemIncomePerSecond || 0;
   
   // Calculate gem income from party members
-  state.party.forEach(id => {
+  partyState.party.forEach(id => {
     const cls = classes.find(c => c.id === id);
     if (cls) total += cls.gemPerSecond || 0;
   });

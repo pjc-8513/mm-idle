@@ -7,7 +7,8 @@ export const buildings = [
     goldCost: 10,
     gemCost: 0,
     goldIncomePerHit: 1,
-    gemPerSecond: 0, 
+    gemPerSecond: 0,
+    upgradedClasses: { id: "fighter"}, 
     buildingRequired: null},
   { id: "mine",
     name: "Mine",
@@ -40,7 +41,7 @@ export const buildings = [
     gemCost: 0,
     goldIncomePerHit: 6,
     gemPerSecond: 0,
-    upgradedClasses: { id: "fighter"},
+    upgradedClasses: null,
     buildingRequired: { id: "farm", level: 1 }
   },
   { id: "gemMine",
