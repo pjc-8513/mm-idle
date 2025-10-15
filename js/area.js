@@ -13,6 +13,10 @@ import { summonsState } from "./systems/summonSystem.js";
    Wave Timer Management (Delta Time)
    -------------------------*/
 
+const BASE_MIN_TIME = 20;        // minimum seconds
+const BASE_MAX_TIME = 60;        // maximum seconds
+const HP_TIME_RATIO = 2;         // each point of HP = 2 seconds of wave time
+let maxTimeUpgradeBonus = 0;     // can be modified by items/upgrades later
 let timeRemaining = 40;
 let maxTime = 40;
 let waveActive = false;
@@ -23,9 +27,14 @@ export function startWaveTimer() {
 
   // 🧮 Calculate duration from party HP
   const partyHP = Number(partyState.totalStats.hp) || 0;
+  // Example: each HP gives 2 seconds (adjust as you balance)
+  let calculatedTime = partyHP * HP_TIME_RATIO;
   
   // Prevent NaN or zero-time waves
-  maxTime = Math.max(20, partyHP); // 5s minimum fallback
+  const maxAllowedTime = BASE_MAX_TIME + maxTimeUpgradeBonus;
+  maxTime = Math.min(Math.max(BASE_MIN_TIME, calculatedTime), maxAllowedTime);
+  
+  // initialize
   timeRemaining = maxTime;
 
   waveActive = true;
