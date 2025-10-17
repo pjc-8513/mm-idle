@@ -17,6 +17,7 @@ export const state = {
   resources: {
     gold: 5000,
     gems: 0,
+    maxGems: 20,
     wood: 0,
     ore: 0,
     goldIncomePerHit: 0,

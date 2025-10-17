@@ -56,7 +56,7 @@ function update(delta) {
     });
   }
   // Update summons - ADD THIS LINE
-  updateSummons(delta);
+  if (state.activeWave) updateSummons(delta);
   
   // update DOTs
   updateDOTs(delta);

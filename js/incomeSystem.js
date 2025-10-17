@@ -50,3 +50,11 @@ export const incomeSystem = {
 function getBonusGoldMultiplier() {
   return 1; // could factor in artifacts, wave clears, buffs, etc.
 }
+
+export function addGems(amount) {
+  if (typeof amount !== 'number' || amount < 0) {
+    console.error('Invalid amount');
+    return;
+  }
+  state.resources.gems = Math.min(state.resources.gems + amount, state.resources.maxGems);
+}

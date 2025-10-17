@@ -5,17 +5,20 @@ import { emit, on } from './events.js';
 import { prefixes } from './content/definitions.js';
 import { logMessage } from './systems/log.js';
 import { uiAnimations } from './systems/animations.js';
+import { addGems } from './incomeSystem.js';
 
 // Quest configuration
 const QUEST_CONFIG = {
   defeat_prefix: {
     enemiesRequired: 5,
     baseExpReward: 100,
+    baseGemReward: 1,
     expPerLevel: 20
   },
   defeat_type: {
     enemiesRequired: 10,
     baseExpReward: 200,
+    baseGemReward: 1,
     expPerLevel: 50
   }
 };
@@ -135,6 +138,7 @@ function createQuest({ idPrefix, questType, key, configKey }) {
     targetCount: config.enemiesRequired,
     currentCount: 0,
     expReward: config.baseExpReward + (partyState.heroLevel * config.expPerLevel),
+    gemReward: config.baseGemReward + Math.floor(partyState.heroLevel / 5),
     isComplete: false
   };
 }
@@ -230,6 +234,7 @@ function handleHeroLevelUp() {
 export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
   const questStore = state.quests[questCategory];
   const oldQuest = questStore?.[questKey];
+  
 
   if (!oldQuest || !oldQuest.isComplete) {
     console.warn(`Cannot complete quest for ${questCategory}: ${questKey}`);
@@ -242,6 +247,8 @@ export function completeQuestGeneric(questCategory, questKey, createQuestFn) {
 
   // Grant rewards
   addHeroExp(oldQuest.expReward);
+  addGems(oldQuest.gemReward);
+  // console.log(`[COMPLETE QUEST] Gem reward: ${oldQuest.gemReward}`);
   // console.log("[COMPLETE QUEST] After EXP:", { heroLevel: partyState.heroLevel, heroExp: partyState.heroExp });
 
   // Replace quest with a fresh one
@@ -496,7 +503,7 @@ function createQuestCard(questKey, quest, questStoreKey) {
 
   const rewardDiv = document.createElement("div");
   rewardDiv.classList.add("questReward");
-  rewardDiv.textContent = `Reward: ${quest.expReward} EXP`;
+  rewardDiv.textContent = `Reward: ${quest.expReward} EXP | ${quest.gemReward} Gems`;
 
   infoOverlay.appendChild(titleDiv);
   infoOverlay.appendChild(descDiv);

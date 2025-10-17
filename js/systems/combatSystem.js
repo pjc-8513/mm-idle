@@ -271,7 +271,7 @@ export function calculateAttackInterval(partyMember) {
  */
 function calculateDamage(attacker, target) {
   
-  let baseDamage = attacker.stats.attack + partyState.heroStats.attack || 30;
+  let baseDamage = attacker.stats.attack || 30;
   let isCritical = false;
   
   // Check for critical hit
@@ -284,9 +284,10 @@ function calculateDamage(attacker, target) {
   // convert damage to resonance element damage
   const resonance = attacker.resonance || 'physical';
 
-  const elementConvert = partyState.elementalDmgModifiers[resonance];
+  const elementConvert = partyState.elementalDmgModifiers[resonance] / 100;
  // console.log('elementConvert: ', elementConvert);
-  baseDamage = calculatePercentage(baseDamage, elementConvert);
+  //baseDamage = calculatePercentage(baseDamage, elementConvert);
+  baseDamage *= elementConvert;
   
   
   // Apply elemental resistances/weaknesses
@@ -354,7 +355,7 @@ function calculateDamage(attacker, target) {
  */
 export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
   // Base attack
-  let baseDamage = (attacker.stats.attack || 30) + (partyState.heroStats.attack || 0);
+  let baseDamage = attacker.stats.attack || 30;
   let isCritical = false;
 
   // Critical hits

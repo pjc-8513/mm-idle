@@ -37,7 +37,7 @@ export function renderResourceBar() {
   displayGold = formatNumber(displayGold);
   document.getElementById("heroLevelResource").textContent = `Hero Level: ${partyState.heroLevel}`;
   document.getElementById("gold").textContent = `Gold: ${displayGold.text}`;
-  document.getElementById("gems").textContent = `Gems: ${state.resources.gems.toFixed(0)}`;
+  document.getElementById("gems").textContent = `Gems: ${state.resources.gems.toFixed(0)}/${state.resources.maxGems}`;
   document.getElementById("partyTotals").textContent = `Attack: ${displayAttack.text}`;
 }
 function levelAnmiation(){

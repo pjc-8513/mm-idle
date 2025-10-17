@@ -4,6 +4,7 @@ import { buildings } from "./content/buildingDefs.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 import { updateUnlockedSkills } from "./party.js";
 import { calculateStats } from "./systems/math.js";
+import { BUILDING_MENUS } from "./content/buildingMenu.js";
 
 // Store the last state to detect changes
 let lastBuildingState = {
@@ -32,6 +33,15 @@ export function initBuildingPanel() {
     }
   });
 }
+
+// close dock menu
+document.addEventListener("click", (e) => {
+  const dock = document.getElementById("buildingDock");
+  if (!dock.classList.contains("hidden") && !dock.contains(e.target)) {
+    closeBuildingDock();
+  }
+});
+
 
 export function renderBuildingPanel() {
   const panel = document.getElementById("panelTown");
@@ -122,6 +132,10 @@ function fullRenderBuildingPanel() {
     buildingCard.appendChild(imageDiv);
     buildingCard.appendChild(infoOverlay);
     buildingCard.appendChild(btn);
+    buildingCard.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent bubbling to body
+      openBuildingDock(building);
+    });
     container.appendChild(buildingCard);
   });
 
@@ -352,6 +366,7 @@ function upgradeBuilding(buildingId) {
     // Find existing building or create new one
     let buildingData = state.buildings.find(b => b.id === buildingId);
     if (buildingData) {
+      console.log('[Building Data]: ', buildingData);
       buildingData.level++;
     } else {
       state.buildings.push({ id: buildingId, level: 1 });
@@ -394,4 +409,22 @@ function upgradeBuilding(buildingId) {
     if (state.resources.gems !== lastTotalGems) emit("gemsChanged", state.resources.gems);
     emit("buildingsChanged", state.buildings);
   }
+}
+
+function openBuildingDock(building) {
+  const dock = document.getElementById("buildingDock");
+  const renderer = BUILDING_MENUS[building.id];
+
+  if (renderer) {
+    dock.innerHTML = renderer(building);
+    dock.classList.remove("hidden");
+  } else {
+    dock.innerHTML = `<h3>${building.name}</h3><p>No actions available.</p>`;
+    dock.classList.remove("hidden");
+  }
+}
+
+function closeBuildingDock() {
+  const dock = document.getElementById("buildingDock");
+  dock.classList.add("hidden");
 }

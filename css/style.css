@@ -606,6 +606,54 @@ body, html {
   cursor: pointer;
 }
 
+.building-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, rgba(30,30,40,0.95), rgba(50,50,70,0.95));
+  border-top: 2px solid #666;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+  z-index: 200;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.4);
+  animation: slideUp 0.25s ease;
+}
+
+.building-dock.hidden {
+  display: none;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.building-dock h3 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.building-dock button {
+  background: #444;
+  border: 1px solid #666;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.building-dock button:hover {
+  background: #666;
+}
+
+
 /* Requirement Tooltip (shared with buildings) */
 .requirement-tooltip {
   display: none;

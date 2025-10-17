@@ -8,6 +8,7 @@ import { getBonusGoldMultiplier } from "./area.js";
 import { prefixes } from "./content/definitions.js";
 import { stopAutoAttack, startAutoAttack, setTarget } from "./systems/combatSystem.js";
 
+// waveManager.js
 const SCALING = {
   baseHP: 1000,
   r: 1.035,
@@ -16,6 +17,19 @@ const SCALING = {
   boss_base_multiplier: 12,
   spike_set: [50, 100, 200],
   spike_factor: 3,
+
+  // --- Quantum Scaling Parameters ---
+  poly_r2: 2.0, // R2: The Polynomial Acceleration Factor (Dimension Multiplier)
+  poly_s: 25, // S: The Scale Divisor (System Entropy)
+
+  // Type-specific adjustments for R2 (The higher the value, the higher the HP)
+  type_r2_adjustments: {
+    pest: -0.2, // Lower HP
+    undead: -0.1, // Slightly Lower HP
+    humanoid: 0.1, // Slightly Higher HP
+    demon: 0.3, // Higher HP
+    beast: 0.0, // Normal
+  },
 };
 
 // Utility: choose a random element from an array
@@ -29,11 +43,33 @@ function getRandomPrefix(heroLevel) {
   return unlocked.length > 0 ? randomChoice(unlocked).prefix : "";
 }
 
-function getEnemyHP(wave, isBoss = false) {
-  let hp = SCALING.baseHP
-    * Math.pow(SCALING.r, wave - 1)
-    * Math.pow(SCALING.zone_multiplier, Math.floor((wave - 1) / SCALING.zone_length));
+// waveManager.js
 
+// NOTE: We need to update this function signature to accept the enemy type
+function getEnemyHP(wave, enemyType, isBoss = false) {
+  const W_minus_1 = wave - 1;
+
+  // 1. Base HP and standard scaling
+  let hp = SCALING.baseHP
+    // Standard Exponential (R1)
+    * Math.pow(SCALING.r, W_minus_1)
+    // Zone Multiplier
+    * Math.pow(SCALING.zone_multiplier, Math.floor(W_minus_1 / SCALING.zone_length));
+
+  // 2. Quantum Scaling (Polynomial Factor)
+  // Get the R2 adjustment for the specific enemy type, defaulting to 0
+  const typeAdjustment = SCALING.type_r2_adjustments[enemyType] || 0;
+  const effective_r2 = SCALING.poly_r2 + typeAdjustment;
+
+  // Polynomial Term: (1 + (W-1) / S)^(R2 + Adjustment)
+  const quantum_scaling_term = Math.pow(
+    (1 + W_minus_1 / SCALING.poly_s),
+    effective_r2
+  );
+  
+  hp *= quantum_scaling_term;
+
+  // 3. Boss and Spike Multipliers (applied after the base scaling)
   if (isBoss) hp *= SCALING.boss_base_multiplier;
   if (SCALING.spike_set.includes(wave)) hp *= SCALING.spike_factor;
 
@@ -271,7 +307,7 @@ export function createEnemy(enemyId, wave, isBoss = false) {
   const currentArea = state.currentArea;
 
   // 1. Get HP and Attack scaling
-  const hp = getEnemyHP(wave, isBoss);
+  const hp = getEnemyHP(wave, template.type, isBoss);
 
   // Attack could scale similarly (simple version for now)
   const attack = Math.floor(
