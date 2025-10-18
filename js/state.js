@@ -61,7 +61,7 @@ export const state = {
       isComplete: false
     }
   },
-  buildings: [],
+  buildings: [], // array {id: building-id, level: building-level}
   spells: [],
   equipment: [],
   currentArea: "newSorpigal",
@@ -86,6 +86,8 @@ export const state = {
   activePanel: "panelArea"
   
 };
+
+export const quickSpellState = {}
 
 export function initState() {
   console.log("Game state initialized");

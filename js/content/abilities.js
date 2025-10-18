@@ -498,7 +498,7 @@ export const abilities = [
 ];
 
 
-function showFloatingDamage(row, col, skillDamage) {
+export function showFloatingDamage(row, col, skillDamage) {
   if (state.activePanel !== "panelArea") return;
   const pos = getEnemyCanvasPosition(row, col);
   if (!pos) return;

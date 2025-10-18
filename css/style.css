@@ -1391,3 +1391,41 @@ body, html {
     gap: 8px;
   }
 }
+
+.spellGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.spellCard {
+  border: 1px solid #444;
+  background: #222;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.spellImage img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.spellButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.spellUpgradeBtn.affordable {
+  background-color: #2e8b57; /* green */
+}
+.spellUpgradeBtn.unaffordable {
+  background-color: #8b2e2e; /* red */
+}
+.spellQuickBtn.registered {
+  background-color: #4a90e2;
+}

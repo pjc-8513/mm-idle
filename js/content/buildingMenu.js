@@ -2,14 +2,64 @@ import { state, partyState } from "../state.js";
 import { buildings as BUILDING_DEFS } from './buildingDefs.js';
 import { classes } from "./classes.js";
 import { abilities } from "./abilities.js";
+import { emit, on } from "../events.js";
+import { logMessage } from "../systems/log.js";
+import { openBuildingDock } from "../town.js";
+
+export function initBuildingMenu() {
+    on("goldChanged", () => {
+  const dock = document.getElementById("buildingDock");
+  if (dock && !dock.classList.contains("hidden")) {
+    const currentBuildingId = dock.getAttribute("data-building-id");
+    if (currentBuildingId) {
+      const building = state.buildings.find(b => b.id === currentBuildingId) 
+        || { id: currentBuildingId, name: "Building" };
+      const renderer = BUILDING_MENUS[currentBuildingId];
+//      console.log('[building menu] renderer: ', renderer);
+      if (renderer) dock.innerHTML = renderer(building);
+      }
+    }
+  });
+  console.log('buildingMenu initialized!');
+}
+
+// You can tweak this cost formula as you like:
+const TRAINING_COST = () => 100 * partyState.heroLevel;  // Example: scales with hero level
+const TRAINING_EXP_GAIN = 50; // How much EXP you get per training
 
 export const BUILDING_MENUS = {
-  trainingCenter: (building) => `
-    <h3>Training Center</h3>
-    <div>
-      <button onclick="exchangeGoldForExp('${building.id}')">Spend Gold for EXP</button>
-    </div>
-  `,
+  trainingCenter: (building) => {
+    // 🔍 Find building info in state.buildings array
+    const b = state.buildings.find(b => b.id === building.id);
+    const buildingLevel = b ? b.level : 0;
+
+    if (buildingLevel <= 0) {
+      return `
+        <h3>Training Center</h3>
+        <p>This building hasn't been constructed yet.</p>
+        <p>Build it first to unlock hero training!</p>
+      `;
+    }
+
+    const cost = TRAINING_COST();
+    const canAfford = state.resources.gold >= cost;
+    const btnColor = canAfford ? "green" : "red";
+
+    return `
+      <h3>Training Center</h3>
+        <div class="building-stats">
+        <p>Need some training?</p>
+        <p>Cost: <strong>${cost} gold</strong></p>
+        </div>
+        <button 
+          style="background-color: ${btnColor};" 
+          onclick="exchangeGoldForExp('${building.id}')"
+        >
+          Train for EXP
+        </button>
+      </div>
+    `;
+  },
   inn: (building) => `
     <h3>Inn</h3>
     <div>
@@ -18,6 +68,12 @@ export const BUILDING_MENUS = {
     </div>
   `,
   farm: unitProducingMenu,
+  barracks: unitProducingMenu,
+  thievesGuild: unitProducingMenu,
+  darkTower: unitProducingMenu,
+  archery: unitProducingMenu,
+  temple: unitProducingMenu,
+  grove: unitProducingMenu,
   magicConflux: (building) => `
     <h3>Magic Conflux</h3>
     <div>
@@ -111,3 +167,22 @@ function unitProducingMenu(building) {
     </div>
   `;
 }
+
+// --- Training function ---
+window.exchangeGoldForExp = function (buildingId) {
+  const cost = TRAINING_COST();
+  if (state.resources.gold >= cost) {
+    state.resources.gold -= cost;
+    logMessage("That's the ticket!");
+    emit("addHeroExp", TRAINING_EXP_GAIN);
+    emit("goldChanged", state.resources.gold);
+  } else {
+    // Optional feedback (e.g. play a sound, flash red, etc.)
+    console.log("Not enough gold!");
+    logMessage("Not enough gold!");
+  }
+
+  // Re-render the dock to update button color & gold display
+  //const building = { id: buildingId, name: "Training Center" };
+  //openBuildingDock(building);
+};

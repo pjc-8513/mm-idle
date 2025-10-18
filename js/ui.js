@@ -5,6 +5,7 @@ import { renderAreaPanel, setupEnemyEffectsCanvas } from "./area.js";
 import { renderQuestPanel } from "./questManager.js";
 import { on } from "./events.js";
 import { floatingTextManager } from "./systems/floatingtext.js";
+import { renderSpellbookPanel } from "./spellbookPanel.js";
 
 export function initUI() {
   // panel switching
@@ -103,6 +104,7 @@ export function showPanel(panelId) {
     document.getElementById("resourceBar").classList.add("spellbook-bg");
     removeBackgroundElement("sidePanel");
     document.getElementById("sidePanel").classList.add("spellbook-bg");
+    renderSpellbookPanel();
   }
 
   if (panelId === "panelQuest") {

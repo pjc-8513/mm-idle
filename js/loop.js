@@ -41,7 +41,7 @@ function update(delta) {
   const gemIncome = calculateGemIncome();
  
   state.resources.gems += state.resources.gemIncomePerSecond * delta;
-  emit("gemsChanged", state.gems);
+  emit("gemsChanged", state.resources.gems);
 
   // combat updates
 

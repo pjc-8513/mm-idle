@@ -47,6 +47,7 @@ export function initQuestSystem() {
 
   // Listen for hero level ups to unlock new prefix quests
   on('heroLevelUp', handleHeroLevelUp);
+  on("addHeroExp", addHeroExp); // gain hero exp from training center
 
   // Auto-quest handler
   on('questCompleted', (quest) => {

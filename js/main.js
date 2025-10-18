@@ -13,6 +13,8 @@ import { initCombatSystem } from "./systems/combatSystem.js";
 import { initAnimations } from "./systems/animations.js";
 import { initQuestSystem, renderQuestPanel } from './questManager.js';
 import { initSummonSystem } from "./systems/summonSystem.js";
+import { initBuildingMenu } from "./content/buildingMenu.js";
+import { initSpellbookPanel } from "./spellbookPanel.js";
 
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -29,6 +31,8 @@ window.addEventListener("DOMContentLoaded", () => {
   initCombatSystem(); // Initialize combat system
   initAnimations();
   initQuestSystem();
+  initBuildingMenu();
+  initSpellbookPanel();
   
   // Start the game loop
   startGameLoop();

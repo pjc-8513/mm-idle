@@ -106,6 +106,30 @@ export function getEnemiesInRow(row) {
 }
 
 /**
+ * Helper to get the first row with living enemies and extra rows based on skill level
+ * @param {number} skillLevel 
+ * @returns {Array} Array of enemy objects with row and column positions
+ */
+export function getEnemiesBasedOnSkillLevel(skillLevel) {
+  let rowsToGet;
+  if (skillLevel < 20) rowsToGet = 1;
+  else if (skillLevel < 50) rowsToGet = 2;
+  else return getActiveEnemies(); // Assuming getActiveEnemies() returns all active enemies
+
+  let enemies = [];
+  for (let i = 0; i < state.enemies.length && rowsToGet > 0; i++) {
+    const rowEnemies = getEnemiesInRow(i);
+    if (rowEnemies.length > 0) {
+      enemies = enemies.concat(rowEnemies);
+      rowsToGet--;
+    }
+  }
+
+  return enemies.slice(0, Math.min(enemies.length, 3 * state.enemies[0].length)); // Assuming all rows have the same length
+}
+
+
+/**
  * Helper to get adjacent (but not diagonal) enemies
  * @param {*} row 
  * @param {*} col 

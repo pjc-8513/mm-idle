@@ -84,6 +84,21 @@ export const buildings = [
     upgradedClasses: { id: "archer"},
     buildingRequired: { id: "barracks", level: 1 }
   },
+  { id: "trainingCenter",
+    name: "Training Center", 
+    image: "../assets/images/buildings/training.png",
+    reqHerolevel: 5,
+    level: 0,
+    goldCost: 100,
+    gemCost: 0,
+    goldIncomePerHit: 0,
+    gemPerSecond: 0,
+    // Example of multiple requirements
+    buildingRequired: [
+      { id: "barracks", level: 5 },
+      { id: "archery", level: 5 }
+    ]
+  },
   { id: "mageGuild",
     name: "Mage Guild", 
     image: "../assets/images/buildings/mageguild.png",

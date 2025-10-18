@@ -411,13 +411,17 @@ function upgradeBuilding(buildingId) {
   }
 }
 
-function openBuildingDock(building) {
+export function openBuildingDock(building) {
   const dock = document.getElementById("buildingDock");
   const renderer = BUILDING_MENUS[building.id];
 
   if (renderer) {
+    dock.setAttribute("data-building-id", building.id); // ✅ track open building
     dock.innerHTML = renderer(building);
     dock.classList.remove("hidden");
+
+    // ✅ Prevent clicks inside the dock from closing it
+    dock.onclick = (e) => e.stopPropagation();
   } else {
     dock.innerHTML = `<h3>${building.name}</h3><p>No actions available.</p>`;
     dock.classList.remove("hidden");
