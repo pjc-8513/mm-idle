@@ -6,6 +6,8 @@ import { renderQuestPanel } from "./questManager.js";
 import { on } from "./events.js";
 import { floatingTextManager } from "./systems/floatingtext.js";
 import { renderSpellbookPanel } from "./spellbookPanel.js";
+import { updateDockIfEnemyChanged } from "./systems/dockManager.js";
+import { openDock, DOCK_TYPES } from "./systems/dockManager.js";
 
 export function initUI() {
   // panel switching
@@ -16,6 +18,18 @@ export function initUI() {
       showPanel(target);
     });
   });
+
+on("enemyDamaged", (enemy) => {
+    const dock = document.getElementById("mainDock");
+    if (dock && !dock.classList.contains("hidden")) {
+      console.log("enemy damaged");
+      if (state.activePanel === "panelArea") {
+        console.log("enemy damaged");
+        // Update the UI if that enemy is open in the dock
+        updateDockIfEnemyChanged(enemy);
+      }
+    }
+});  
 
 on("healTriggered", ({ amount }) => {
   if (state.activePanel !== "panelArea") return;
@@ -93,6 +107,7 @@ export function showPanel(panelId) {
     if (document.getElementById("enemiesGrid")) return;
     renderAreaPanel();
     setupEnemyEffectsCanvas();
+    openDock(DOCK_TYPES.AREA, { type: "quickSpells"});
 
   }
     

@@ -87,7 +87,30 @@ export const state = {
   
 };
 
-export const quickSpellState = {}
+export const quickSpellState = {
+  // array of spell IDs currently assigned to quick slots
+  registered: [],
+
+  // maximum number of quick slots available (can increase with upgrades)
+  maxSlots: 4,
+
+  // optional: stores the order and slot assignment
+  slots: [
+    // Example:
+    // { slotIndex: 0, spellId: "breathOfDecay" },
+    // { slotIndex: 1, spellId: "fireball" },
+  ],
+
+  // cooldowns for each spell (used by hotbar or combat loop)
+  cooldowns: {
+    // breathOfDecay: 0,
+    // fireball: 0,
+  },
+
+  // helper flag for UI refresh or rebind logic
+  dirty: false,
+};
+
 
 export function initState() {
   console.log("Game state initialized");

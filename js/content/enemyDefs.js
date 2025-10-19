@@ -9,6 +9,8 @@ export const ENEMY_TEMPLATES = {
     speed: 2,
     maxMp: 15,
     row: 0,
+    resistances: [],
+    weaknesses: ["physical"],
     description: "Nuisance dragon flies common throughout the land."
   },
   goblin: {
@@ -24,47 +26,8 @@ export const ENEMY_TEMPLATES = {
     attackFormula: (level) => Math.floor(3 + level * 1.2),
     xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1)),
     description: "A small, green humanoid creature known for its cunning and mischief.",
-    /*
-    resistances: {
-      physical: 0,
-      fire: 0,
-        water: 0,
-        earth: 0,
-        air: 0,
-        poison: 10,
-        light: 0,
-        dark: 0,
-    },
-    weaknesses: {
-        physical: 0,
-        fire: 0,
-        water: 10,
-        earth: 0,
-        air: 10,
-        poison: 0,
-        light: 10,
-        dark: 0,
-    },
-    */
-    // Special abilities (healer)
-    /*
-    specialAbilities: [{
-      type: "heal",
-      amount: 0.2,     // heals for 20% of target's max HP
-      interval: 3000,   // heals every 3 seconds
-      cost: 10 
-    }]
-    */
-    //isAOE: true,
-    /*
-    statusEffect: {
-      curse: {
-      key: 'curse',
-      chance: 1
-      }
-    }
-    */
-    //variants: ["Scout", "Warrior", "Chieftain"]
+    resistances: ["physical"],
+    weaknesses: ["water"]
   },
    bandit: {
     id: "bandit",
@@ -79,6 +42,8 @@ export const ENEMY_TEMPLATES = {
     attackFormula: (level) => Math.floor(4 + level * 1.3),
     goldFormula: (level) => Math.floor(14 + level * 3),
     xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1)),
+    resistances: ["pest"],
+    weaknesses: ["poison", "undead"]
     //variants: ["Thief", "Outlaw", "Captain"]
   },
   
@@ -94,7 +59,9 @@ export const ENEMY_TEMPLATES = {
     hpFormula: (level) => Math.floor(20 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
     attackFormula: (level) => Math.floor(7 + level * 1.4),
     goldFormula: (level) => Math.floor(10 + level * 1.5),
-    xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1))
+    xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1)),
+    resistances: ["earth", "undead"],
+    weaknesses: ["water"]
   },
     skeletonArcher: {
     id: "skeletonArcher",
@@ -108,7 +75,9 @@ export const ENEMY_TEMPLATES = {
     hpFormula: (level) => Math.floor(20 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
     attackFormula: (level) => Math.floor(7 + level * 1.4),
     goldFormula: (level) => Math.floor(10 + level * 1.5),
-    xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1))
+    xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1)),
+    resistances: ["physical"],
+    weaknesses: ["light", "fire", "water"]
   },
     swarm: {
       id: "swarm",
@@ -117,7 +86,9 @@ export const ENEMY_TEMPLATES = {
       elementType: "pest",
       tier: "boss",
       isBoss: true,
-      maxMp: 30
+      maxMp: 30,
+      resistances: [],
+      weaknesses: ["physical"]
     },
     goblinKing: {
     id: "goblinKing",
@@ -133,6 +104,8 @@ export const ENEMY_TEMPLATES = {
     goldFormula: (level) => Math.floor(60 + level * 3),
     xpFormula: (level) => Math.floor(30 * Math.pow(1.13, level - 1)),
     variants: ["Warlord", "Tyrant", "Destroyer"],
+    resistances: ["physical"],
+    weaknesses: ["water"],
     // Special abilities
     specialAbilities: [{
       type: "summon",

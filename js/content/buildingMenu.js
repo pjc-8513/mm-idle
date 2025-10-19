@@ -4,14 +4,14 @@ import { classes } from "./classes.js";
 import { abilities } from "./abilities.js";
 import { emit, on } from "../events.js";
 import { logMessage } from "../systems/log.js";
-import { openBuildingDock } from "../town.js";
+//import { openDock } from "../systems/dockManager.js";
 
 export function initBuildingMenu() {
     on("goldChanged", () => {
-  const dock = document.getElementById("buildingDock");
+  const dock = document.getElementById("mainDock");
   if (dock && !dock.classList.contains("hidden")) {
     const currentBuildingId = dock.getAttribute("data-building-id");
-    if (currentBuildingId) {
+    if (currentBuildingId && state.activePanel === "panelTown") {
       const building = state.buildings.find(b => b.id === currentBuildingId) 
         || { id: currentBuildingId, name: "Building" };
       const renderer = BUILDING_MENUS[currentBuildingId];
@@ -87,7 +87,7 @@ function getClassInfo(classId) {
   const level = partyState.classLevels[classId];
   const thisClass = classes.find((b) => b.id === classId);
   const name = thisClass.name;
-  console.log(name);
+  //console.log(name);
   if (level === undefined){ 
     return{
         id: classId,
@@ -103,6 +103,7 @@ function getClassInfo(classId) {
 }
 
 function getBuildingInfo(buildingId, level) {
+  //console.log(`building.id ${buildingId}`);
   const def = BUILDING_DEFS.find((b) => b.id === buildingId);
   if (!def) return null;
 
@@ -142,6 +143,7 @@ function getBuildingInfo(buildingId, level) {
 
 
 function unitProducingMenu(building) {
+ // console.log('unit producing building: ', building);
   const info = getBuildingInfo(building.id, building.level);
   const income = info?.effects?.goldIncomePerHit ?? 0;
 
@@ -178,11 +180,8 @@ window.exchangeGoldForExp = function (buildingId) {
     emit("goldChanged", state.resources.gold);
   } else {
     // Optional feedback (e.g. play a sound, flash red, etc.)
-    console.log("Not enough gold!");
+   // console.log("Not enough gold!");
     logMessage("Not enough gold!");
   }
 
-  // Re-render the dock to update button color & gold display
-  //const building = { id: buildingId, name: "Training Center" };
-  //openBuildingDock(building);
 };

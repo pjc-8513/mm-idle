@@ -1,5 +1,5 @@
 // area.js
-import { state, partyState } from "./state.js";
+import { state, partyState, quickSpellState } from "./state.js";
 import { emit, on } from "./events.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
@@ -8,6 +8,8 @@ import { spriteAnimationManager } from "./systems/spriteAnimationSystem.js ";
 import { setTarget } from "./systems/combatSystem.js";
 import { floatingTextManager } from "./systems/floatingtext.js";
 import { summonsState } from "./systems/summonSystem.js";
+import { openDock, DOCK_TYPES } from "./systems/dockManager.js";
+import { heroSpells } from "./content/heroSpells.js";
 
 /* -------------------------
    Wave Timer Management (Delta Time)
@@ -256,7 +258,9 @@ export function updateAreaPanel() {
   document.getElementById("waveTimerText").textContent = `${timeRemaining}s`;
 
   const grid = document.getElementById("enemiesGrid");
-  if (grid) grid.innerHTML = renderEnemiesGrid();
+  if (grid) {
+    grid.innerHTML = renderEnemiesGrid();
+  }
 
   const party = document.getElementById("partyDisplay");
   if (party) party.innerHTML = renderPartyDisplay();
@@ -506,7 +510,13 @@ export function updateEnemyCard(enemy, row, col) {
   // Set target on click
   card.onclick = () => {
     setTarget(row, col);
-    // console.log(`Set target to enemy at [${row}, ${col}]`);
+    console.log('clicked enemy: ', enemy);
+      openDock(DOCK_TYPES.AREA, { type: "enemy", data: enemy }, {
+      sourcePanel: state.activePanel,   // e.g. "panelTown"
+      sourceEl: card,                   // the actual DOM element clicked
+      persist: false                    // optional: true if this dock should remain across panel switches
+    });
+    
   };
   /*  
   // Add damage animation class if enemy was just damaged
@@ -1019,3 +1029,110 @@ export function setupEnemyEffectsCanvas() {
   
   // console.log('[Canvas] Sprite animation manager initialized');
 }
+
+export const AREA_MENUS = {
+  enemy: (enemy) => {
+    if (!enemy) return `<p>No enemy data available.</p>`;
+
+    // --- Format counters ---
+    const countersHTML = enemy.counters && Object.keys(enemy.counters).length
+      ? `<ul>${Object.entries(enemy.counters)
+          .map(([type, val]) => `<li>${type}: ${val}</li>`)
+          .join("")}</ul>`
+      : `<em>None</em>`;
+
+    // --- Format resistances ---
+    const resistancesHTML = enemy.resistances && Object.keys(enemy.resistances).length
+      ? `<ul>${Object.entries(enemy.resistances)
+          .map(([element, val]) => `<li>${element}: ${val}</li>`)
+          .join("")}</ul>`
+      : `<em>None</em>`;
+
+    // --- Format weaknesses ---
+    const weaknessesHTML = enemy.weaknesses && Object.keys(enemy.weaknesses).length
+      ? `<ul>${Object.entries(enemy.weaknesses)
+          .map(([element, val]) => `<li>${element}: ${val}</li>`)
+          .join("")}</ul>`
+      : `<em>None</em>`;
+
+    return `
+      <div class="area-menu" data-enemy-id="${enemy.uniqueId}">
+        <h3>${enemy.prefix} ${enemy.name}</h3>
+        <p>
+          HP: ${enemy.hp} / ${enemy.maxHp}<br>
+          <div class="middle-text">
+          Enemy Type: ${enemy.type}<br>
+          Element Type: ${enemy.elementType}
+          </div>
+        </p>
+        <div class="right-text">
+        <p><strong>Active Counters:</strong> ${countersHTML}</p>
+        <p><strong>Resistances:</strong> ${resistancesHTML}</p>
+        <p><strong>Weaknesses:</strong> ${weaknessesHTML}</p>
+        </div>
+      </div>
+    `;
+  },
+quickSpells: () => {
+  const registeredSpells = quickSpellState.registered;
+  if (registeredSpells.length === 0) {
+    return `
+      <p><strong>No hero spells registered</strong></p>
+    `;
+  }
+  
+  // Generate buttons for each registered spell
+  const spellButtons = registeredSpells
+    .map(spellId => {
+      // Find the spell data from heroSpells array
+      const spell = heroSpells.find(s => s.id === spellId);
+      if (!spell) return ''; // Skip if spell not found
+      
+      return `
+        <button 
+          class="quick-spell-btn" 
+          data-spell-id="${spell.id}"
+          title="${spell.name} - ${spell.description}"
+        >
+          <img src="${spell.icon}" alt="${spell.name}" class="spell-icon" />
+          <span class="spell-name">${spell.name}</span>
+          <span class="gem-cost">${spell.gemCost} gems</span>
+        </button>
+      `;
+    })
+    .join('');
+  
+  return `
+    <div class="quick-spells-container">
+      <h4>Quick Spells</h4>
+      ${spellButtons}
+    </div>
+  `;
+}
+};
+
+
+/*
+// docking menu
+export const AREA_MENUS = {
+  enemy: (enemy) => `
+    <div class="area-menu">
+      <h3>${enemy.prefix} ${enemy.name}</h3>
+      <p>HP: ${enemy.hp} <br>
+      Enemy Type: ${enemy.type} <br>
+      Element type: ${enemy.elementType}</p>
+      <p> Active counters: ${enemy.counters}<br>
+      Resistances: ${enemy.resistances}<br>
+      Weaknesses: ${enemy.weaknesses}
+    </div>
+  `,
+    quickSpells: (spells) => `
+    <div class="area-menu">
+      <h3>Quick Spells</h3>
+      <div class="spell-grid">
+        ${spells.map(sp => `<div class="spell">${sp.name}</div>`).join("")}
+      </div>
+    </div>
+  `,
+};
+*/

@@ -367,7 +367,7 @@ export function damageEnemy(row, col, damage, element) {
   enemy.hp = Math.max(0, enemy.hp - applyDmg);
   enemy.justDamaged = true;
   
-  emit("enemyDamaged", { row, col, enemy, applyDmg });
+  emit("enemyDamaged", enemy);
   
   // Check if enemy died
   if (enemy.hp <= 0) {

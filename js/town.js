@@ -4,6 +4,7 @@ import { buildings } from "./content/buildingDefs.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 import { updateUnlockedSkills } from "./party.js";
 import { calculateStats } from "./systems/math.js";
+import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
 import { BUILDING_MENUS } from "./content/buildingMenu.js";
 
 // Store the last state to detect changes
@@ -34,14 +35,16 @@ export function initBuildingPanel() {
   });
 }
 
+/* replacing with listener in dockManger
 // close dock menu
 document.addEventListener("click", (e) => {
-  const dock = document.getElementById("buildingDock");
-  if (!dock.classList.contains("hidden") && !dock.contains(e.target)) {
-    closeBuildingDock();
+  const dock = document.getElementById("mainDock");
+  const currentBuildingId = dock.getAttribute("data-building-id");
+  if ((state.activePanel === "panelTown" && currentBuildingId) && !dock.classList.contains("hidden") && !dock.contains(e.target)) {
+    closeDock();
   }
 });
-
+*/
 
 export function renderBuildingPanel() {
   const panel = document.getElementById("panelTown");
@@ -134,7 +137,7 @@ function fullRenderBuildingPanel() {
     buildingCard.appendChild(btn);
     buildingCard.addEventListener("click", (e) => {
       e.stopPropagation(); // prevent bubbling to body
-      openBuildingDock(building);
+      openDock(DOCK_TYPES.BUILDING, building);
     });
     container.appendChild(buildingCard);
   });
@@ -409,26 +412,4 @@ function upgradeBuilding(buildingId) {
     if (state.resources.gems !== lastTotalGems) emit("gemsChanged", state.resources.gems);
     emit("buildingsChanged", state.buildings);
   }
-}
-
-export function openBuildingDock(building) {
-  const dock = document.getElementById("buildingDock");
-  const renderer = BUILDING_MENUS[building.id];
-
-  if (renderer) {
-    dock.setAttribute("data-building-id", building.id); // ✅ track open building
-    dock.innerHTML = renderer(building);
-    dock.classList.remove("hidden");
-
-    // ✅ Prevent clicks inside the dock from closing it
-    dock.onclick = (e) => e.stopPropagation();
-  } else {
-    dock.innerHTML = `<h3>${building.name}</h3><p>No actions available.</p>`;
-    dock.classList.remove("hidden");
-  }
-}
-
-function closeBuildingDock() {
-  const dock = document.getElementById("buildingDock");
-  dock.classList.add("hidden");
 }

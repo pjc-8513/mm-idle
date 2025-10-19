@@ -445,7 +445,7 @@ export function executeAttack(attacker) {
   const income = incomeSystem.applyHitIncome(attacker, damageResult.damage);
   
   // Log income for debugging
-  logMessage(`Income from attack: ${income.toFixed(0)} gold`);
+  //logMessage(`Income from attack: ${income.toFixed(0)} gold`);
   //console.log(`Income from attack: ${income} gold`);
 
   emit( "coinAnimation", position );
