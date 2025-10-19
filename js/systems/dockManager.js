@@ -122,6 +122,21 @@ export function getBuildingMenu(building) {
 export function closeDock() {
   if (state.sourcePanel === "panelArea"){ 
     openDock(DOCK_TYPES.AREA, { type: "quickSpells"});
+    // Add event delegation for quick spell buttons
+document.addEventListener('click', (e) => {
+  const spellBtn = e.target.closest('.quick-spell-btn');
+  if (spellBtn) {
+    const spellId = spellBtn.dataset.spellId;
+    const spell = heroSpells.find(s => s.id === spellId);
+    console.log(`added listener for ${spell.id}`);
+    
+    if (spell) {
+      spell.activate();
+      // Optionally refresh the UI after casting
+      // updateQuickSpellsUI();
+    }
+  }
+});
   } else {
     console.log(state.sourcePanel);
     state.open = false;

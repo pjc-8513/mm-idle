@@ -607,7 +607,7 @@ body, html {
 }
 
 .main-dock {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
@@ -651,6 +651,21 @@ body, html {
 
 .main-dock button:hover {
   background: #666;
+}
+
+.area-menu .enemy-text-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.area-menu .grid-text-cell {
+  background: rgba(255,255,255,0.05);
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.95em;
 }
 
 

@@ -24,7 +24,7 @@ on("enemyDamaged", (enemy) => {
     if (dock && !dock.classList.contains("hidden")) {
       console.log("enemy damaged");
       if (state.activePanel === "panelArea") {
-        console.log("enemy damaged");
+        //console.log("enemy damaged");
         // Update the UI if that enemy is open in the dock
         updateDockIfEnemyChanged(enemy);
       }

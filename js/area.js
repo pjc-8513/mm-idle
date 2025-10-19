@@ -1034,41 +1034,21 @@ export const AREA_MENUS = {
   enemy: (enemy) => {
     if (!enemy) return `<p>No enemy data available.</p>`;
 
-    // --- Format counters ---
-    const countersHTML = enemy.counters && Object.keys(enemy.counters).length
-      ? `<ul>${Object.entries(enemy.counters)
-          .map(([type, val]) => `<li>${type}: ${val}</li>`)
-          .join("")}</ul>`
-      : `<em>None</em>`;
-
-    // --- Format resistances ---
-    const resistancesHTML = enemy.resistances && Object.keys(enemy.resistances).length
-      ? `<ul>${Object.entries(enemy.resistances)
-          .map(([element, val]) => `<li>${element}: ${val}</li>`)
-          .join("")}</ul>`
-      : `<em>None</em>`;
-
-    // --- Format weaknesses ---
-    const weaknessesHTML = enemy.weaknesses && Object.keys(enemy.weaknesses).length
-      ? `<ul>${Object.entries(enemy.weaknesses)
-          .map(([element, val]) => `<li>${element}: ${val}</li>`)
-          .join("")}</ul>`
-      : `<em>None</em>`;
+    const formatList = (obj) =>
+      obj && Object.keys(obj).length
+        ? `<ul>${Object.entries(obj).map(([key, val]) => `<li>${key}: ${val}</li>`).join("")}</ul>`
+        : `<em>None</em>`;
 
     return `
       <div class="area-menu" data-enemy-id="${enemy.uniqueId}">
         <h3>${enemy.prefix} ${enemy.name}</h3>
-        <p>
-          HP: ${enemy.hp} / ${enemy.maxHp}<br>
-          <div class="middle-text">
-          Enemy Type: ${enemy.type}<br>
-          Element Type: ${enemy.elementType}
-          </div>
-        </p>
-        <div class="right-text">
-        <p><strong>Active Counters:</strong> ${countersHTML}</p>
-        <p><strong>Resistances:</strong> ${resistancesHTML}</p>
-        <p><strong>Weaknesses:</strong> ${weaknessesHTML}</p>
+        <div class="enemy-text-grid">
+          <div class="grid-text-cell"><strong>Name:</strong><br>${enemy.name}</div>
+          <div class="grid-text-cell"><strong>Weaknesses:</strong><br>${formatList(enemy.weaknesses)}</div>
+          <div class="grid-text-cell"><strong>Counters:</strong><br>${formatList(enemy.counters)}</div>
+          <div class="grid-text-cell"><strong>HP:</strong><br>${enemy.hp} / ${enemy.maxHp}</div>
+          <div class="grid-text-cell"><strong>Resistances:</strong><br>${formatList(enemy.resistances)}</div>
+          <div class="grid-text-cell"><strong>Type:</strong><br>${enemy.type}<br>${enemy.elementType}</div>
         </div>
       </div>
     `;
