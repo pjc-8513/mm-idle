@@ -123,10 +123,11 @@ export function handleGameStart() {
   }
 }
 
-export function handleAreaChanged(newAreaId) {
+export async function handleAreaChanged(newAreaId) {
   // When switching areas, reset to wave 1 and start
   state.areaWave = 1;
   state.currentArea = newAreaId;
+  await preloadAreaEnemies(state.currentArea);
   startWave();
 }
 
@@ -342,6 +343,7 @@ export function createEnemy(enemyId, wave, isBoss = false) {
     resistances: { ...template.resistances },
     weaknesses: { ...template.weaknesses },
     specialAbilities: template.specialAbilities ? [...template.specialAbilities] : [],
+    image: template.image || "../../assets/images/enemies/goblin.webp",
     isBoss
   };
 }
@@ -371,6 +373,7 @@ export function damageEnemy(row, col, damage, element) {
   
   // Check if enemy died
   if (enemy.hp <= 0) {
+    state.enemies[row][col] = null; // Remove enemy from grid
     emit("enemyDefeated", {
       enemy: enemy,
       wave: state.currentWave, 
@@ -384,4 +387,28 @@ export function damageEnemy(row, col, damage, element) {
     }, 100);
   
   return true;
+}
+
+const areaAssets = {
+  newSorpigal: ["swarm.webp", "mage.webp", "dragonFly.webp", "bandit.webp"],
+  mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp"],
+  // ...
+};
+
+function preloadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+export async function preloadAreaEnemies(areaName) {
+  const images = areaAssets[areaName];
+  if (!images) return;
+  
+  const basePath = "assets/enemies/";
+  await Promise.all(images.map(img => preloadImage(basePath + img)));
+  console.log(`[Preload] Loaded ${images.length} enemy sprites for ${areaName}`);
 }

@@ -44,7 +44,9 @@ export const DOCK_TYPES = {
   AREA: "area",
 };
 
-const dock = document.getElementById("mainDock");
+function getDock() {
+  return document.getElementById("mainDock");
+}
 
 const state = {
   open: false,
@@ -78,12 +80,18 @@ export function openDock(type, context = {}, opts = {}) {
   state.sourceEl = opts.sourceEl || null;
   state.persist = !!opts.persist;
 
-  dock.innerHTML = renderContent();
-  dock.classList.remove("hidden");
-  dock.classList.add("visible");
-  dock.setAttribute("data-dock-type", type);
-  if (state.sourcePanel) dock.setAttribute("data-source-panel", state.sourcePanel);
-  else dock.removeAttribute("data-source-panel");
+  const dockEl = getDock();
+  if (!dockEl) {
+    console.warn("openDock: #mainDock not found in DOM");
+    return;
+  }
+
+  dockEl.innerHTML = renderContent();
+  dockEl.classList.remove("hidden");
+  dockEl.classList.add("visible");
+  dockEl.setAttribute("data-dock-type", type);
+  if (state.sourcePanel) dockEl.setAttribute("data-source-panel", state.sourcePanel);
+  else dockEl.removeAttribute("data-source-panel");
   state.open = true;
 }
 
@@ -120,37 +128,35 @@ export function getBuildingMenu(building) {
 }
 
 export function closeDock() {
-  if (state.sourcePanel === "panelArea"){ 
-    openDock(DOCK_TYPES.AREA, { type: "quickSpells"});
-    // Add event delegation for quick spell buttons
-document.addEventListener('click', (e) => {
-  const spellBtn = e.target.closest('.quick-spell-btn');
-  if (spellBtn) {
-    const spellId = spellBtn.dataset.spellId;
-    const spell = heroSpells.find(s => s.id === spellId);
-    console.log(`added listener for ${spell.id}`);
-    
-    if (spell) {
-      spell.activate();
-      // Optionally refresh the UI after casting
-      // updateQuickSpellsUI();
+  // If in panelArea, keep the spell dock open
+  if (state.sourcePanel === "panelArea" && state.type === DOCK_TYPES.AREA) {
+    // If the current dock isn't showing quick spells, show them
+    if (state.context?.type !== "quickSpells") {
+      openDock(DOCK_TYPES.AREA, { type: "quickSpells" }, {
+        sourcePanel: "panelArea",
+        persist: true
+      });
     }
+    // Don't close the dock
+    return;
   }
-});
-  } else {
-    console.log(state.sourcePanel);
-    state.open = false;
-    state.type = null;
-    state.context = null;
-    state.sourcePanel = null;
-    state.sourceEl = null;
-    state.persist = false;
-    dock.classList.remove("visible");
-    dock.classList.add("hidden");
-    dock.removeAttribute("data-dock-type");
-    dock.innerHTML = "";
-  }
+
+  // Otherwise, close normally
+  state.open = false;
+  state.type = null;
+  state.context = null;
+  state.sourcePanel = null;
+  state.sourceEl = null;
+  state.persist = false;
+  const dockEl = getDock();
+  if (!dockEl) return;
+
+  dockEl.classList.remove("visible");
+  dockEl.classList.add("hidden");
+  dockEl.removeAttribute("data-dock-type");
+  dockEl.innerHTML = "";
 }
+
 
 export function updateDockIfEnemyChanged(updatedEnemy) {
   const dock = document.getElementById("mainDock");
@@ -200,8 +206,11 @@ document.addEventListener("click", (e) => {
 
   const clickEl = e.target;
 
+  const dockEl = getDock();
+  if (!dockEl) return;
+
   // inside dock -> keep open
-  if (dock.contains(clickEl)) return;
+  if (dockEl.contains(clickEl)) return;
 
   // click on opener element -> keep open
   if (state.sourceEl && (state.sourceEl === clickEl || state.sourceEl.contains(clickEl))) return;

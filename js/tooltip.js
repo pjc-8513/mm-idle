@@ -1,3 +1,4 @@
+import { getEnemyCanvasPosition } from "./area.js";
 // tooltip.js
 
 /**
@@ -5,6 +6,7 @@
  * Returns the tooltip DOM element.
  */
 export function ensureTooltip(container) {
+  //console.log('ensureTooltip called');
   let tooltip = container.querySelector(".requirement-tooltip");
   if (!tooltip) {
     tooltip = document.createElement("div");
@@ -13,6 +15,18 @@ export function ensureTooltip(container) {
   }
   return tooltip;
 }
+
+export function ensureEnemyTooltip(container) {
+  const existing = document.querySelector(`.enemy-tooltip[data-owner-id="${container.dataset.enemyId}"]`);
+  if (existing) return existing;
+
+  const tooltip = document.createElement("div");
+  tooltip.classList.add("enemy-tooltip");
+  tooltip.setAttribute("data-owner-id", container.dataset.enemyId); // optional for tracking
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
 
 /**
  * Attaches hover listeners for showing/hiding a requirements tooltip.
@@ -112,6 +126,65 @@ if (!buildingUpgradeLimit.met) {
   tooltip.style.display = "block";
 }
 
+export function showEnemyTooltip(container, enemy) {
+  const tooltip = ensureEnemyTooltip(container);
+  const pos = getEnemyCanvasPosition(enemy.position.row, enemy.position.col);
+  if (!tooltip || !enemy) return;
+
+  const formatList = (obj) =>
+    obj && Object.keys(obj).length
+      ? `<ul>${Object.entries(obj).map(([key, val]) => `<li>${key}: ${val}</li>`).join("")}</ul>`
+      : `<em>None</em>`;
+
+  tooltip.innerHTML = `
+    <strong>${enemy.prefix} ${enemy.name}</strong><br>
+    <div><strong>HP:</strong> ${enemy.hp} / ${enemy.maxHp}</div>
+    <div><strong>Type:</strong> ${enemy.type} (${enemy.elementType})</div>
+    <div><strong>Weaknesses:</strong> ${formatList(enemy.weaknesses)}</div>
+    <div><strong>Counters:</strong> ${formatList(enemy.counters)}</div>
+    <div><strong>Resistances:</strong> ${formatList(enemy.resistances)}</div>
+  `;
+  tooltip.style.display = "block";
+  const rect = container.getBoundingClientRect();
+  tooltip.style.top = `${pos.y/2}px`;
+  tooltip.style.left = `${pos.x}px`;
+  console.log('showEnemyTooltip called for ', enemy);
+  console.log('Tooltip content: ', tooltip.innerHTML);
+  console.log("Tooltip position:", tooltip.getBoundingClientRect());
+
+}
+
+export function attachEnemyTooltip(container, enemy) {
+  ensureEnemyTooltip(container);
+  container.addEventListener("mouseenter", (e) => {
+    showEnemyTooltip(container, enemy);
+    const tooltip = document.querySelector(`.enemy-tooltip[data-owner-id="${container.dataset.enemyId}"]`);
+    if (tooltip) {
+      tooltip.style.top = `${e.clientY + 10}px`;
+      tooltip.style.left = `${e.clientX + 10}px`;
+    }
+  });
+  container.addEventListener("mouseleave", () => hideEnemyTooltip(container));
+  container.addEventListener("click", () => {
+    const tooltip = document.querySelector(`.enemy-tooltip[data-owner-id="${container.dataset.enemyId}"]`);
+    const rect = tooltip?.getBoundingClientRect();
+    const styles = tooltip ? window.getComputedStyle(tooltip) : null;
+/*
+    console.log("🔍 Enemy Card Clicked:");
+    console.log("➡️ Enemy Object:", enemy);
+    console.log("📦 Tooltip Element:", tooltip);
+    console.log("📐 Tooltip Position:", rect);
+    console.log("🎨 Tooltip Styles:", styles);
+    console.log("🧭 Tooltip Display:", styles?.display);
+    console.log("👁️ Tooltip Visibility:", styles?.visibility);
+    console.log("🧱 Tooltip Opacity:", styles?.opacity);
+    console.log("🧩 Tooltip Inner HTML:", tooltip?.innerHTML);
+*/
+  });
+}
+
+
+
 
 /**
  * Hide requirements tooltip.
@@ -121,4 +194,12 @@ export function hideRequirementTooltip(container) {
   if (tooltip) {
     tooltip.style.display = "none";
   }
+}
+
+export function hideEnemyTooltip(container) {
+  const tooltip = document.querySelector(`.enemy-tooltip[data-owner-id="${container.dataset.enemyId}"]`);
+  if (tooltip) {
+    tooltip.style.display = "none";
+  }
+  console.log('hideRequirementTooltip called');
 }

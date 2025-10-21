@@ -10,6 +10,7 @@ export const ENEMY_TEMPLATES = {
     maxMp: 15,
     row: 0,
     resistances: [],
+    image: "../../assets/images/enemies/dragonFly.webp",
     weaknesses: ["physical"],
     description: "Nuisance dragon flies common throughout the land."
   },
@@ -22,6 +23,7 @@ export const ENEMY_TEMPLATES = {
     speed: 1.5,
     maxMp: 20,
     row: 0,
+    image: "../../assets/images/enemies/goblin.webp",
     hpFormula: (level) => Math.floor(10 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 4),
     attackFormula: (level) => Math.floor(3 + level * 1.2),
     xpFormula: (level) => Math.floor(20 * Math.pow(1.13, level - 1)),
@@ -38,6 +40,7 @@ export const ENEMY_TEMPLATES = {
     dodge: .30,
     speed: 2.5,
     row: 1,
+    image: "../../assets/images/enemies/bandit.webp",
     hpFormula: (level) => Math.floor(15 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
     attackFormula: (level) => Math.floor(4 + level * 1.3),
     goldFormula: (level) => Math.floor(14 + level * 3),
@@ -56,6 +59,7 @@ export const ENEMY_TEMPLATES = {
     speed: 1.5,
     row: 2,
     isMagic: true,
+    image: "../../assets/images/enemies/mage.webp",
     hpFormula: (level) => Math.floor(20 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
     attackFormula: (level) => Math.floor(7 + level * 1.4),
     goldFormula: (level) => Math.floor(10 + level * 1.5),
@@ -72,6 +76,7 @@ export const ENEMY_TEMPLATES = {
     speed: 1.5,
     row: 2,
     isMagic: false,
+    image: "../../assets/images/enemies/skeletonArcher.webp",
     hpFormula: (level) => Math.floor(20 + level * (Math.random() * 2 + 25) + Math.pow(level, 1.2) * 5),
     attackFormula: (level) => Math.floor(7 + level * 1.4),
     goldFormula: (level) => Math.floor(10 + level * 1.5),
@@ -88,6 +93,7 @@ export const ENEMY_TEMPLATES = {
       isBoss: true,
       maxMp: 30,
       resistances: [],
+      image: "../../assets/images/enemies/swarm.webp",
       weaknesses: ["physical"]
     },
     goblinKing: {
@@ -106,6 +112,8 @@ export const ENEMY_TEMPLATES = {
     variants: ["Warlord", "Tyrant", "Destroyer"],
     resistances: ["physical"],
     weaknesses: ["water"],
+    image: "../../assets/images/enemies/goblinKing.webp",
+    description: "The Goblin King is a formidable leader of goblin tribes, known for his cunning tactics and ruthless nature.",
     // Special abilities
     specialAbilities: [{
       type: "summon",

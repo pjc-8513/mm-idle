@@ -19,6 +19,19 @@ export function initUI() {
     });
   });
 
+  document.addEventListener('click', (e) => {
+  const spellBtn = e.target.closest('.quick-spell-btn');
+  if (!spellBtn) return; // clicked something else
+
+  const spellId = spellBtn.dataset.spellId;
+  const spell = heroSpells.find(s => s.id === spellId);
+  if (spell) {
+    spell.activate();
+    console.log(`Casted ${spell.name}`);
+  }
+});
+
+
 on("enemyDamaged", (enemy) => {
     const dock = document.getElementById("mainDock");
     if (dock && !dock.classList.contains("hidden")) {
@@ -104,10 +117,22 @@ export function showPanel(panelId) {
     document.getElementById("resourceBar").classList.add("area-bg");
     removeBackgroundElement("sidePanel");
     document.getElementById("sidePanel").classList.add("area-bg");
-    if (document.getElementById("enemiesGrid")) return;
-    renderAreaPanel();
+    const enemiesGridExists = !!document.getElementById("enemiesGrid");
+    if (!enemiesGridExists) {
+      renderAreaPanel();
+    }
+    // Ensure the enemy effects canvas is setup (idempotent)
     setupEnemyEffectsCanvas();
-    openDock(DOCK_TYPES.AREA, { type: "quickSpells"});
+
+    // Defer the dock opening until the DOM is updated — always attempt to open
+    // the quick-spells dock when switching to the Area panel so it reappears
+    // even if the panel was previously rendered and the dock closed.
+    requestAnimationFrame(() => {
+      openDock(DOCK_TYPES.AREA, { type: "quickSpells" }, {
+        sourcePanel: "panelArea",
+        persist: true
+      });
+    });
 
   }
     

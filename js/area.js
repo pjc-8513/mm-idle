@@ -1,4 +1,5 @@
 // area.js
+import { attachEnemyTooltip } from "./tooltip.js";
 import { state, partyState, quickSpellState } from "./state.js";
 import { emit, on } from "./events.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
@@ -260,6 +261,18 @@ export function updateAreaPanel() {
   const grid = document.getElementById("enemiesGrid");
   if (grid) {
     grid.innerHTML = renderEnemiesGrid();
+            for (let row = 0; row < 3; row++) {
+              for (let col = 0; col < 3; col++) {
+                const enemy = state.enemies[row] && state.enemies[row][col];
+                if (enemy) {
+                  const container = document.querySelector(`[data-enemy-id="${enemy.uniqueId}"]`);
+                  if (container) {
+                    attachEnemyTooltip(container, enemy);
+                    //console.log('Attached tooltip to enemy: ', enemy);
+                  }
+                }
+              }
+            }
   }
 
   const party = document.getElementById("partyDisplay");
@@ -413,9 +426,13 @@ function renderEnemyCard(enemy, row, col) {
   const elementClass = enemy.elementType || "default";
   const bossClass = enemy.isBoss ? "boss" : "";
 
-  
+  const spriteHTML = template.image
+    ? `<img class="enemy-sprite" src="${template.image}" alt="${enemy.name || template.baseName}">`
+    : `<div class="enemy-placeholder"></div>`;
+
   return `
-    <div class="enemy-card ${elementClass} ${bossClass}" id="enemy-${row}-${col}">
+    <div class="enemy-card ${elementClass} ${bossClass}" id="enemy-${row}-${col}" data-enemy-id="${enemy.uniqueId}">
+      ${spriteHTML}
       <div class="enemy-name">${enemy.name || template.baseName}</div>
       <div class="enemy-level">Lv.${enemy.level}</div>
       <div class="enemy-type">${template.type}</div>
@@ -432,8 +449,8 @@ function renderEnemyCard(enemy, row, col) {
       }
     </div>
   `;
-
 }
+
 
 export function updateEnemiesGrid() {
   if (!Array.isArray(state.enemies)) {
@@ -511,11 +528,13 @@ export function updateEnemyCard(enemy, row, col) {
   card.onclick = () => {
     setTarget(row, col);
     console.log('clicked enemy: ', enemy);
+    /*
       openDock(DOCK_TYPES.AREA, { type: "enemy", data: enemy }, {
       sourcePanel: state.activePanel,   // e.g. "panelTown"
       sourceEl: card,                   // the actual DOM element clicked
       persist: false                    // optional: true if this dock should remain across panel switches
     });
+    */
     
   };
   /*  
@@ -711,6 +730,7 @@ function addEnemiesGridCSS() {
     }
     
     .hp-bar {
+      z-index: 9;
       width: 100%;
       height: 10px;
       background: #ddd;
@@ -1034,6 +1054,16 @@ export const AREA_MENUS = {
   enemy: (enemy) => {
     if (!enemy) return `<p>No enemy data available.</p>`;
 
+    return `
+      <div class="enemy-hover-target" data-enemy-id="${enemy.uniqueId}">
+        <span>${enemy.prefix} ${enemy.name}</span>
+      </div>
+    `;
+  },
+/*
+  enemy: (enemy) => {
+    if (!enemy) return `<p>No enemy data available.</p>`;
+
     const formatList = (obj) =>
       obj && Object.keys(obj).length
         ? `<ul>${Object.entries(obj).map(([key, val]) => `<li>${key}: ${val}</li>`).join("")}</ul>`
@@ -1053,6 +1083,7 @@ export const AREA_MENUS = {
       </div>
     `;
   },
+  */
 quickSpells: () => {
   const registeredSpells = quickSpellState.registered;
   if (registeredSpells.length === 0) {
