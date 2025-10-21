@@ -13,7 +13,8 @@ import { logMessage } from './log.js';
 import { abilities } from '../content/abilities.js';
 import { getElementalMultiplier, getElementalMatchup } from './elementalSystem.js';
 import { floatingTextManager } from './floatingtext.js';
-import { getEnemyCanvasPosition } from "../area.js";
+import { updateAreaPanel, getEnemyCanvasPosition } from "../area.js";
+import { removeEnemyTooltipById, removeAllEnemyTooltips } from "../tooltip.js";
 
 // Combat configuration
 const COMBAT_CONFIG = {
@@ -559,15 +560,22 @@ function handleWaveCleared() {
 
 function getEnemyAt(row, col) {
   if (row < 0 || row > 2 || col < 0 || col > 2) return null;
+  console.log('enemy: ', state.enemies[row][col]);
   return state.enemies[row][col];
 }
 
 function handleEnemyDefeated({ row, col }) {
+  //console.log(`Enemy defeated at position: ${row}, ${col}`);
   const enemy = getEnemyAt(row, col);
     if (enemy) {
+    removeEnemyTooltipById(enemy.uniqueId);
+    //console.log(`Enemy defeated at position: ${row}, ${col}`);
+    //removeAllEnemyTooltips();
+    //updateAreaPanel();
     // ✅ Award kill bounty
     const bounty = incomeSystem.applyKillIncome(enemy);
     logMessage(`Bounty: ${bounty.toFixed(2)} gold`);
+    state.enemies[row][col] = null; // Remove enemy from grid
   }
   // If current target was defeated, find new target
   if (combatState.currentTarget && 

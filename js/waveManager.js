@@ -373,7 +373,7 @@ export function damageEnemy(row, col, damage, element) {
   
   // Check if enemy died
   if (enemy.hp <= 0) {
-    state.enemies[row][col] = null; // Remove enemy from grid
+    //state.enemies[row][col] = null; // Remove enemy from grid
     emit("enemyDefeated", {
       enemy: enemy,
       wave: state.currentWave, 

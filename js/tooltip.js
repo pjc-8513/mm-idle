@@ -148,9 +148,9 @@ export function showEnemyTooltip(container, enemy) {
   const rect = container.getBoundingClientRect();
   tooltip.style.top = `${pos.y/2}px`;
   tooltip.style.left = `${pos.x}px`;
-  console.log('showEnemyTooltip called for ', enemy);
-  console.log('Tooltip content: ', tooltip.innerHTML);
-  console.log("Tooltip position:", tooltip.getBoundingClientRect());
+  //console.log('showEnemyTooltip called for ', enemy);
+  //console.log('Tooltip content: ', tooltip.innerHTML);
+  //console.log("Tooltip position:", tooltip.getBoundingClientRect());
 
 }
 
@@ -183,6 +183,22 @@ export function attachEnemyTooltip(container, enemy) {
   });
 }
 
+
+export function removeEnemyTooltipById(enemyId) {
+  const tooltip = document.querySelector(`.enemy-tooltip[data-owner-id="${enemyId}"]`);
+  if (tooltip) {
+    //const container = document.querySelector(`[data-enemy-id="${uniqueId}"]`);    
+    tooltip.style.display = "none";
+    tooltip.remove();
+    console.log(`Tooltip for enemy ${enemyId} removed`);
+  }
+}
+
+export function removeAllEnemyTooltips() {
+  const tooltips = document.querySelectorAll(".enemy-tooltip");
+  tooltips.forEach((tooltip) => tooltip.remove());
+  console.log("All enemy tooltips removed");
+}
 
 
 

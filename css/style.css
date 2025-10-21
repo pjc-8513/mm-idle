@@ -40,26 +40,26 @@ body, html {
 }
 
 #resourceBar.town-bg {
-  background: url('../assets/images/town-top.png') no-repeat center center;
+  background: url('../assets/images/town-top.webp') no-repeat center center;
   background-size: cover;
   color: #fff;
   text-shadow: 1px 1px 2px #000;
 }
 
 #resourceBar.spellbook-bg {
-  background: url('../assets/images/spellbook-top.png') no-repeat center center;
+  background: url('../assets/images/spellbook-top.webp') no-repeat center center;
   background-size: cover;
   color: #fff;
   text-shadow: 1px 1px 2px #000;
 }
 #resourceBar.party-bg {
-  background: url('../assets/images/party-top.png') no-repeat center center;
+  background: url('../assets/images/party-top.webp') no-repeat center center;
   background-size: cover;
   color: #fff;
   text-shadow: 1px 1px 2px #000;
 }
 #resourceBar.area-bg {
-  background: url('../assets/images/area-top.png') no-repeat center center;
+  background: url('../assets/images/area-top.webp') no-repeat center center;
   background-size: cover;
   color: #fff;
   text-shadow: 1px 1px 2px #000;
@@ -79,7 +79,7 @@ body, html {
 }
 
 #game.party-bg {
-  background: url('../assets/images/party-bg.png') no-repeat center center;
+  background: url('../assets/images/party-bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.95;
   padding: 20px;
@@ -87,7 +87,7 @@ body, html {
 }
 
 #game.spellbook-bg {
-  background: url('../assets/images/spellbook.png') no-repeat center center;
+  background: url('../assets/images/spellbook-bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.95;
   padding: 20px;
@@ -95,7 +95,7 @@ body, html {
 }
 
 #game.area-bg {
-  background: url('../assets/images/main_bg.png') no-repeat center center;
+  background: url('../assets/images/main_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.95;
   padding: 20px;
@@ -103,7 +103,7 @@ body, html {
 }
 
 #game.town-bg {
-  background: url('../assets/images/town_bg.png') no-repeat center center;
+  background: url('../assets/images/town-bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.95;
   padding: 20px;
@@ -127,22 +127,22 @@ body, html {
 }
 
 #sidePanel.town-bg {
-  background: url('../assets/images/town-side.png') no-repeat center center;
+  background: url('../assets/images/town-side.webp') no-repeat center center;
   background-size: cover;
 }
 
 #sidePanel.spellbook-bg {
-  background: url('../assets/images/spellbook-side.png') no-repeat center center;
+  background: url('../assets/images/spellbook-side.webp') no-repeat center center;
   background-size: cover;
 }
 
 #sidePanel.party-bg {
-  background: url('../assets/images/party-side.png') no-repeat center center;
+  background: url('../assets/images/party-side.webp') no-repeat center center;
   background-size: cover;
 }
 
 #sidePanel.area-bg {
-  background: url('../assets/images/area-side.png') no-repeat center center;
+  background: url('../assets/images/area-side.webp') no-repeat center center;
   background-size: cover;
 }
 

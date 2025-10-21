@@ -1,5 +1,5 @@
 // area.js
-import { attachEnemyTooltip } from "./tooltip.js";
+import { attachEnemyTooltip, removeAllEnemyTooltips } from "./tooltip.js";
 import { state, partyState, quickSpellState } from "./state.js";
 import { emit, on } from "./events.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
@@ -17,7 +17,7 @@ import { heroSpells } from "./content/heroSpells.js";
    -------------------------*/
 
 const BASE_MIN_TIME = 20;        // minimum seconds
-const BASE_MAX_TIME = 60;        // maximum seconds
+const BASE_MAX_TIME = 40;        // maximum seconds
 const HP_TIME_RATIO = 2;         // each point of HP = 2 seconds of wave time
 let maxTimeUpgradeBonus = 0;     // can be modified by items/upgrades later
 let timeRemaining = 40;
@@ -257,7 +257,7 @@ export function updateAreaPanel() {
   document.getElementById("areaDescription").textContent = currentArea.description;
   document.getElementById("waveInfo").textContent = `Wave: ${state.areaWave}/${currentArea.maxWaves}`;
   document.getElementById("waveTimerText").textContent = `${timeRemaining}s`;
-
+  removeAllEnemyTooltips();
   const grid = document.getElementById("enemiesGrid");
   if (grid) {
     grid.innerHTML = renderEnemiesGrid();
@@ -1060,30 +1060,7 @@ export const AREA_MENUS = {
       </div>
     `;
   },
-/*
-  enemy: (enemy) => {
-    if (!enemy) return `<p>No enemy data available.</p>`;
 
-    const formatList = (obj) =>
-      obj && Object.keys(obj).length
-        ? `<ul>${Object.entries(obj).map(([key, val]) => `<li>${key}: ${val}</li>`).join("")}</ul>`
-        : `<em>None</em>`;
-
-    return `
-      <div class="area-menu" data-enemy-id="${enemy.uniqueId}">
-        <h3>${enemy.prefix} ${enemy.name}</h3>
-        <div class="enemy-text-grid">
-          <div class="grid-text-cell"><strong>Name:</strong><br>${enemy.name}</div>
-          <div class="grid-text-cell"><strong>Weaknesses:</strong><br>${formatList(enemy.weaknesses)}</div>
-          <div class="grid-text-cell"><strong>Counters:</strong><br>${formatList(enemy.counters)}</div>
-          <div class="grid-text-cell"><strong>HP:</strong><br>${enemy.hp} / ${enemy.maxHp}</div>
-          <div class="grid-text-cell"><strong>Resistances:</strong><br>${formatList(enemy.resistances)}</div>
-          <div class="grid-text-cell"><strong>Type:</strong><br>${enemy.type}<br>${enemy.elementType}</div>
-        </div>
-      </div>
-    `;
-  },
-  */
 quickSpells: () => {
   const registeredSpells = quickSpellState.registered;
   if (registeredSpells.length === 0) {
