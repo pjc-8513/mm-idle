@@ -5,7 +5,7 @@
  */
 
 import { state, partyState } from '../state.js';
-import { calculatePercentage } from '../systems/math.js';
+//import { calculatePercentage } from '../systems/math.js';
 import { emit, on } from '../events.js';
 import { damageEnemy, checkWaveCleared } from '../waveManager.js';
 import { incomeSystem } from "../incomeSystem.js";
@@ -13,8 +13,8 @@ import { logMessage } from './log.js';
 import { abilities } from '../content/abilities.js';
 import { getElementalMultiplier, getElementalMatchup } from './elementalSystem.js';
 import { floatingTextManager } from './floatingtext.js';
-import { updateAreaPanel, getEnemyCanvasPosition } from "../area.js";
-import { removeEnemyTooltipById, removeAllEnemyTooltips } from "../tooltip.js";
+import { getEnemyCanvasPosition } from "../area.js";
+import { removeEnemyTooltipById } from "../tooltip.js";
 
 // Combat configuration
 const COMBAT_CONFIG = {
@@ -420,6 +420,54 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
   };
 }
 
+/**
+ * 
+ * @param {*} attacker 
+ * @param {*} skillBaseDamage 
+ * @param {*} target 
+ * @returns 
+ */
+export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
+  // Base attack
+  let baseDamage = partyState.heroStats.attack || 30;
+  let isCritical = false;
+
+  // Critical hits
+  const critChance = partyState.heroStats.criticalChance || 0;
+  if (Math.random() < critChance) {
+    isCritical = true;
+    baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
+  }
+
+  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
+
+  // Step 1: Core skill damage
+  let skillDamage = baseDamage * (skillBaseDamage / 100);
+
+  // Step 2: Elemental bonus
+  const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;
+  skillDamage *= (1 + elementBonus);
+
+  // Step 3: Apply resistances and weaknesses
+  const elementalMultiplier = getElementalMultiplier(
+    resonance,
+    target.elementType,
+    partyState.heroStats.elementalPenetration || 0,
+    partyState.heroStats.weaknessBonus || 0
+  );
+
+  const finalDamage = Math.max(1, Math.floor(skillDamage * elementalMultiplier));
+
+  // console.log(`[Skill Damage] Final: ${finalDamage} (${resonance} vs ${target.elementType})`);
+  
+  return {
+    damage: finalDamage,
+    isCritical,
+    resonance,
+    multiplier: elementalMultiplier,
+    elementalMatchup: getElementalMatchup(resonance, target.elementType)
+  };
+}
 
 /**
  * Execute attack from party member to current target

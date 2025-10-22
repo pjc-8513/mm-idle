@@ -5,7 +5,7 @@ export const partyState = {
   unlockedClasses: [],
   classLevels: {}, // map: { fighter: 1, cleric: 2 }
   party: [],
-  heroStats: { hp: 10, attack: 30, defense: 0 },
+  heroStats: { hp: 10, attack: 30, defense: 0, criticalChance: 0.05, elementalPenetration: 0, weaknessBonus: 0},
   elementalDmgModifiers: { physical: 100, fire: 100, water: 100, 
                    air: 100, poison: 100, light: 100, dark: 100, 
                    undead: 100 },
@@ -16,7 +16,7 @@ export const state = {
   tick: 0,
   resources: {
     gold: 5000,
-    gems: 0,
+    gems: 15,
     maxGems: 20,
     wood: 0,
     ore: 0,

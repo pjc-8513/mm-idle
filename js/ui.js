@@ -7,7 +7,8 @@ import { on } from "./events.js";
 import { floatingTextManager } from "./systems/floatingtext.js";
 import { renderSpellbookPanel } from "./spellbookPanel.js";
 import { updateDockIfEnemyChanged } from "./systems/dockManager.js";
-import { openDock, DOCK_TYPES } from "./systems/dockManager.js";
+import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
+import { heroSpells } from "./content/heroSpells.js";
 
 export function initUI() {
   // panel switching
@@ -82,6 +83,8 @@ on("healTriggered", ({ amount }) => {
 }
 
 export function showPanel(panelId) {
+  // Force-close the dock so panel changes always hide it (even quick-spells)
+  closeDock({ force: true });
   const panels = document.querySelectorAll(".panel");
   panels.forEach(panel => {
     panel.classList.remove("active");
@@ -130,7 +133,7 @@ export function showPanel(panelId) {
     requestAnimationFrame(() => {
       openDock(DOCK_TYPES.AREA, { type: "quickSpells" }, {
         sourcePanel: "panelArea",
-        persist: true
+        persist: false
       });
     });
 

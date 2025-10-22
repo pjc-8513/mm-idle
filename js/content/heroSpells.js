@@ -1,11 +1,12 @@
-import { getActiveEnemies, getEnemiesBasedOnSkillLevel } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
 import { showFloatingDamage } from './abilities.js';
-import { state } from '../state.js';
+import { state, partyState } from '../state.js';
 import { emit } from '../events.js';
 import { logMessage } from '../systems/log.js';
+import { applyVisualEffect } from '../systems/effects.js';
 
 export const heroSpells = [
     {
@@ -114,11 +115,17 @@ export const heroSpells = [
         logMessage(`Cannot afford to cast ${this.name}`);
         return;
     }
+    applyVisualEffect('dark-flash', 0.8);
+    console.log('Activating Breath of Decay');
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
+    
         enemies.forEach(enemy => {
-            damageEnemy(enemy.position.row, enemy.position.col, drained, this.resonance);
-            handleSkillAnimation("breathOfDecay", enemy.position.row, enemy.position.col);
-            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
+           // console.log('Damaging enemy: ', enemy);
+            const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+           // console.log(`Calculated skill damage: ${skillDamage.damage}`);
+            damageEnemy(enemy.row, enemy.col, skillDamage.damage, this.resonance);
+            handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
+            showFloatingDamage(enemy.row, enemy.col, skillDamage); // show floating text
             });
         state.resources.gems -= this.gemCost;
         emit("gemChanged", state.resources.gems);

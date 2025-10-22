@@ -1,6 +1,7 @@
 import { BUILDING_MENUS } from "../content/buildingMenu.js";
 import { AREA_MENUS } from "../area.js";
 
+
 /*
 export const DOCK_TYPES = {
   BUILDING: "building",
@@ -48,7 +49,7 @@ function getDock() {
   return document.getElementById("mainDock");
 }
 
-const state = {
+const dockState = {
   open: false,
   type: null,
   context: null,         // payload (e.g. { type: "enemy", data: enemy })
@@ -58,15 +59,15 @@ const state = {
 };
 
 function renderContent() {
-  if (!state.type) return `<p>No dock available.</p>`;
+  if (!dockState.type) return `<p>No dock available.</p>`;
 
-  switch (state.type) {
+  switch (dockState.type) {
     case DOCK_TYPES.BUILDING:
-      return getBuildingMenu(state.context);
+      return getBuildingMenu(dockState.context);
     case DOCK_TYPES.PARTY:
-      return BUILDING_MENUS.party ? BUILDING_MENUS.party(state.context) : `<p>No party menu</p>`;
+      return BUILDING_MENUS.party ? BUILDING_MENUS.party(dockState.context) : `<p>No party menu</p>`;
     case DOCK_TYPES.AREA:
-      return getAreaMenu(state.context);
+      return getAreaMenu(dockState.context);
     default:
       return `<p>No dock available for this type.</p>`;
   }
@@ -74,11 +75,11 @@ function renderContent() {
 
 export function openDock(type, context = {}, opts = {}) {
   // opts: { sourcePanel: "panelTown", sourceEl: HTMLElement, persist: false }
-  state.type = type;
-  state.context = context;
-  state.sourcePanel = opts.sourcePanel || null;
-  state.sourceEl = opts.sourceEl || null;
-  state.persist = !!opts.persist;
+  dockState.type = type;
+  dockState.context = context;
+  dockState.sourcePanel = opts.sourcePanel || null;
+  dockState.sourceEl = opts.sourceEl || null;
+  dockState.persist = !!opts.persist;
 
   const dockEl = getDock();
   if (!dockEl) {
@@ -90,9 +91,9 @@ export function openDock(type, context = {}, opts = {}) {
   dockEl.classList.remove("hidden");
   dockEl.classList.add("visible");
   dockEl.setAttribute("data-dock-type", type);
-  if (state.sourcePanel) dockEl.setAttribute("data-source-panel", state.sourcePanel);
+  if (dockState.sourcePanel) dockEl.setAttribute("data-source-panel", dockState.sourcePanel);
   else dockEl.removeAttribute("data-source-panel");
-  state.open = true;
+  dockState.open = true;
 }
 
 function getAreaMenu(context) {
@@ -127,14 +128,17 @@ export function getBuildingMenu(building) {
   }
 }
 
-export function closeDock() {
-  // If in panelArea, keep the spell dock open
-  if (state.sourcePanel === "panelArea" && state.type === DOCK_TYPES.AREA) {
+export function closeDock(opts = {}) {
+  // opts: { force: boolean }
+  const force = !!opts.force;
+
+  // If not forced and in panelArea, keep the spell dock open
+  if (!force && dockState.sourcePanel === "panelArea" && dockState.type === DOCK_TYPES.AREA) {
     // If the current dock isn't showing quick spells, show them
-    if (state.context?.type !== "quickSpells") {
+    if (dockState.context?.type !== "quickSpells") {
       openDock(DOCK_TYPES.AREA, { type: "quickSpells" }, {
         sourcePanel: "panelArea",
-        persist: true
+        persist: false
       });
     }
     // Don't close the dock
@@ -142,12 +146,12 @@ export function closeDock() {
   }
 
   // Otherwise, close normally
-  state.open = false;
-  state.type = null;
-  state.context = null;
-  state.sourcePanel = null;
-  state.sourceEl = null;
-  state.persist = false;
+  dockState.open = false;
+  dockState.type = null;
+  dockState.context = null;
+  dockState.sourcePanel = null;
+  dockState.sourceEl = null;
+  dockState.persist = false;
   const dockEl = getDock();
   if (!dockEl) return;
 
@@ -178,7 +182,7 @@ export function updateDockIfEnemyChanged(updatedEnemy) {
 
 export function toggleDock(type, context = {}, opts = {}) {
   // simple toggle logic: if same dock open - close; else open new
-  if (state.open && state.type === type && JSON.stringify(state.context) === JSON.stringify(context)) {
+  if (dockState.open && dockState.type === type && JSON.stringify(dockState.context) === JSON.stringify(context)) {
     closeDock();
   } else {
     openDock(type, context, opts);
@@ -187,7 +191,7 @@ export function toggleDock(type, context = {}, opts = {}) {
 
 /* ---------- ESC key closes dock ---------- */
 document.addEventListener("keydown", (e) => {
-  if (!state.open) return;
+  if (!dockState.open) return;
   if (e.key === "Escape" || e.key === "Esc") {
     closeDock();
   }
@@ -202,7 +206,7 @@ document.addEventListener("keydown", (e) => {
    - Otherwise close dock.
 */
 document.addEventListener("click", (e) => {
-  if (!state.open) return;
+  if (!dockState.open) return;
 
   const clickEl = e.target;
 
@@ -213,11 +217,11 @@ document.addEventListener("click", (e) => {
   if (dockEl.contains(clickEl)) return;
 
   // click on opener element -> keep open
-  if (state.sourceEl && (state.sourceEl === clickEl || state.sourceEl.contains(clickEl))) return;
+  if (dockState.sourceEl && (dockState.sourceEl === clickEl || dockState.sourceEl.contains(clickEl))) return;
 
   // click inside source panel -> keep open
-  if (state.sourcePanel) {
-    const panelEl = document.getElementById(state.sourcePanel);
+  if (dockState.sourcePanel) {
+    const panelEl = document.getElementById(dockState.sourcePanel);
     if (panelEl && panelEl.contains(clickEl)) return;
   }
 

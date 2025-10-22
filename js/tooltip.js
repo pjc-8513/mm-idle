@@ -197,7 +197,7 @@ export function removeEnemyTooltipById(enemyId) {
 export function removeAllEnemyTooltips() {
   const tooltips = document.querySelectorAll(".enemy-tooltip");
   tooltips.forEach((tooltip) => tooltip.remove());
-  console.log("All enemy tooltips removed");
+  //console.log("All enemy tooltips removed");
 }
 
 
@@ -217,5 +217,5 @@ export function hideEnemyTooltip(container) {
   if (tooltip) {
     tooltip.style.display = "none";
   }
-  console.log('hideRequirementTooltip called');
+ // console.log('hideRequirementTooltip called');
 }
