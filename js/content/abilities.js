@@ -7,7 +7,7 @@ import { getEnemyCanvasPosition } from "../area.js";
 import { floatingTextManager } from "../systems/floatingtext.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
-import { addWaveTime } from "../area.js";
+import { addWaveTime, addTimeShield } from "../area.js";
 import { applyVisualEffect } from "../systems/effects.js";
 //import { createVampireMist, createRadiantBurst, createRadiantPulse, spawnRadiantBurst } from "../systems/radiantEffect.js";
 import { calculatePercentage } from "../systems/math.js";
@@ -492,8 +492,30 @@ export const abilities = [
 
         //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt damage based on undead counters.`);
       }
-  }
+  },
+  {
+  id: "blindingLight",
+  name: "Blinding Light",
+  type: "passive",
+  class: "templar",
+  description: "Creates a time shield whenever any heal is performed.",
+  resonance: "light",
+  spritePath: null,
+  cooldown: null,
+  perLevelBonus: 0.5,
 
+  // Triggered ANY TIME a heal happens (no wave limit)
+  triggerOnHeal: function(healEvent) {
+    const templar = partyState.party.find(c => c.id === "templar");
+    if (!templar) return;
+    // Apply time shield
+    const shieldAmount = Math.min(Math.floor(5 + (this.perLevelBonus * templar.level)), 10); // max 10s
+    addTimeShield(shieldAmount);
+    console.log(`[templar] added time shield of ${shieldAmount}s on heal.`);
+    
+    logMessage(`⏳ Templar gains ${shieldAmount}s time shield from Blinding Light.`, "info");
+    }
+  },
         
 ];
 

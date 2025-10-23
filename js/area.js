@@ -20,6 +20,8 @@ const BASE_MIN_TIME = 20;        // minimum seconds
 const BASE_MAX_TIME = 40;        // maximum seconds
 const HP_TIME_RATIO = 2;         // each point of HP = 2 seconds of wave time
 let maxTimeUpgradeBonus = 0;     // can be modified by items/upgrades later
+let MAX_TIMESHIELD = 10;  // e.g. from building upgrades
+let timeShield = 0;
 let timeRemaining = 40;
 let maxTime = 40;
 let waveActive = false;
@@ -61,6 +63,12 @@ export function resumeWaveTimer() {
   if (waveActive) paused = false;
 }
 
+export function addTimeShield(seconds) {
+  timeShield = Math.min(timeShield + seconds, MAX_TIMESHIELD);
+  updateTimerDisplay();
+}
+
+
 /**
  * Called every frame from the main game loop.
  * @param {number} delta - time passed in seconds
@@ -68,7 +76,13 @@ export function resumeWaveTimer() {
 export function updateWaveTimer(delta) {
   if (!waveActive || paused) return;
 
+  if (timeShield > 0) {
+    const absorbed = Math.min(delta, timeShield);
+    timeShield -= absorbed;
+    delta -= absorbed;
+  }
   timeRemaining -= delta;
+
   if (timeRemaining <= 0) {
     timeRemaining = 0;
     waveActive = false;
@@ -93,14 +107,23 @@ export function getBonusGoldMultiplier() {
 }
 
 function updateTimerDisplay() {
+  const shieldPercent = Math.max(0, (timeShield / maxTime) * 100);
+  const timePercent = Math.max(0, (timeRemaining / maxTime) * 100);
   const timerBar = document.getElementById("waveTimerBar");
   const timerText = document.getElementById("waveTimerText");
+
+  timerBar.style.background = `linear-gradient(
+    to right,
+    gold 0% ${shieldPercent}%,
+    ${timePercent > 50 ? '#2196f3' : timePercent > 20 ? '#ff9800' : '#f44336'} ${shieldPercent}% 100%
+  )`;
+
 
   if (timerBar && timerText) {
     const percentage = Math.max(0, (timeRemaining / maxTime) * 100);
     timerBar.style.width = `${percentage}%`;
     timerText.textContent = `${Math.ceil(timeRemaining)}s`;
-
+/*
     // Color changes based on time remaining
     if (percentage > 50) {
       timerBar.style.background = "linear-gradient(90deg, #2196f3 0%, #03a9f4 100%)";
@@ -109,6 +132,7 @@ function updateTimerDisplay() {
     } else {
       timerBar.style.background = "linear-gradient(90deg, #f44336 0%, #ff5722 100%)";
     }
+      */
   }
 }
 

@@ -114,6 +114,12 @@ on("healTriggered", (healEvent) => {
   if (heal && heal.triggerOnHeal) {
     heal.triggerOnHeal(healEvent);
   }
+  const templar = partyState.party.find(c => c.id === "templar");
+  if (!templar) return;
+  const blindingLight = abilities.find(a => a.id === "blindingLight");
+  if (blindingLight && blindingLight.triggerOnHeal) {
+    blindingLight.triggerOnHeal(healEvent);
+  }
 });
 
 export function handleGameStart() {

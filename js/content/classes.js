@@ -111,6 +111,30 @@ export const classes = [
       growthPerLevel: { attack: 1, defense: 1 },
       attackCooldown: 0
     },
+    { id: "templar", 
+      name: "Templar", 
+      goldCost: 20,
+      gemCost: 0, 
+      goldIncomePerHit: 0.5, 
+      buildingRequired: [
+        { id: "barracks", level: 5 }, 
+        { id: "temple", level: 5 }
+      ],
+      lastTarget: null,
+      sameTargetStreak: 0,
+      resonance: "light",
+      hasAutoAttack: true,
+      baseStats: { hp: partyState.heroStats.hp * 1.2, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.15, speed: 1.5 },
+      growthPerLevel: { attack: 1, defense: 1 },
+      abilities: [
+        { id: "blindingLight", unlockLevel: 1 },
+        
+      ],
+      skills: {
+        blindingLight: { active: true },
+      },
+      attackCooldown: 0
+    },    
     { id: "necromancer", 
       name: "Necromancer",
       image: "../assets/images/classes/necromancer.png", 
