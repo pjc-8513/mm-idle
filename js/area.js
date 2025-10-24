@@ -1,15 +1,16 @@
 // area.js
 import { attachEnemyTooltip, removeAllEnemyTooltips } from "./tooltip.js";
-import { state, partyState, quickSpellState } from "./state.js";
+import { state, partyState, spellHandState } from "./state.js";
 import { emit, on } from "./events.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
 import { classes } from "./content/classes.js";
 import { spriteAnimationManager } from "./systems/spriteAnimationSystem.js ";
 import { setTarget } from "./systems/combatSystem.js";
-import { floatingTextManager } from "./systems/floatingtext.js";
+//import { floatingTextManager } from "./systems/floatingtext.js";
 import { summonsState } from "./systems/summonSystem.js";
-import { openDock, DOCK_TYPES } from "./systems/dockManager.js";
+import { updateSpellDock } from "./systems/dockManager.js";
+import { getBuildingLevel } from "./town.js";
 import { heroSpells } from "./content/heroSpells.js";
 
 /* -------------------------
@@ -1077,52 +1078,148 @@ export function setupEnemyEffectsCanvas() {
 export const AREA_MENUS = {
   enemy: (enemy) => {
     if (!enemy) return `<p>No enemy data available.</p>`;
-
     return `
       <div class="enemy-hover-target" data-enemy-id="${enemy.uniqueId}">
         <span>${enemy.prefix} ${enemy.name}</span>
       </div>
     `;
   },
-
-quickSpells: () => {
-  const registeredSpells = quickSpellState.registered;
-  if (registeredSpells.length === 0) {
-    return `
-      <p><strong>No hero spells registered</strong></p>
-    `;
-  }
   
-  // Generate buttons for each registered spell
-  const spellButtons = registeredSpells
-    .map(spellId => {
-      // Find the spell data from heroSpells array
+quickSpells: () => {
+  const currentGems = Math.floor(state.resources.gems || 0);
+  const drawCost = 5;
+  const canAffordDraw = currentGems >= drawCost;
+  const handSpells = spellHandState.hand;
+  
+  // Get library level to determine unlocked tiers
+  const libraryLevel = getBuildingLevel("library");
+  
+  // Generate spell card buttons for current hand
+  const spellButtons = handSpells
+    .map((spellId, index) => {  // ✅ Add index parameter
       const spell = heroSpells.find(s => s.id === spellId);
-      if (!spell) return ''; // Skip if spell not found
+      if (!spell) return '';
+      
+      const canAffordSpell = currentGems >= (spell.gemCost || 0);
+      const affordableClass = canAffordSpell ? 'affordable' : 'unaffordable';
       
       return `
         <button 
-          class="quick-spell-btn" 
+          class="quick-spell-btn ${affordableClass}" 
           data-spell-id="${spell.id}"
-          title="${spell.name} - ${spell.description}"
+          data-hand-index="${index}"
+          title="${spell.name} (Lvl ${spell.skillLevel}) - ${spell.description}"
+          ${!canAffordSpell ? 'disabled' : ''}
         >
           <img src="${spell.icon}" alt="${spell.name}" class="spell-icon" />
           <span class="spell-name">${spell.name}</span>
-          <span class="gem-cost">${spell.gemCost} gems</span>
+          <span class="gem-cost">${spell.gemCost || 0} gems</span>
         </button>
       `;
     })
     .join('');
   
+  const emptySlots = spellHandState.maxHandSize - handSpells.length;
+  const emptySlotHTML = '<div class="empty-spell-slot"></div>'.repeat(emptySlots);
+  
   return `
     <div class="quick-spells-container">
-      <h4>Quick Spells</h4>
-      ${spellButtons}
+      <div class="spell-hand-header">
+        <h4>Spell Hand</h4>
+        <button 
+          class="draw-spells-btn ${canAffordDraw ? 'affordable' : 'unaffordable'}"
+          ${!canAffordDraw ? 'disabled' : ''}
+        >
+          Draw Hand (${drawCost} gems)
+        </button>
+      </div>
+      <div class="spell-hand">
+        ${spellButtons}
+        ${emptySlotHTML}
+      </div>
+      ${libraryLevel === 0 ? '<p class="spell-hint">Upgrade your Library to unlock spell tiers</p>' : ''}
     </div>
   `;
 }
 };
 
+export function drawSpellHand() {
+  const drawCost = 5;
+  const currentGems = state.resources.gems || 0;
+  
+  if (currentGems < drawCost) {
+    console.log("Not enough gems to draw spells");
+    return false;
+  }
+  
+  // Get library level to determine unlocked spells
+  const libraryLevel = getBuildingLevel("library");
+  
+  // Filter spells by unlocked tiers
+  const unlockedSpells = heroSpells.filter(spell => {
+    const tier = spell.tier || 1;
+    return tier <= libraryLevel;
+  });
+  
+  if (unlockedSpells.length === 0) {
+    console.log("No spells unlocked yet");
+    return false;
+  }
+  
+  // Draw 4 random spells (with replacement if not enough unique spells)
+  const handSize = Math.min(4, unlockedSpells.length);
+  const newHand = [];
+  
+  for (let i = 0; i < handSize; i++) {
+    const randomIndex = Math.floor(Math.random() * unlockedSpells.length);
+    newHand.push(unlockedSpells[randomIndex].id);
+  }
+  
+  // Spend gems and update hand
+  state.resources.gems -= drawCost;
+  spellHandState.hand = newHand;
+  
+  emit("gemsChanged");
+  emit("spellHandDrawn");
+  updateSpellDock();
+  return true;
+}
+
+// Update the spell casting to remove spell from hand by index
+export function castSpellFromHand(spellId, handIndex) {  // ✅ Add handIndex parameter
+  const spell = heroSpells.find(s => s.id === spellId);
+  if (!spell) return false;
+  
+  const gemCost = spell.gemCost || 0;
+  if (state.resources.gems < gemCost) {
+    console.log("Not enough gems to cast spell");
+    return false;
+  }
+  
+  // Cast the spell
+  spell.activate();
+  
+  // Spend gems
+  state.resources.gems -= gemCost;
+  
+  // ✅ Remove spell from hand by index (not by ID!)
+  if (handIndex !== undefined && handIndex >= 0 && handIndex < spellHandState.hand.length) {
+    spellHandState.hand.splice(handIndex, 1);
+  } else {
+    // Fallback: remove first occurrence (shouldn't happen with new system)
+    const indexToRemove = spellHandState.hand.indexOf(spellId);
+    if (indexToRemove !== -1) {
+      spellHandState.hand.splice(indexToRemove, 1);
+    }
+  }
+  
+  emit("gemsChanged");
+  emit("spellCast", spellId);
+  updateSpellDock(); // ✅ Update UI after casting
+  
+  console.log(`Casted ${spell.name}`);
+  return true;
+}
 
 /*
 // docking menu

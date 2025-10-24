@@ -1,5 +1,8 @@
 import { BUILDING_MENUS } from "../content/buildingMenu.js";
 import { AREA_MENUS } from "../area.js";
+import { on } from "../events.js";
+
+on("gemsChanged", () => updateSpellDock());
 
 
 /*
@@ -161,6 +164,13 @@ export function closeDock(opts = {}) {
   dockEl.innerHTML = "";
 }
 
+export function updateSpellDock() {
+  const dock = document.getElementById("mainDock");
+  if (dockState.type !== DOCK_TYPES.AREA) return;
+  if (dockState.context?.type !== "quickSpells") return;
+  dock.innerHTML = AREA_MENUS.quickSpells();
+  console.log('spell dock updated');
+}
 
 export function updateDockIfEnemyChanged(updatedEnemy) {
   const dock = document.getElementById("mainDock");

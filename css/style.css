@@ -197,7 +197,7 @@ body, html {
   border-top: 2px solid #444;
   border-right: 2px solid #444;
   padding: 5px;
-  display:flex;
+  display:none;
   flex-direction: column;
 }
 
@@ -1449,31 +1449,82 @@ body, html {
 }
 
 .spellGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
+  padding: 16px;
+}
+
+.spellbook-tier-header {
+  font-size: 14px;
+  font-weight: bold;
+  color: #888;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+.spellbook-tier-header:first-child {
+  margin-top: 0;
+}
+
+.spellbook-tier-separator {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 4px 0 12px 0;
+}
+
+.spellbook-tier-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.spellbook-tier-row.locked {
+  opacity: 0.4;
 }
 
 .spellCard {
-  border: 1px solid #444;
-  background: #222;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border: 2px solid #444;
+  background: #222;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.spellCard:hover {
+  border-color: #666;
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.spellImage {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .spellImage img {
   width: 100%;
-  border-radius: 6px;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
-.spellButtons {
+.spell-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
+  align-items: center;
+  justify-content: center;
+  background: #444;
+  border-radius: 4px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
 }
 
 .spellUpgradeBtn.affordable {
@@ -1492,7 +1543,7 @@ body, html {
   gap: 10px;
   padding: 10px;
 }
-
+/*
 .quick-spell-btn {
   display: flex;
   flex-direction: column;
@@ -1525,4 +1576,107 @@ body, html {
 .gem-cost {
   font-size: 10px;
   color: #64b5f6;
+}
+  */
+  .spell-hand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.spell-hand {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quick-spell-btn {
+  width: 72px;
+  height: 96px;
+  padding: 8px;
+  border: 2px solid #444;
+  background: #1a1a2e;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  overflow: hidden;
+}
+
+.quick-spell-btn.affordable {
+  border-color: #4a9eff;
+  background: #2a4a7e;
+}
+
+.quick-spell-btn.affordable:hover {
+  background: #3a5a9e;
+  transform: translateY(-2px);
+}
+
+.quick-spell-btn .spell-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.quick-spell-btn .spell-name {
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.quick-spell-btn .gem-cost {
+  font-size: 9px;
+  color: #4a9eff;
+  white-space: nowrap;
+}
+
+.empty-spell-slot {
+  width: 72px;
+  height: 96px;
+  border: 2px dashed #444;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.quick-spell-btn.unaffordable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.draw-spells-btn.affordable {
+  border-color: 
+#4a9eff;
+  background: 
+#2a4a7e;
+}
+.draw-spells-btn.affordable:hover {
+  background: 
+#3a5a9e;
+  transform: translateY(-2px);
+}
+.draw-spells-btn.unaffordable {
+  border-color: #666;
+  background: 
+#2a2a2a;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.spell-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
 }

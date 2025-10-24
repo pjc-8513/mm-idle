@@ -8,7 +8,8 @@ import { floatingTextManager } from "./systems/floatingtext.js";
 import { renderSpellbookPanel } from "./spellbookPanel.js";
 import { updateDockIfEnemyChanged } from "./systems/dockManager.js";
 import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
-import { heroSpells } from "./content/heroSpells.js";
+//import { heroSpells } from "./content/heroSpells.js";
+import { drawSpellHand, castSpellFromHand } from "./area.js";
 
 export function initUI() {
   // panel switching
@@ -20,18 +21,27 @@ export function initUI() {
     });
   });
 
-  document.addEventListener('click', (e) => {
-  const spellBtn = e.target.closest('.quick-spell-btn');
-  if (!spellBtn) return; // clicked something else
 
-  const spellId = spellBtn.dataset.spellId;
-  const spell = heroSpells.find(s => s.id === spellId);
-  if (spell) {
-    spell.activate();
-    console.log(`Casted ${spell.name}`);
-  }
-});
-
+  // ✅ FIXED: Attach to mainDock instead of document
+const mainDock = document.getElementById("mainDock");
+if (mainDock) {
+  mainDock.addEventListener('click', (e) => {
+    // Handle spell casting
+    const spellBtn = e.target.closest('.quick-spell-btn');
+    if (spellBtn && !spellBtn.disabled) {  // ✅ Add disabled check
+      const spellId = spellBtn.dataset.spellId;
+      const handIndex = parseInt(spellBtn.dataset.handIndex, 10);  // ✅ Get index
+      castSpellFromHand(spellId, handIndex);  // ✅ Pass both
+      return;
+    }
+    
+    // Handle draw button
+    const drawBtn = e.target.closest('.draw-spells-btn');
+    if (drawBtn && !drawBtn.disabled) {
+      drawSpellHand();
+    }
+  });
+}
 
 on("enemyDamaged", (enemy) => {
     const dock = document.getElementById("mainDock");

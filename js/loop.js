@@ -13,6 +13,7 @@ import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
 import { updateSummonTimers, updateWaveTimer } from "./area.js";
 import { updateVisualEffects } from "./systems/effects.js";
+import { updateSpellDock } from "./systems/dockManager.js";
 //import { updateRadiantEffects } from "./systems/radiantEffect.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
 
@@ -40,9 +41,10 @@ export function startGameLoop() {
 function update(delta) {
   const gemIncome = calculateGemIncome();
  
-  state.resources.gems += state.resources.gemIncomePerSecond * delta;
-  emit("gemsChanged", state.resources.gems);
-
+  if (gemIncome > 0) {
+    state.resources.gems += state.resources.gemIncomePerSecond * delta;
+    emit("gemsChanged", state.resources.gems);
+  }
   // combat updates
 
   if (combatState.isAutoAttacking) {

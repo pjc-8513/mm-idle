@@ -2,6 +2,7 @@
 import { emit, on } from "./events.js"; // adjust path as needed
 import { state, partyState, quickSpellState } from "./state.js";
 import { heroSpells } from "./content/heroSpells.js";
+import { getBuildingLevel } from "./town.js";
 
 export function initSpellbookPanel() {
   // Re-render whenever gold/gems changes
@@ -52,57 +53,68 @@ function fullRenderSpellbookPanel() {
   const container = document.createElement("div");
   container.classList.add("spellGrid");
 
+  // Group spells by tier
+  const spellsByTier = {};
   heroSpells.forEach(spell => {
-    const spellCard = document.createElement("div");
-    spellCard.classList.add("spellCard");
-    spellCard.dataset.spellId = spell.id;
+    const tier = spell.tier || 1;
+    if (!spellsByTier[tier]) {
+      spellsByTier[tier] = [];
+    }
+    spellsByTier[tier].push(spell);
+  });
 
-    // --- Icon ---
-    const imageDiv = document.createElement("div");
-    imageDiv.classList.add("spellImage");
-    const img = document.createElement("img");
-    img.src = spell.icon;
-    img.alt = spell.name;
-    img.onerror = () => {
-      img.style.display = "none";
-      imageDiv.innerHTML = `<div class="spell-placeholder">${spell.name[0]}</div>`;
-    };
-    imageDiv.appendChild(img);
+  // Get library building level
+  const libraryLevel = getBuildingLevel("library");
 
-    // --- Info ---
-    const infoDiv = document.createElement("div");
-    infoDiv.classList.add("spellInfo");
+  // Render each tier
+  const tiers = Object.keys(spellsByTier).sort((a, b) => a - b);
+  tiers.forEach(tier => {
+    const tierNum = parseInt(tier);
+    const isUnlocked = libraryLevel >= tierNum;
 
-    const nameDiv = document.createElement("div");
-    nameDiv.classList.add("spellName");
-    nameDiv.textContent = `${spell.name} (Lvl ${spell.skillLevel})`;
+    // Tier header
+    const tierHeader = document.createElement("div");
+    tierHeader.classList.add("spellbook-tier-header");
+    tierHeader.innerHTML = `Tier ${tier}`;
+    container.appendChild(tierHeader);
 
-    const descDiv = document.createElement("div");
-    descDiv.classList.add("spellDescription");
-    descDiv.textContent = spell.description;
+    const tierSeparator = document.createElement("hr");
+    tierSeparator.classList.add("spellbook-tier-separator");
+    container.appendChild(tierSeparator);
 
-    infoDiv.appendChild(nameDiv);
-    infoDiv.appendChild(descDiv);
+    // Tier spell container
+    const tierContainer = document.createElement("div");
+    tierContainer.classList.add("spellbook-tier-row");
+    if (!isUnlocked) {
+      tierContainer.classList.add("locked");
+    }
 
-    // --- Buttons ---
-    const btnContainer = document.createElement("div");
-    btnContainer.classList.add("spellButtons");
+    spellsByTier[tier].forEach(spell => {
+      const spellCard = document.createElement("div");
+      spellCard.classList.add("spellCard");
+      spellCard.dataset.spellId = spell.id;
+      spellCard.dataset.tier = tier;
 
-    const upgradeBtn = document.createElement("button");
-    upgradeBtn.classList.add("spellUpgradeBtn");
-    upgradeBtn.dataset.spellId = spell.id;
+      // Tooltip for hover
+      spellCard.title = `${spell.name} (Lvl ${spell.skillLevel})\n${spell.description}`;
 
-    const quickBtn = document.createElement("button");
-    quickBtn.classList.add("spellQuickBtn");
-    quickBtn.dataset.spellId = spell.id;
+      // --- Icon only ---
+      const imageDiv = document.createElement("div");
+      imageDiv.classList.add("spellImage");
+      const img = document.createElement("img");
+      img.src = spell.icon;
+      img.alt = spell.name;
+      img.onerror = () => {
+        img.style.display = "none";
+        imageDiv.innerHTML = `<div class="spell-placeholder">${spell.name[0]}</div>`;
+      };
+      imageDiv.appendChild(img);
 
-    btnContainer.appendChild(upgradeBtn);
-    btnContainer.appendChild(quickBtn);
+      spellCard.appendChild(imageDiv);
+      tierContainer.appendChild(spellCard);
+    });
 
-    spellCard.appendChild(imageDiv);
-    spellCard.appendChild(infoDiv);
-    spellCard.appendChild(btnContainer);
-    container.appendChild(spellCard);
+    container.appendChild(tierContainer);
   });
 
   panel.appendChild(container);
@@ -121,7 +133,7 @@ function fullRenderSpellbookPanel() {
 function setupSpellbookListeners() {
   on("goldChanged", updateSpellbookPanel);
   on("spellUpgraded", updateSpellbookPanel);
-  on("quickSpellsChanged", updateSpellbookPanel);
+  on("buildingUpgraded", updateSpellbookPanel);
 }
 
 // =============================================================
@@ -129,62 +141,29 @@ function setupSpellbookListeners() {
 // =============================================================
 
 export function updateSpellbookPanel() {
-  const currentGold = Math.floor(state.resources.gold);
-  const registeredSpells = quickSpellState.registered || [];
+  const libraryLevel = getBuildingLevel("library");
 
-  // Optimization: detect if meaningful changes occurred
-  const goldChanged = currentGold !== lastSpellbookState.gold;
-  const regChanged = !arraysEqual(registeredSpells, lastSpellbookState.registered);
-  if (!goldChanged && !regChanged) return;
+  // Update locked/unlocked states
+  const tierRows = document.querySelectorAll(".spellbook-tier-row");
+  tierRows.forEach(row => {
+    const cards = row.querySelectorAll(".spellCard");
+    if (cards.length > 0) {
+      const tier = parseInt(cards[0].dataset.tier);
+      const isUnlocked = libraryLevel >= tier;
+      row.classList.toggle("locked", !isUnlocked);
+    }
+  });
 
+  // Update tooltips with current levels
   const spellCards = document.querySelectorAll(".spellCard");
-
   spellCards.forEach(card => {
     const spellId = card.dataset.spellId;
     const spell = heroSpells.find(s => s.id === spellId);
-    if (!spell) return;
-
-    // --- Update info ---
-    const nameDiv = card.querySelector(".spellName");
-    nameDiv.textContent = `${spell.name} (Lvl ${spell.skillLevel})`;
-
-    // --- Upgrade button ---
-    const upgradeBtn = card.querySelector(".spellUpgradeBtn");
-    const upgradeCost = getSpellUpgradeCost(spell);
-    const canAfford = currentGold >= upgradeCost;
-
-    upgradeBtn.textContent = `Upgrade (${upgradeCost}g)`;
-    upgradeBtn.disabled = !canAfford;
-    upgradeBtn.classList.toggle("affordable", canAfford);
-    upgradeBtn.classList.toggle("unaffordable", !canAfford);
-
-    upgradeBtn.onclick = () => {
-      if (!canAfford) return;
-      spendGold(upgradeCost);
-      spell.skillLevel++;
-      emit("spellUpgraded", spell.id);
-    };
-
-    // --- Quick register ---
-    const quickBtn = card.querySelector(".spellQuickBtn");
-    const isRegistered = registeredSpells.includes(spell.id);
-
-    quickBtn.textContent = isRegistered ? "Unregister" : "Register";
-    quickBtn.classList.toggle("registered", isRegistered);
-
-    quickBtn.onclick = () => {
-      toggleQuickSpell(spell.id);
-      emit("quickSpellsChanged");
-    };
+    if (spell) {
+      card.title = `${spell.name} (Lvl ${spell.skillLevel})\n${spell.description}`;
+    }
   });
-
-  // Save snapshot
-  lastSpellbookState = {
-    gold: currentGold,
-    registered: [...registeredSpells],
-  };
 }
-
 // =============================================================
 // HELPERS
 // =============================================================

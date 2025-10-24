@@ -57,4 +57,5 @@ export function addGems(amount) {
     return;
   }
   state.resources.gems = Math.min(state.resources.gems + amount, state.resources.maxGems);
+  emit("gemsChanged", state.resources.gems);
 }

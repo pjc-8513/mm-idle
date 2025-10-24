@@ -115,10 +115,10 @@ export const classes = [
       name: "Templar", 
       goldCost: 20,
       gemCost: 0, 
+      level: 0,
       goldIncomePerHit: 0.5, 
       buildingRequired: [
-        { id: "barracks", level: 5 }, 
-        { id: "temple", level: 5 }
+        { id: "bellTower", level: 1 }, 
       ],
       lastTarget: null,
       sameTargetStreak: 0,
@@ -170,26 +170,6 @@ export const classes = [
       hasAutoAttack: true,
       baseStats: { hp: partyState.heroStats.hp * 0.9, attack: partyState.heroStats.attack * 1.1, defense: 3, criticalChance: 0.1, speed: 1.3 },
       growthPerLevel: { attack: 1, defense: 1 },
-      attackCooldown: 0
-    },
-    { id: "paladin", 
-      name: "Paladin", 
-      image: "../assets/images/classes/paladin.png",
-      level: 0,
-      goldCost: 50,
-      gemCost: 5, 
-      goldIncomePerHit: 0.5, 
-      gemPerSecond: 0.0167, // 1 gem per minute
-      buildingRequired: [
-        {id: "barracks", level: 5 },
-        {id: "temple", level: 5} 
-      ],
-      lastTarget: null,
-      sameTargetStreak: 0,
-      resonance: "light",
-      hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 1.2, attack: partyState.heroStats.attack * 0.8, defense: 5, criticalChance: 0.1, speed: 1.2 },
-      growthPerLevel: { attack: 1, defense: 2 },
       attackCooldown: 0
     },
     { id: "archer", 

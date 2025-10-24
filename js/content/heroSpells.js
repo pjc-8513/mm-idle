@@ -16,6 +16,8 @@ export const heroSpells = [
         skillBaseDamage: 80,
         skillLevel: 1,
         gemCost: 20,
+        tier: 2,
+        unlocked: true,
         description: "Absorbs all counters from enemies, converts them to dark counters, redistributes them randomly, then deals dark damage based on how many each enemy has.",
         icon: "../../assets/images/icons/moonbeam.png",
 
@@ -54,8 +56,6 @@ export const heroSpells = [
 
             enemy.counters = {}; // Step 5: Consume all counters
             });
-            state.resources.gems -= this.gemCost;
-            emit("gemChanged", state.resources.gems);
         }
     },
     {
@@ -65,6 +65,8 @@ export const heroSpells = [
         skillBaseDamage: 100,
         skillLevel: 1,
         gemCost: 20,
+        tier: 3,
+        unlocked: true,
         description: "Convert all active counters to a random counter type, if it is light, consume all counters and deal light damage to all enemies for each light counter they have.",
         icon: "../../assets/images/icons/brilliant.png",
         activate: function () {
@@ -97,8 +99,6 @@ export const heroSpells = [
             showFloatingDamage(enemy.row, enemy.col, skillDamage);
             }
         });
-        state.resources.gems -= this.gemCost;
-        emit("gemChanged", state.resources.gems);
         },
     },
     {
@@ -108,8 +108,10 @@ export const heroSpells = [
 	skillBaseDamage: 180,
 	skillLevel: 1,
 	gemCost: 5,
+    tier: 1,
 	description: "Deals a small amount of undead to rows of enemies based on skill level.",
 	icon: "../../assets/images/icons/breath.png",
+    unlocked: true,
 	activate: function () {
     if (state.resources.gems < this.gemCost) {
         logMessage(`Cannot afford to cast ${this.name}`);
@@ -127,8 +129,6 @@ export const heroSpells = [
             handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.row, enemy.col, skillDamage); // show floating text
             });
-        state.resources.gems -= this.gemCost;
-        emit("gemChanged", state.resources.gems);
     },
 },
 

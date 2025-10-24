@@ -1,3 +1,8 @@
+export const spellHandState = {
+  hand: [], // Array of spell IDs currently in hand
+  maxHandSize: 4
+};
+
 export const partyState = {
   heroLevel: 5,
   heroExp: 0,
