@@ -67,6 +67,10 @@ export const state = {
     }
   },
   buildings: [], // array {id: building-id, level: building-level}
+  innAssignments: {
+    slots: [null, null, null, null], // Each slot holds a class ID or null
+    goldIncomeMultiplier: 1.0 // Starts at 1.0, increases by 0.2 per assignment
+  },
   spells: [],
   equipment: [],
   currentArea: "newSorpigal",

@@ -29,6 +29,9 @@ const SCALING = {
     humanoid: 0.1, // Slightly Higher HP
     demon: 0.3, // Higher HP
     beast: 0.0, // Normal
+    elemental: 0.2, // Higher HP
+    construct: 0.4, // Much Higher HP
+    dragon: 0.5  // Highest HP
   },
 };
 
@@ -398,6 +401,8 @@ export function damageEnemy(row, col, damage, element) {
 const areaAssets = {
   newSorpigal: ["swarm.webp", "mage.webp", "dragonFly.webp", "bandit.webp"],
   mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp"],
+  bootlegBay: ["seaTerror.webp", "willow.webp", "deathKnight.webp", "giantRat.webp"],
+  castleIronfist: ["diamondGargoyle.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp"],
   // ...
 };
 

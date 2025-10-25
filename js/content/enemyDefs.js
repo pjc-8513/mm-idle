@@ -84,6 +84,106 @@ export const ENEMY_TEMPLATES = {
     resistances: ["physical"],
     weaknesses: ["light", "fire", "water"]
   },
+  giantRat: {
+    id: "giantRat",
+    baseName: "Giant rat",
+    type: "pest",
+    elementType: "pest",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: [],
+    image: "../../assets/images/enemies/giantRat.webp",
+    weaknesses: ["physical"],
+    description: "Nuisance rats common throughout the land."
+  },
+  pirateRaider: {
+    id: "pirateRaider",
+    baseName: "Pirate raider",
+    type: "humanoid",
+    elementType: "water",
+    tier: 2,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["fire", "poison"],
+    image: "../../assets/images/enemies/bandit.webp",
+    weaknesses: ["air"],
+    description: "Nuisance pirates common throughout the land."
+  },
+  headHunter: {
+    id: "headHunter",
+    baseName: "Head hunter",
+    type: "humanoid",
+    elementType: "dark",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: [],
+    image: "../../assets/images/enemies/deathKnight.webp",
+    weaknesses: ["light"],
+    description: "Nuisance headhunters common throughout the land."
+  },
+  dustDevil: {
+    id: "dustDevil",
+    baseName: "Dust devil",
+    type: "elemental",
+    elementType: "air",
+    tier: 2,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["water"],
+    image: "../../assets/images/enemies/willow.webp",
+    weaknesses: ["earth"],
+    description: "Nuisance dust devil common throughout the land."
+  },
+  cobra: {
+    id: "cobra",
+    baseName: "cobra",
+    type: "pest",
+    elementType: "pest",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: [],
+    image: "../../assets/images/enemies/cobra.webp",
+    weaknesses: ["physical"],
+    description: "Nuisance cobras common throughout the land."
+  },
+  masterArcher: {
+    id: "masterArcher",
+    baseName: "Master Archer",
+    type: "humanoid",
+    elementType: "air",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["water"],
+    image: "../../assets/images/enemies/masterArcher.webp",
+    weaknesses: ["earth"],
+    description: "Nuisance master archers common throughout the land."
+  },
+  lich: {
+    id: "lich",
+    baseName: "Lich",
+    type: "humanoid",
+    elementType: "undead",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["physical"],
+    image: "../../assets/images/enemies/lich.webp",
+    weaknesses: ["light", "fire", "water"],
+    description: "Nuisance liches common throughout the land."
+  },
+
+  // Boss Enemies
     swarm: {
       id: "swarm",
       baseName: "Swarm",
@@ -122,8 +222,31 @@ export const ENEMY_TEMPLATES = {
       max: 2,                      // maximum alive
       cost: 20
     }]
-    }
-
+    },
+    seaTerror: {
+      id: "seaTerror",
+      baseName: "Sea Terror",
+            type: "beast",
+      elementType: "water",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: [],
+      image: "../../assets/images/enemies/seaTerror.webp",
+      weaknesses: ["air"]
+    },
+    masterThief: {
+      id: "masterThief",
+      baseName: "Master thief",
+      type: "humanoid",
+      elementType: "physical",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: [],
+      image: "../../assets/images/enemies/diamondGargoyle.webp",
+      weaknesses: ["poison", "undead"]
+    },
 };
 
 // Higher tier enemies can be defined similarly
