@@ -4,6 +4,7 @@ import { classes } from "./classes.js";
 import { abilities } from "./abilities.js";
 import { emit, on } from "../events.js";
 import { logMessage } from "../systems/log.js";
+import { getBuildingLevel } from "../town.js";
 //import { openDock } from "../systems/dockManager.js";
 
 export function initBuildingMenu() {
@@ -25,7 +26,7 @@ export function initBuildingMenu() {
 
 // You can tweak this cost formula as you like:
 const TRAINING_COST = () => 100 * partyState.heroLevel;  // Example: scales with hero level
-const TRAINING_EXP_GAIN = 50; // How much EXP you get per training
+let TRAINING_EXP_GAIN = 50; // How much EXP you get per training
 
 export const BUILDING_MENUS = {
   trainingCenter: (building) => {
@@ -188,6 +189,8 @@ function unitProducingMenu(building) {
 // --- Training function ---
 window.exchangeGoldForExp = function (buildingId) {
   const cost = TRAINING_COST();
+  const trainingLevel = getBuildingLevel(buildingId);
+  TRAINING_EXP_GAIN = 50 + (trainingLevel - 1) * 10; // Increase EXP gain with building level
   if (state.resources.gold >= cost) {
     state.resources.gold -= cost;
     logMessage("That's the ticket!");

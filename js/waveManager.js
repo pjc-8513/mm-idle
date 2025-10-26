@@ -137,6 +137,22 @@ export async function handleAreaChanged(newAreaId) {
   state.areaWave = 1;
   state.currentArea = newAreaId;
   await preloadAreaEnemies(state.currentArea);
+  if (state.activePanel === "panelArea"){
+        const area = AREA_TEMPLATES[state.currentArea];
+        const gameEl = document.getElementById("game");
+        const resourceBarEl = document.getElementById("resourceBar");
+        const sidePanelEl = document.getElementById("sidePanel");    
+        removeBackgroundElement("game");
+        gameEl.style.backgroundImage = `url('../assets/images/${area.backgroundImg}')`;
+        removeBackgroundElement("resourceBar");
+        resourceBarEl.style.backgroundImage = `url('../assets/images/${area.topImg}')`;
+        removeBackgroundElement("sidePanel");
+        sidePanelEl.style.backgroundImage = `url('../assets/images/${area.sideImg}')`;
+        gameEl.classList.add("area-bg");
+        resourceBarEl.classList.add("area-bg");
+        sidePanelEl.classList.add("area-bg");
+  }
+  emit("areaChanged", newAreaId);
   startWave();
 }
 
@@ -399,10 +415,10 @@ export function damageEnemy(row, col, damage, element) {
 }
 
 const areaAssets = {
-  newSorpigal: ["swarm.webp", "mage.webp", "dragonFly.webp", "bandit.webp"],
-  mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp"],
-  bootlegBay: ["seaTerror.webp", "willow.webp", "deathKnight.webp", "giantRat.webp"],
-  castleIronfist: ["diamondGargoyle.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp"],
+  newSorpigal: ["swarm.webp", "mage.webp", "dragonFly.webp", "bandit.webp", "main.webp", "area-side.webp", "area-top.webp"],
+  mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
+  bootlegBay: ["seaTerror.webp", "deathKnight.webp", "willow.webp", "pirateRaider.webp", "giantRat.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
+  castleIronfist: ["thief.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp", "main.webp", "area-side.webp", "area-top.webp"],
   // ...
 };
 

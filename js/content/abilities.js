@@ -432,7 +432,7 @@ export const abilities = [
       onVampireExpire: function(summon){
         console.log("💀 Vampire expires: releasing stored essence.");
           // Convert stored HP into time (e.g., 1s per 500 HP drained)
-        const secondsRestored = Math.floor(this.storedHP / 300);
+        const secondsRestored = Math.floor(this.storedHP / 500);
         console.log(`Vampire returns ${secondsRestored}s of stolen time using ${this.storedHP} worth of storedHP.`);
         if (secondsRestored > 0) {
           addWaveTime(secondsRestored);

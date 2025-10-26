@@ -108,7 +108,7 @@ export const ENEMY_TEMPLATES = {
     maxMp: 15,
     row: 0,
     resistances: ["fire", "poison"],
-    image: "../../assets/images/enemies/bandit.webp",
+    image: "../../assets/images/enemies/pirateRaider.webp",
     weaknesses: ["air"],
     description: "Nuisance pirates common throughout the land."
   },
@@ -243,8 +243,8 @@ export const ENEMY_TEMPLATES = {
       tier: "boss",
       isBoss: true,
       maxMp: 30,
-      resistances: [],
-      image: "../../assets/images/enemies/diamondGargoyle.webp",
+      resistances: ["pest"],
+      image: "../../assets/images/enemies/thief.webp",
       weaknesses: ["poison", "undead"]
     },
 };

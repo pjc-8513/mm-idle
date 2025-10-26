@@ -9,7 +9,10 @@ export const AREA_TEMPLATES = {
     boss: "swarm", 
     //unlocks: ["mistyIslands", "goblinWatch"],
     nextArea: "mistyIslands",
-    questId: "newSorpigal"
+    questId: "newSorpigal",
+    backgroundImg: "main_bg.webp",
+    sideImg: "area-side.webp",
+    topImg: "area-top.webp"
   },
   mistyIslands: {
     id: "mistyIslands",
@@ -21,7 +24,10 @@ export const AREA_TEMPLATES = {
     boss: "goblinKing", 
     //unlocks: ["mistyIslands", "goblinWatch"],
     nextArea: "bootlegBay",
-    questId: "mistyIslands"
+    questId: "mistyIslands",
+    backgroundImg: "misty-bg.webp",
+    sideImg: "misty-side.webp",
+    topImg: "misty-top.webp"
   },
     bootlegBay: {
       id: "bootlegBay",
@@ -33,7 +39,10 @@ export const AREA_TEMPLATES = {
       boss: "seaTerror", 
       //unlocks: ["mistyIslands", "goblinWatch"],
       nextArea: "castleIronfist",
-      questId: "bootlegBay"
+      questId: "bootlegBay",
+      backgroundImg: "misty-bg.webp",
+      sideImg: "misty-side.webp",
+      topImg: "misty-top.webp"
   },
     castleIronfist: {
       id: "castleIronfist",
@@ -45,7 +54,10 @@ export const AREA_TEMPLATES = {
       boss: "masterThief", 
       //unlocks: ["mistyIslands", "goblinWatch"],
       //nextArea: "mistyIslands",
-      questId: "castleIronfist"
+      questId: "castleIronfist",
+      backgroundImg: "main_bg.webp",
+      sideImg: "area-side.webp",
+      topImg: "area-top.webp"
   },
   // more areas
 };

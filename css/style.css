@@ -58,12 +58,6 @@ body, html {
   color: #fff;
   text-shadow: 1px 1px 2px #000;
 }
-#resourceBar.area-bg {
-  background: url('../assets/images/area-top.webp') no-repeat center center;
-  background-size: cover;
-  color: #fff;
-  text-shadow: 1px 1px 2px #000;
-}
 
 /* Layout */
 #mainLayout {
@@ -88,14 +82,6 @@ body, html {
 
 #game.spellbook-bg {
   background: url('../assets/images/spellbook-bg.webp') no-repeat center center;
-  background-size: cover;
-  opacity: 0.95;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-#game.area-bg {
-  background: url('../assets/images/main_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.95;
   padding: 20px;
@@ -141,9 +127,18 @@ body, html {
   background-size: cover;
 }
 
-#sidePanel.area-bg {
-  background: url('../assets/images/area-side.webp') no-repeat center center;
+.area-bg {
+  background-repeat: no-repeat;
+  background-position: center center;
   background-size: cover;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+#game.area-bg {
+  opacity: 0.95;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 #sidePanel button {

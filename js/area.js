@@ -6,7 +6,7 @@ import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
 import { classes } from "./content/classes.js";
 import { spriteAnimationManager } from "./systems/spriteAnimationSystem.js ";
-import { setTarget } from "./systems/combatSystem.js";
+import { getActiveEnemies, setTarget } from "./systems/combatSystem.js";
 //import { floatingTextManager } from "./systems/floatingtext.js";
 import { summonsState } from "./systems/summonSystem.js";
 import { updateSpellDock } from "./systems/dockManager.js";
@@ -94,7 +94,7 @@ export function updateWaveTimer(delta) {
 }
 
 export function addWaveTime(seconds) {
-  timeRemaining = Math.min(timeRemaining + seconds, maxTime * 2);
+  timeRemaining = Math.min(timeRemaining + seconds, maxTime);
   updateTimerDisplay();
 }
 
@@ -1189,6 +1189,7 @@ export function drawSpellHand() {
 export function castSpellFromHand(spellId, handIndex) {  // ✅ Add handIndex parameter
   const spell = heroSpells.find(s => s.id === spellId);
   if (!spell) return false;
+  if (getActiveEnemies().length === 0) return false;
   
   const gemCost = spell.gemCost || 0;
   if (state.resources.gems < gemCost) {

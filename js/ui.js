@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { renderPartyPanel } from "./party.js";
 import { renderBuildingPanel } from "./town.js";
 import { renderAreaPanel, setupEnemyEffectsCanvas } from "./area.js";
@@ -124,12 +125,20 @@ export function showPanel(panelId) {
   }
   if (panelId === "panelArea") {
     state.activePanel = "panelArea";
+    const area = AREA_TEMPLATES[state.currentArea];
+    const gameEl = document.getElementById("game");
+    const resourceBarEl = document.getElementById("resourceBar");
+    const sidePanelEl = document.getElementById("sidePanel");    
     removeBackgroundElement("game");
-    document.getElementById("game").classList.add("area-bg");
+    gameEl.style.backgroundImage = `url('../assets/images/${area.backgroundImg}')`;
     removeBackgroundElement("resourceBar");
-    document.getElementById("resourceBar").classList.add("area-bg");
+    resourceBarEl.style.backgroundImage = `url('../assets/images/${area.topImg}')`;
     removeBackgroundElement("sidePanel");
-    document.getElementById("sidePanel").classList.add("area-bg");
+    sidePanelEl.style.backgroundImage = `url('../assets/images/${area.sideImg}')`;
+    gameEl.classList.add("area-bg");
+    resourceBarEl.classList.add("area-bg");
+    sidePanelEl.classList.add("area-bg");
+
     const enemiesGridExists = !!document.getElementById("enemiesGrid");
     if (!enemiesGridExists) {
       renderAreaPanel();
