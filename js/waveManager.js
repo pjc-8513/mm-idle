@@ -4,9 +4,10 @@ import { emit, on } from "./events.js";
 import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
-import { getBonusGoldMultiplier } from "./area.js";
+import { getBonusGoldMultiplier, renderAreaPanel } from "./area.js";
 import { prefixes } from "./content/definitions.js";
 import { stopAutoAttack, startAutoAttack, setTarget } from "./systems/combatSystem.js";
+import { applyAreaBackground } from "./ui.js";
 
 // waveManager.js
 const SCALING = {
@@ -83,16 +84,18 @@ export function initWaveManager() {
   // Listen for wave-related events
   on("waveCleared", handleWaveCleared);
   on("waveTimedOut", handleWaveTimeout);
-  on("areaChanged", handleAreaChanged);
+  on("areaCompleted", handleAreaChanged);
   on("gameStarted", handleGameStart);
 }
 
 // waveManager.js
-on("enemyDefeated", ({ col }) => {
-  // Check if all rows in this column are cleared
+on("enemyDefeated", ({ enemy }) => {
+  // Check if all enemies in this column are cleared
+  const col = enemy.position.col;
   const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
   
   if (columnCleared) {
+    console.log(`[waveManager] Column ${col} cleared.`);
     const cleric = partyState.party.find(c => c.id === "cleric");
     if (cleric){
       const heal = abilities.find(a => a.id === "heal");
@@ -137,6 +140,7 @@ export async function handleAreaChanged(newAreaId) {
   state.areaWave = 1;
   state.currentArea = newAreaId;
   await preloadAreaEnemies(state.currentArea);
+  /*
   if (state.activePanel === "panelArea"){
         const area = AREA_TEMPLATES[state.currentArea];
         const gameEl = document.getElementById("game");
@@ -152,7 +156,13 @@ export async function handleAreaChanged(newAreaId) {
         resourceBarEl.classList.add("area-bg");
         sidePanelEl.classList.add("area-bg");
   }
-  emit("areaChanged", newAreaId);
+        */
+  console.log("changing background");
+  applyAreaBackground(AREA_TEMPLATES[state.currentArea]);
+  state.newArea = true;
+  renderAreaPanel(); 
+  //emit("areaChanged", newAreaId);
+  state.newArea = false;
   startWave();
 }
 
@@ -387,8 +397,8 @@ export function checkWaveCleared() {
 }
 
 // Export for use in combat/damage systems
-export function damageEnemy(row, col, damage, element) {
-  const enemy = state.enemies[row][col];
+export function damageEnemy(enemy, damage, element) {
+  //const enemy = state.enemies[row][col];
   if (!enemy || enemy.hp <= 0) return false;
   const applyDmg = Math.round(damage);
   enemy.hp = Math.max(0, enemy.hp - applyDmg);
@@ -401,9 +411,11 @@ export function damageEnemy(row, col, damage, element) {
     //state.enemies[row][col] = null; // Remove enemy from grid
     emit("enemyDefeated", {
       enemy: enemy,
-      wave: state.currentWave, 
-      row, col, enemy });
+      wave: state.currentWave
+    });
   } else {
+    //console.log(`Damaged ${enemy.name} for ${applyDmg}. Remaining HP: ${enemy.hp}. Current counters: ${enemy.counters[element]}`);
+    //console.log(enemy);
     enemy.counters[element] = (enemy.counters[element] || 0) + 1;
   }
     // Small delay then check if wave is cleared

@@ -97,7 +97,7 @@ function applyDOTDamage(enemy, row, col, deltaTime) {
   //  console.log(`[DOT] damagePerTick: ${damagePerTick},
   //      duration: ${duration}, elapsed: ${elapsed}`);  
     // Apply the damage
-    damageEnemy(row, col, damagePerTick * DOT_TICK_INTERVAL, type);
+    damageEnemy(enemy, damagePerTick * DOT_TICK_INTERVAL, type);
     
     // Update elapsed time
     const newElapsed = elapsed + DOT_TICK_INTERVAL;

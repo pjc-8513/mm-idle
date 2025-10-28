@@ -107,6 +107,7 @@ export function showPanel(panelId) {
     state.activePanel = "panelParty";
     removeBackgroundElement("game");
     document.getElementById("game").classList.add("party-bg");
+    console.log(document.getElementById("game").classList);
     removeBackgroundElement("resourceBar");
     document.getElementById("resourceBar").classList.add("party-bg");
     removeBackgroundElement("sidePanel");
@@ -124,6 +125,7 @@ export function showPanel(panelId) {
     renderBuildingPanel();
   }
   if (panelId === "panelArea") {
+    
     state.activePanel = "panelArea";
     const area = AREA_TEMPLATES[state.currentArea];
     const gameEl = document.getElementById("game");
@@ -138,6 +140,9 @@ export function showPanel(panelId) {
     gameEl.classList.add("area-bg");
     resourceBarEl.classList.add("area-bg");
     sidePanelEl.classList.add("area-bg");
+    
+   //state.activePanel = "panelArea";
+   //applyAreaBackground(AREA_TEMPLATES[state.currentArea]);
 
     const enemiesGridExists = !!document.getElementById("enemiesGrid");
     if (!enemiesGridExists) {
@@ -190,4 +195,25 @@ export function removeBackgroundElement(element) {
       gameElement.classList.remove(className);
     }
   });
+  // Clear inline background styles to allow CSS classes to take effect
+  gameElement.style.backgroundImage = '';
+}
+
+export function applyAreaBackground(area) {
+  const gameEl = document.getElementById("game");
+  const resourceBarEl = document.getElementById("resourceBar");
+  const sidePanelEl = document.getElementById("sidePanel");    
+
+  if (!area || !gameEl || !resourceBarEl || !sidePanelEl) return;
+
+  removeBackgroundElement("game");
+  gameEl.style.backgroundImage = `url('../assets/images/${area.backgroundImg}')`;
+
+  removeBackgroundElement("resourceBar");
+  resourceBarEl.style.backgroundImage = `url('../assets/images/${area.topImg}')`;
+
+  removeBackgroundElement("sidePanel");
+  sidePanelEl.style.backgroundImage = `url('../assets/images/${area.sideImg}')`;
+
+  [gameEl, resourceBarEl, sidePanelEl].forEach(el => el.classList.add("area-bg"));
 }

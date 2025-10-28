@@ -79,6 +79,7 @@ export const state = {
   baseLevel: 1,
   activeWave: true,
   alreadySpawned: false,
+  newArea: false,
   nextArea: "",
 //  unlockedAreas: ["newSorpigal"], // Add newly unlocked areas here
   enemies: [

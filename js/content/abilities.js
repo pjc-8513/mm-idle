@@ -74,7 +74,7 @@ export const abilities = [
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
                 const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(row, col, skillDamage.damage, this.resonance);
+                damageEnemy(enemy, skillDamage.damage, this.resonance);
                 handleSkillAnimation("followThrough", row, col);
                 showFloatingDamage(row, col, skillDamage); // show floating text
             });
@@ -241,7 +241,7 @@ export const abilities = [
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
                 const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(row, col, skillDamage.damage, this.resonance);
+                damageEnemy(enemy, skillDamage.damage, this.resonance);
                 handleSkillAnimation("flameArch", row, col);
                 showFloatingDamage(row, col, skillDamage); // show floating text
             });
@@ -271,7 +271,7 @@ export const abilities = [
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
                 const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(row, col, skillDamage.damage, this.resonance);
+                damageEnemy(enemy, skillDamage.damage, this.resonance);
                 handleSkillAnimation("zombieAmbush", row, col);
                 showFloatingDamage(row, col, skillDamage); // show floating text
                 applyUtilityEffects(attacker, this.id, enemy, row, col);
@@ -330,7 +330,7 @@ export const abilities = [
   // Triggered ONLY on column clear (once per wave)
   triggerOnColumnClear: function (context) {
     if (this.triggeredThisWave) return; // only once per wave
-    
+    console.log('[cleric] column cleared, triggering heal');
     const cleric = partyState.party.find(c => c.id === "cleric");
     if (!cleric) return;
     
@@ -361,7 +361,7 @@ export const abilities = [
 
     // Apply light flash effect to all enemies
     if (state.activePanel === 'panelArea') {
-      console.log('light flash');
+      //console.log('light flash');
       applyVisualEffect('light-flash', 0.6);
     }
 
@@ -372,11 +372,11 @@ export const abilities = [
         if (!enemy || enemy.hp <= 0) continue;
         
         const skillDamage = calculateSkillDamage(cleric, this.resonance, this.skillBaseDamage, enemy);
-        damageEnemy(row, col, skillDamage.damage, this.resonance);
+        damageEnemy(enemy, skillDamage.damage, this.resonance);
         
         // Trigger twice on undead
         if (enemy.type === "undead"){
-          damageEnemy(row, col, skillDamage.damage, this.resonance);
+          damageEnemy(enemy, skillDamage.damage, this.resonance);
         }
         //console.log(`[soul cleric] healEvent dealt ${skillDamage.damage}`);      
         showFloatingDamage(row, col, skillDamage);
@@ -415,8 +415,8 @@ export const abilities = [
             enemies.forEach(enemy => {
               // Drain 5% of each enemy's current HP
               const drained = (enemy.hp * 0.05) + attacker.stats.attack;
-              console.log(`[vampire] drained each enemy for ${drained}`);
-              damageEnemy(enemy.position.row, enemy.position.col, drained, this.resonance);
+              //console.log(`[vampire] drained each enemy for ${drained}`);
+              damageEnemy(enemy, drained, this.resonance);
               totalDrained += drained;
               handleSkillAnimation("feastOfAges", enemy.position.row, enemy.position.col);
               //showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
@@ -430,10 +430,10 @@ export const abilities = [
         },
 
       onVampireExpire: function(summon){
-        console.log("💀 Vampire expires: releasing stored essence.");
+        //console.log("💀 Vampire expires: releasing stored essence.");
           // Convert stored HP into time (e.g., 1s per 500 HP drained)
         const secondsRestored = Math.floor(this.storedHP / 500);
-        console.log(`Vampire returns ${secondsRestored}s of stolen time using ${this.storedHP} worth of storedHP.`);
+        //console.log(`Vampire returns ${secondsRestored}s of stolen time using ${this.storedHP} worth of storedHP.`);
         if (secondsRestored > 0) {
           addWaveTime(secondsRestored);
           logMessage(`⏳ Vampire returns ${secondsRestored}s of stolen time.`);
@@ -483,7 +483,7 @@ export const abilities = [
             if (undeadStacks <= 0) continue;
 
             const damagePayload = calculateSkillDamage(attacker, resonance, basePercent * undeadStacks, enemy);
-            damageEnemy(row, col, damagePayload.damage, resonance);
+            damageEnemy(enemy, damagePayload.damage, resonance);
             //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt ${damagePayload.damage} damage based on undead counters.`);
             // Reset undead counters
             enemy.counters["undead"] = 0;
@@ -511,7 +511,7 @@ export const abilities = [
     // Apply time shield
     const shieldAmount = Math.min(Math.floor(5 + (this.perLevelBonus * templar.level)), 10); // max 10s
     addTimeShield(shieldAmount);
-    console.log(`[templar] added time shield of ${shieldAmount}s on heal.`);
+    //console.log(`[templar] added time shield of ${shieldAmount}s on heal.`);
     
     logMessage(`⏳ Templar gains ${shieldAmount}s time shield from Blinding Light.`, "info");
     }
@@ -581,7 +581,7 @@ export function applyUtilityEffects(attacker, skillId, enemy, row, col) {
           };
           */
           const finalDamage = calculateSkillDamage(attacker, resonance, bonusDamage, enemy);
-          damageEnemy(row, col, finalDamage.damage);
+          damageEnemy(enemy, finalDamage.damage);
           showFloatingDamage(row, col, finalDamage);
 
           logMessage(

@@ -231,7 +231,7 @@ export function renderAreaPanel() {
   }
 
   // Only render layout once
-  if (!panel.querySelector(".area-content")) {
+  if (!panel.querySelector(".area-content") || state.newArea === true) {
     panel.innerHTML = `
       <div class="area-content">
         <div class="area-main">

@@ -70,7 +70,7 @@ export function startAutoAttack() {
   });
 
   emit('autoAttackStarted');
-  console.log('Auto-attack started');
+  //console.log('Auto-attack started');
 }
 
 /**
@@ -82,7 +82,7 @@ export function stopAutoAttack() {
   combatState.isAutoAttacking = false;
   
   emit('autoAttackStopped');
-  console.log('Auto-attack stopped');
+  //console.log('Auto-attack stopped');
 }
 
 /**
@@ -115,7 +115,7 @@ export function getEnemiesBasedOnSkillLevel(skillLevel) {
   let rowsToGet;
   if (skillLevel < 20) rowsToGet = 1;
   else if (skillLevel < 50) rowsToGet = 2;
-  else return getActiveEnemies(); // Assuming getActiveEnemies() returns all active enemies
+  else return getActiveEnemies(); // Full list for high levels
 
   let enemies = [];
   for (let i = 0; i < state.enemies.length && rowsToGet > 0; i++) {
@@ -126,8 +126,12 @@ export function getEnemiesBasedOnSkillLevel(skillLevel) {
     }
   }
 
-  return enemies.slice(0, Math.min(enemies.length, 3 * state.enemies[0].length)); // Assuming all rows have the same length
+  // Unwrap the real enemy objects but preserve their position
+  return enemies
+    .map(e => e.enemy ? e.enemy : e)
+    .filter(e => e && e.hp > 0);
 }
+
 
 
 /**
@@ -501,7 +505,7 @@ export function executeAttack(attacker) {
   
   
   // Apply damage
-  const success = damageEnemy(position.row, position.col, damageResult.damage, attacker.resonance);
+  const success = damageEnemy(enemy, damageResult.damage, attacker.resonance);
 
   // Get canvas position for this enemy
   const pos = getEnemyCanvasPosition(position.row, position.col);
@@ -606,15 +610,17 @@ function handleWaveCleared() {
   // console.log('Wave cleared - combat stopped');
 }
 
-function getEnemyAt(row, col) {
+function getEnemyAt(enemy) {
+  const { row, col } = enemy.position;
   if (row < 0 || row > 2 || col < 0 || col > 2) return null;
   console.log('enemy: ', state.enemies[row][col]);
   return state.enemies[row][col];
 }
 
-function handleEnemyDefeated({ row, col }) {
+function handleEnemyDefeated({ enemy }) {
+  const { row, col } = enemy.position;
   //console.log(`Enemy defeated at position: ${row}, ${col}`);
-  const enemy = getEnemyAt(row, col);
+  //const enemy = getEnemyAt(row, col);
     if (enemy) {
     removeEnemyTooltipById(enemy.uniqueId);
     //console.log(`Enemy defeated at position: ${row}, ${col}`);

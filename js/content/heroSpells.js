@@ -34,9 +34,14 @@ export const heroSpells = [
             for (const type in enemy.counters) {
                 totalCounters += enemy.counters[type];
             }
-            enemy.counters = {}; // Step 2: Clear all counters
+            Object.keys(enemy.counters).forEach(k => delete enemy.counters[k]);
             });
 
+            if (totalCounters === 0) {
+                logMessage(`${this.name}: No counters to absorb.`);
+                return;
+            }
+            applyVisualEffect('dark-flash', 0.8);
             // Step 3: Redistribute as dark counters
             for (let i = 0; i < totalCounters; i++) {
             const randomEnemy = enemies[Math.floor(Math.random() * enemies.length)];
@@ -46,15 +51,18 @@ export const heroSpells = [
             // Step 4: Deal damage and consume counters
             enemies.forEach(enemy => {
             const darkCount = enemy.counters["dark"] || 0;
-            const skillDamage = this.skillBaseDamage * darkCount;
+            const initialSkillDamage = this.skillBaseDamage * darkCount;
+            const skillDamageObject = calculateHeroSpellDamage(this.resonance, initialSkillDamage, enemy);
+            const skillDamage = skillDamageObject.damage;
+
 
             if (darkCount > 0) {
-                damageEnemy(enemy.row, enemy.col, skillDamage, this.resonance);
-                handleSkillAnimation("moonbeam", enemy.row, enemy.col);
-                showFloatingDamage(enemy.row, enemy.col, skillDamage);
+                damageEnemy(enemy, skillDamage, this.resonance);
+                //handleSkillAnimation("moonbeam", enemy.position.row, enemy.position.col);
+                showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage);
             }
 
-            enemy.counters = {}; // Step 5: Consume all counters
+            delete enemy.counters["dark"];; // Step 5: Consume all counters
             });
         }
     },
@@ -67,37 +75,48 @@ export const heroSpells = [
         gemCost: 3,
         tier: 2,
         unlocked: true,
-        description: "Convert all active counters to a random counter type, if it is light, consume all counters and deal light damage to all enemies for each light counter they have.",
+        description: "Convert all active counters to a random counter type, then deals damage based on the type selected.",
         icon: "../../assets/images/icons/brilliant.png",
         activate: function () {
         if (state.resources.gems < this.gemCost) {
             logMessage(`Cannot afford to cast ${this.name}`);
             return;
         }
+        const damageMultipliers = {
+            "dark": 0.5,
+            "undead": 0.5,
+            "earth": 0.5,
+            "physical": 0.5,
+            "poison": 0.5,
+            "air": 1,
+            "water": 1,
+            "fire": 1,
+            "light": 2
+        };
+
+        applyVisualEffect('light-flash', 0.8);
         const enemies = getActiveEnemies();
         const counterTypes = ["fire", "water", "poison", "light", "dark", "air", "undead", "physical"]; // define your game's counter types
-
+        const newType = counterTypes[Math.floor(Math.random() * counterTypes.length)];
+        const initialSkillDamage = this.skillBaseDamage * damageMultipliers[newType];
         enemies.forEach(enemy => {
             const currentCounters = enemy.counters;
             const totalCounters = Object.values(currentCounters).reduce((sum, val) => sum + val, 0);
 
-            // Convert all counters to a single random type
-            const newType = counterTypes[Math.floor(Math.random() * counterTypes.length)];
+            // Step 2: Convert all counters to the new type
             enemy.counters = { [newType]: totalCounters };
-
-            // If the new type is "light", apply damage
-            if (newType === "light") {
-            const lightCount = enemy.counters["light"] || 0;
-            const skillDamage = this.skillBaseDamage * lightCount;
+            
+            const skillDamageObject = calculateHeroSpellDamage(newType, initialSkillDamage, enemy);
+            const skillDamage = skillDamageObject.damage;
+            console.log(`Brilliant Light converting to ${newType} counters, dealing ${skillDamage} damage.`);
 
             // Consume all counters
-            enemy.counters = {};
+            //enemy.counters = {};
 
             // Apply damage and animation
-            damageEnemy(enemy.row, enemy.col, skillDamage, this.resonance);
-            handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
-            showFloatingDamage(enemy.row, enemy.col, skillDamage);
-            }
+            damageEnemy(enemy, skillDamage, this.resonance);
+            //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
+            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage);
         });
         },
     },
@@ -122,12 +141,12 @@ export const heroSpells = [
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
     
         enemies.forEach(enemy => {
-           // console.log('Damaging enemy: ', enemy);
+            console.log('Damaging enemy: ', enemy);
             const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
-            damageEnemy(enemy.row, enemy.col, skillDamage.damage, this.resonance);
-            handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
-            showFloatingDamage(enemy.row, enemy.col, skillDamage); // show floating text
+            damageEnemy(enemy, skillDamage.damage, this.resonance);
+            //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
+            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
             });
     },
 },
