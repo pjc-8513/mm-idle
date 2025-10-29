@@ -33,3 +33,53 @@ export function updateVisualEffects(delta) {
     }
   }
 }
+
+/**
+ * Flashes the screen with a color (default white) for a brief duration.
+ * @param {string} color - Flash color (e.g., 'white', '#ffcc00').
+ * @param {number} duration - Duration in ms.
+ */
+export function flashScreen(color = "white", duration = 500) {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = color;
+  overlay.style.opacity = "0.8";
+  overlay.style.zIndex = "9999";
+  overlay.style.transition = `opacity ${duration / 2}ms ease-out`;
+  document.body.appendChild(overlay);
+
+  setTimeout(() => (overlay.style.opacity = "0"), duration / 2);
+  setTimeout(() => overlay.remove(), duration);
+}
+
+/**
+ * Shakes the entire screen or battle container for a brief duration.
+ * @param {number} duration - Duration of the shake in milliseconds.
+ * @param {number} intensity - Maximum pixel offset for the shake.
+ */
+export function shakeScreen(duration = 500, intensity = 5) {
+  const container = document.querySelector("#game") || document.body; 
+  if (!container) return;
+
+  const start = Date.now();
+  const originalStyle = container.style.transform;
+
+  function animate() {
+    const elapsed = Date.now() - start;
+    if (elapsed >= duration) {
+      container.style.transform = originalStyle;
+      return;
+    }
+
+    const dx = (Math.random() - 0.5) * intensity * 2;
+    const dy = (Math.random() - 0.5) * intensity * 2;
+    container.style.transform = `translate(${dx}px, ${dy}px)`;
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}

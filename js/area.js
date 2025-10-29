@@ -308,25 +308,53 @@ export function updateAreaPanel() {
 
 
 // Updated renderPartyDisplay function
+// Updated renderPartyDisplay function - separates regular members and summons
 function renderPartyDisplay() {
   if (!partyState.party || partyState.party.length === 0) {
     return '<div class="no-party">No party members</div>';
   }
   
-  let partyHTML = '';
-  //console.log("Rendering party members:", partyState.party);
+  // Separate regular members and summons
+  const regularMembers = [];
+  const summonMembers = [];
+  
   partyState.party.forEach(member => {
-    // For summons, we don't look up in classes array
     if (member.isSummon) {
-      partyHTML += renderSummonMember(member);
+      summonMembers.push(member);
     } else {
+      regularMembers.push(member);
+    }
+  });
+  
+  // Create two-column layout
+  let partyHTML = '<div class="party-columns-container">';
+  
+  // Regular members column
+  partyHTML += '<div class="party-column regular-column">';
+  if (regularMembers.length > 0) {
+    regularMembers.forEach(member => {
       const cls = classes.find(c => c.id === member.id);
       if (cls) {
         partyHTML += renderPartyMember(member, cls);
       }
-    }
-  });
+    });
+  } else {
+    partyHTML += '<div class="empty-column-message">No party members</div>';
+  }
+  partyHTML += '</div>';
   
+  // Summons column
+  partyHTML += '<div class="party-column summons-column">';
+  if (summonMembers.length > 0) {
+    summonMembers.forEach(member => {
+      partyHTML += renderSummonMember(member);
+    });
+  } else {
+    partyHTML += '<div class="empty-column-message">No summons</div>';
+  }
+  partyHTML += '</div>';
+  
+  partyHTML += '</div>';
   return partyHTML;
 }
 
@@ -822,7 +850,6 @@ function addVerticalPartyCSS() {
       display: flex;
       gap: 0px;
       align-items: flex-start;
-      
     }
     
     .enemies-section {
@@ -830,8 +857,8 @@ function addVerticalPartyCSS() {
     }
     
     .party-section {
-      flex: 0 0 140px;
-      min-width: 100px;
+      flex: 0 0 300px;
+      min-width: 240px;
       margin-left: 20px;
     }
     
@@ -842,12 +869,39 @@ function addVerticalPartyCSS() {
       text-align: center;
     }
     
-    .party-vertical {
+    /* Two-column layout for party members and summons */
+    .party-columns-container {
+      display: flex;
+      gap: 12px;
+      max-height: 350px;
+    }
+    
+    .party-column {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 350px;
       overflow-y: auto;
+      padding: 4px;
+      border-radius: 6px;
+    }
+    
+    .regular-column {
+      background: rgba(33, 150, 243, 0.05);
+      border: 1px solid rgba(33, 150, 243, 0.2);
+    }
+    
+    .summons-column {
+      background: rgba(156, 39, 176, 0.05);
+      border: 1px solid rgba(156, 39, 176, 0.2);
+    }
+    
+    .empty-column-message {
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      padding: 12px;
+      font-size: 0.85em;
     }
     
     .party-member-vertical {
@@ -860,12 +914,23 @@ function addVerticalPartyCSS() {
       border-radius: 6px;
       min-height: 60px;
       transition: all 0.2s ease;
+      position: relative;
     }
     
     .party-member-vertical:hover {
       background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
       border-color: #2196f3;
       transform: translateX(2px);
+    }
+    
+    .summon-member {
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+      border-color: #ce93d8;
+    }
+    
+    .summon-member:hover {
+      background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%);
+      border-color: #9c27b0;
     }
     
     .party-image-vertical {
@@ -876,6 +941,7 @@ function addVerticalPartyCSS() {
       overflow: hidden;
       background: #fff;
       border: 1px solid #ddd;
+      position: relative;
     }
     
     .party-image-vertical img {
@@ -896,6 +962,18 @@ function addVerticalPartyCSS() {
       font-size: 16px;
     }
     
+    .summon-timer {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      font-size: 0.65em;
+      padding: 1px 3px;
+      border-radius: 2px;
+      line-height: 1;
+    }
+    
     .party-info-vertical {
       flex: 1;
       display: flex;
@@ -910,10 +988,31 @@ function addVerticalPartyCSS() {
       line-height: 1.2;
     }
     
+    .summon-name {
+      color: #7b1fa2;
+    }
+    
     .party-level-vertical {
       font-size: 0.75em;
       color: #666;
       font-weight: 500;
+    }
+    
+    .summon-duration-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+    }
+    
+    .summon-duration-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #9c27b0, #e91e63);
+      transition: width 0.3s ease;
     }
     
     .no-party {
@@ -935,11 +1034,15 @@ function addVerticalPartyCSS() {
         min-width: auto;
       }
       
-      .party-vertical {
+      .party-columns-container {
+        flex-direction: column;
+        max-height: none;
+      }
+      
+      .party-column {
         flex-direction: row;
         overflow-x: auto;
         overflow-y: visible;
-        max-height: none;
         padding-bottom: 4px;
       }
       
@@ -1087,22 +1190,16 @@ export const AREA_MENUS = {
   
 quickSpells: () => {
   const currentGems = Math.floor(state.resources.gems || 0);
-  const drawCost = 5;
-  const canAffordDraw = currentGems >= drawCost;
   const handSpells = spellHandState.hand;
-  
-  // Get library level to determine unlocked tiers
   const libraryLevel = getBuildingLevel("library");
-  
-  // Generate spell card buttons for current hand
+
   const spellButtons = handSpells
-    .map((spellId, index) => {  // ✅ Add index parameter
+    .map((spellId, index) => {
       const spell = heroSpells.find(s => s.id === spellId);
       if (!spell) return '';
-      
       const canAffordSpell = currentGems >= (spell.gemCost || 0);
       const affordableClass = canAffordSpell ? 'affordable' : 'unaffordable';
-      
+
       return `
         <button 
           class="quick-spell-btn ${affordableClass}" 
@@ -1118,20 +1215,14 @@ quickSpells: () => {
       `;
     })
     .join('');
-  
+
   const emptySlots = spellHandState.maxHandSize - handSpells.length;
   const emptySlotHTML = '<div class="empty-spell-slot"></div>'.repeat(emptySlots);
-  
+
   return `
     <div class="quick-spells-container">
       <div class="spell-hand-header">
         <h4>Spell Hand</h4>
-        <button 
-          class="draw-spells-btn ${canAffordDraw ? 'affordable' : 'unaffordable'}"
-          ${!canAffordDraw ? 'disabled' : ''}
-        >
-          Draw Hand (${drawCost} gems)
-        </button>
       </div>
       <div class="spell-hand">
         ${spellButtons}

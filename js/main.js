@@ -1,4 +1,7 @@
 // main.js
+import { state, partyState, spellHandState } from "./state.js";
+import { updateSpellDock } from "./systems/dockManager.js";
+import { heroSpells } from "./content/heroSpells.js";
 import { initState } from "./state.js";
 import { emit } from "./events.js";
 import { initUI } from "./ui.js";
@@ -44,3 +47,22 @@ window.addEventListener("DOMContentLoaded", () => {
   
   console.log("Game initialized with event-based updates.");
 });
+
+// devHelper.js or near initialization code
+window.giveSpell = function (spellId) {
+  const spell = heroSpells.find(s => s.id === spellId);
+  if (!spell) {
+    console.warn(`❌ Spell ID not found: ${spellId}`);
+    return;
+  }
+
+  if (spellHandState.hand.length >= spellHandState.maxHandSize) {
+    console.warn(`⚠️ Hand is full (${spellHandState.maxHandSize})`);
+    return;
+  }
+
+  spellHandState.hand.push(spell.id);
+  console.log(`✨ Added spell to hand: ${spell.name} (Tier ${spell.tier})`);
+  emit("spellHandUpdated");
+  updateSpellDock();
+};

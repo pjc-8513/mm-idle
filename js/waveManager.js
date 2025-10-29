@@ -1,5 +1,7 @@
 // waveManager.js - Centralized wave management
-import { state, partyState } from "./state.js";
+import { state, partyState, spellHandState } from "./state.js";
+import { getBuildingLevel } from "./town.js";
+import { heroSpells } from "./content/heroSpells.js";
 import { emit, on } from "./events.js";
 import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
@@ -8,6 +10,7 @@ import { getBonusGoldMultiplier, renderAreaPanel } from "./area.js";
 import { prefixes } from "./content/definitions.js";
 import { stopAutoAttack, startAutoAttack, setTarget } from "./systems/combatSystem.js";
 import { applyAreaBackground } from "./ui.js";
+import { updateSpellDock } from "./systems/dockManager.js";
 
 // waveManager.js
 const SCALING = {
@@ -90,6 +93,46 @@ export function initWaveManager() {
 
 // waveManager.js
 on("enemyDefeated", ({ enemy }) => {
+  spellHandState.counter += 1;
+  // Draw a new spell every 3 defeated enemies
+  if (spellHandState.counter < 3) return;
+  spellHandState.counter = 0;
+    // Don’t overfill the hand
+  if (spellHandState.hand.length >= spellHandState.maxHandSize) return;
+
+  const libraryLevel = getBuildingLevel("library");
+  const unlockedSpells = heroSpells.filter(spell => (spell.tier || 1) <= libraryLevel);
+
+  if (unlockedSpells.length === 0) return;
+  // --- Weighted tiers ---
+  const tierWeights = {
+    1: 60,
+    2: 25,
+    3: 10,
+    4: 5,
+  };
+  // Normalize weights for currently unlocked tiers only
+  const availableWeights = unlockedSpells.map(spell => tierWeights[spell.tier] || 1);
+  const totalWeight = availableWeights.reduce((a, b) => a + b, 0);
+  let roll = Math.random() * totalWeight;
+
+    let selectedSpell = null;
+  for (let i = 0; i < unlockedSpells.length; i++) {
+    roll -= availableWeights[i];
+    if (roll <= 0) {
+      selectedSpell = unlockedSpells[i];
+      break;
+    }
+  }
+
+  if (!selectedSpell) selectedSpell = unlockedSpells[0]; // fallback safety
+
+  spellHandState.hand.push(selectedSpell.id);
+  console.log(`💧 Dropped spell: ${selectedSpell.name} (Tier ${selectedSpell.tier}) from ${enemy.name}`);
+
+  emit("spellHandUpdated");
+  updateSpellDock();
+
   // Check if all enemies in this column are cleared
   const col = enemy.position.col;
   const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);

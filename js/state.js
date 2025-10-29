@@ -1,6 +1,7 @@
 export const spellHandState = {
+  counter: 0, // counter for determining when to draw a new spell
   hand: [], // Array of spell IDs currently in hand
-  maxHandSize: 4
+  maxHandSize: 5
 };
 
 export const partyState = {
