@@ -1,4 +1,5 @@
 export const spellHandState = {
+  lastHeroSpellResonance: null,
   counter: 0, // counter for determining when to draw a new spell
   hand: [], // Array of spell IDs currently in hand
   maxHandSize: 5
@@ -17,6 +18,7 @@ export const partyState = {
                    undead: 100 },
   totalStats: {},
   maxPartySize: 4,
+  activeHeroBuffs: []
 }
 export const state = {
   tick: 0,

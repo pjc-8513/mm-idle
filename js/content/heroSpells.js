@@ -72,6 +72,7 @@ export const heroSpells = [
 
             delete enemy.counters["dark"];; // Step 5: Consume all counters
             });
+          spellHandState.lastHeroSpellResonance = "dark";
         }
     },
     {
@@ -129,6 +130,7 @@ export const heroSpells = [
             //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage);
         });
+        spellHandState.lastHeroSpellResonance = "light";
         },
     },
     {
@@ -161,6 +163,7 @@ export const heroSpells = [
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
             });
+      spellHandState.lastHeroSpellResonance = "undead";
     },
 },
 {
@@ -260,7 +263,7 @@ export const heroSpells = [
         delete enemy.counters["dark"];; // Consume all counters
       }
     });
-
+    spellHandState.lastHeroSpellResonance = "earth";
     logMessage(`${this.name} shakes the battlefield!`);
   }
 },
@@ -338,7 +341,9 @@ export const heroSpells = [
         shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
         logMessage(`${this.name} strikes matched enemies with crushing force!`);
     }
+    spellHandState.lastHeroSpellResonance = "physical";
   }
+  
 },
 {
   id: "destroyUndead",
@@ -415,10 +420,77 @@ export const heroSpells = [
         renderAreaPanel();
       }
     });
-
+    spellHandState.lastHeroSpellResonance = "light";
     logMessage(`${this.name} incinerates the undead with divine light!`);
   }
-}
+},
+{
+  id: "haste",
+  name: "Haste",
+  resonance: "fire",
+  tier: 1,
+  gemCost: 1,
+  description: "Maxes out all party members' attack speed for a short duration.",
+  icon: "../../assets/images/icons/inferno.png",
+  duration: 8, // seconds — base duration
+  unlocked: true,
+  active: false,
+  remaining: 0,
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`Not enough gems to cast ${this.name}`);
+      return;
+    }
+    // Duration logic (double if previous spell was fire)
+    let duration = this.duration;
+    if (spellHandState.lastHeroSpellResonance === "fire") {
+      duration *= 2;
+      logMessage("🔥 Fire synergy! Haste duration doubled!");
+    }
+
+    // Track spell used
+    spellHandState.lastHeroSpellResonance = this.resonance;
+
+    // Apply visual
+    applyVisualEffect("air-flash", 0.8);
+    logMessage(`✨ ${this.name} activated!`);
+
+    // Activate buff
+    this.active = true;
+    this.remaining = duration;
+
+    // Apply buff to party
+    partyState.party.forEach(member => {
+      if (!member.stats) member.stats = {};
+      member.stats._originalSpeed = member.stats.speed || 1;
+      member.stats.speed = 9999; // effectively max speed
+    });
+
+    // Register buff for delta tracking
+    if (!partyState.activeHeroBuffs) partyState.activeHeroBuffs = [];
+    const existingBuff = partyState.activeHeroBuffs.find(b => b.id === this.id);
+    if (!existingBuff) {
+      partyState.activeHeroBuffs.push({
+        id: this.id,
+        remaining: this.remaining,
+        onExpire: () => {
+          // Restore original speed
+          partyState.party.forEach(member => {
+            if (member.stats && member.stats._originalSpeed != null) {
+              member.stats.speed = member.stats._originalSpeed;
+              delete member.stats._originalSpeed;
+            }
+          });
+          this.active = false;
+          logMessage("⚡ Haste has worn off.");
+        },
+      });
+    }
+    spellHandState.lastHeroSpellResonance = "fire";
+  },
+},
+
 
 ];
 

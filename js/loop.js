@@ -64,6 +64,18 @@ function update(delta) {
   updateDOTs(delta);
   updateVisualEffects(delta); // ADD THIS LINE
   if (partyState.party.length !== 0) updateWaveTimer(delta); // ✅ add this line
+    // ✅ Track hero buffs by delta
+  if (partyState.activeHeroBuffs && partyState.activeHeroBuffs.length > 0) {
+    for (let i = partyState.activeHeroBuffs.length - 1; i >= 0; i--) {
+      const buff = partyState.activeHeroBuffs[i];
+      buff.remaining -= delta;
+
+      if (buff.remaining <= 0) {
+        if (buff.onExpire) buff.onExpire();
+        partyState.activeHeroBuffs.splice(i, 1);
+      }
+    }
+  }
 
   // Update sprite animations
   if (state.ui?.spriteAnimations) {

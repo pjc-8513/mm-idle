@@ -93,6 +93,21 @@ export function initWaveManager() {
 
 // waveManager.js
 on("enemyDefeated", ({ enemy }) => {
+  // Check if all enemies in this column are cleared
+  const col = enemy.position.col;
+  const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
+  
+  if (columnCleared) {
+    console.log(`[waveManager] Column ${col} cleared.`);
+    const cleric = partyState.party.find(c => c.id === "cleric");
+    if (cleric){
+      const heal = abilities.find(a => a.id === "heal");
+      if (heal && !heal.triggeredThisWave) {
+        heal.triggerOnColumnClear({ col });
+      }
+    }
+  }
+
   spellHandState.counter += 1;
   // Draw a new spell every 3 defeated enemies
   if (spellHandState.counter < 3) return;
@@ -133,20 +148,6 @@ on("enemyDefeated", ({ enemy }) => {
   emit("spellHandUpdated");
   updateSpellDock();
 
-  // Check if all enemies in this column are cleared
-  const col = enemy.position.col;
-  const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);
-  
-  if (columnCleared) {
-    console.log(`[waveManager] Column ${col} cleared.`);
-    const cleric = partyState.party.find(c => c.id === "cleric");
-    if (cleric){
-      const heal = abilities.find(a => a.id === "heal");
-      if (heal && !heal.triggeredThisWave) {
-        heal.triggerOnColumnClear({ col });
-      }
-    }
-  }
 });
 
 on("waveStarted", () => {
