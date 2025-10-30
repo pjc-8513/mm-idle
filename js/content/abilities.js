@@ -516,7 +516,16 @@ export const abilities = [
     logMessage(`⏳ Templar gains ${shieldAmount}s time shield from Blinding Light.`, "info");
     }
   },
-        
+    {
+      // Tornado ability placeholder - used for spritepath for hero spell
+        id: "tornado",
+        name: "Tornado",
+        type: "active",
+        resonance: "air",
+        skillBaseDamage: 180,
+        //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
+        spritePath: '../../assets/images/sprites/tornado.webp',
+    },        
 ];
 
 

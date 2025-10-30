@@ -1,4 +1,4 @@
-import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
@@ -12,6 +12,8 @@ import { renderAreaPanel, updateEnemiesGrid } from '../area.js';
 import { getBuildingLevel } from '../town.js';
 import { spellHandState } from '../state.js';
 import { updateSpellDock } from '../systems/dockManager.js';
+import { applyDOT } from "../systems/dotManager.js";
+import { spawnTornado } from "../systems/tornadoManager.js";
 
 export const heroSpells = [
     {
@@ -258,7 +260,7 @@ export const heroSpells = [
         const dmgObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * totalBonus, enemy);
         const dmg = dmgObject.damage;
         damageEnemy(enemy, dmg, this.resonance);
-        handleSkillAnimation("earthquake", newRow, newCol);
+        //handleSkillAnimation("earthquake", newRow, newCol);
         showFloatingDamage(newRow, newCol, dmg);
         delete enemy.counters["dark"];; // Consume all counters
       }
@@ -270,13 +272,13 @@ export const heroSpells = [
 {
   id: "flush",
   name: "Flush",
-  resonance: "physical",
+  resonance: "water",
   tier: 2,
   gemCost: 3,
     get skillBaseDamage() {
         return 20 * partyState.heroStats.attack;
     },
-  description: "Deals physical damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
+  description: "Deals water damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
     icon: "../../assets/images/icons/brilliant.png",
 
   activate: function () {
@@ -341,7 +343,7 @@ export const heroSpells = [
         shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
         logMessage(`${this.name} strikes matched enemies with crushing force!`);
     }
-    spellHandState.lastHeroSpellResonance = "physical";
+    spellHandState.lastHeroSpellResonance = "water";
   }
   
 },
@@ -453,7 +455,7 @@ export const heroSpells = [
     spellHandState.lastHeroSpellResonance = this.resonance;
 
     // Apply visual
-    applyVisualEffect("air-flash", 0.8);
+    applyVisualEffect("light-flash", 0.8);
     logMessage(`✨ ${this.name} activated!`);
 
     // Activate buff
@@ -490,6 +492,455 @@ export const heroSpells = [
     spellHandState.lastHeroSpellResonance = "fire";
   },
 },
+{
+  id: "starFall",
+  name: "Star Fall",
+  resonance: "air",
+  get skillBaseDamage() {
+        return 10 * partyState.heroStats.attack;
+    },
+  skillLevel: 1,
+  gemCost: 5,
+  tier: 4,
+  unlocked: true,
+  description: "Calls down 9 falling stars that each target a random grid position. Empty tiles result in misses.",
+  icon: "../../assets/images/icons/starfall.webp",
+  active: false,
+  remainingDelay: 0,
+  starsRemaining: 0,
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`❌ Not enough gems to cast ${this.name}`);
+      return;
+    }
+    //applyVisualEffect("air-flash", 1.2);
+    applyVisualEffect('light-flash', 0.8);
+    logMessage("🌠 Casting Star Fall!");
+
+    this.active = true;
+    if (spellHandState.lastHeroSpellResonance === "air") {
+      this.starsRemaining = 12;
+      logMessage("💨 Air synergy! Star Fall summons 12 stars!");
+    } else {
+      this.starsRemaining = 9;
+    }
+    this.remainingDelay = 0.15; // seconds between each star
+
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+    spellHandState.lastHeroSpellResonance = this.resonance;  
+  },
+
+  update: function (delta) {
+    //console.log('Updating Star Fall spell:', this);
+    if (!this.active) return;
+
+    this.remainingDelay -= delta;
+    if (this.remainingDelay <= 0 && this.starsRemaining > 0) {
+      this.castStar();
+      this.starsRemaining--;
+      this.remainingDelay = 0.15; // next star delay
+    }
+
+    if (this.starsRemaining <= 0) {
+      this.active = false;
+      const idx = state.activeHeroSpells.indexOf(this);
+      if (idx !== -1) state.activeHeroSpells.splice(idx, 1);
+    }
+  },
+
+  castStar: function () {
+    const randRow = randInt(0, state.enemies.length - 1);
+    const randCol = randInt(0, state.enemies[randRow].length - 1);
+    const enemy = state.enemies[randRow][randCol];
+
+    if (enemy && enemy.hp > 0) {
+      const tierMultiplier = Math.pow(1.2, this.tier);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+      damageEnemy(enemy, skillDamage.damage, this.resonance);
+      handleSkillAnimation("followThrough", randRow, randCol);
+      showFloatingDamage(randRow, randCol, skillDamage);
+      renderAreaPanel();
+    } else {
+      /*
+      showFloatingText("Miss!", randRow, randCol, { color: "#b0c4de" });
+      handleSkillAnimation("starFallMiss", randRow, randCol);
+      */
+      logMessage(`🌠 Star Fall missed at (${randRow}, ${randCol})`);
+    }
+  },
+},
+{
+  id: "landslide",
+  name: "Landslide",
+  resonance: "earth",
+  tier: 2,
+  get skillBaseDamage() {
+      return 10 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  gemCost: 3,
+  unlocked: true,
+  description: "Crushes enemies column by column. If it defeats an enemy, the landslide continues to the next column (max 3).",
+  icon: "../../assets/images/icons/earthquake.webp",
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`❌ Not enough gems to cast ${this.name}`);
+      return;
+    }
+
+    state.lastHeroSpellResonance = this.resonance;
+    spellHandState.lastHeroSpellResonance = this.resonance;
+    shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
+    logMessage("🌋 Casting Landslide!");
+
+    let columnsChecked = 0;
+    let currentColumn = 0;
+    const maxColumns = 3;
+    let defeatedSomething = false;
+
+    // Find first column with enemies
+    while (currentColumn < state.enemies[0].length && getEnemiesInColumn(currentColumn).length === 0) {
+      currentColumn++;
+    }
+
+    // If we ran out of columns entirely
+    if (currentColumn >= state.enemies[0].length) {
+      logMessage("The ground rumbles, but there are no enemies to crush!");
+      return;
+    }
+
+    // Process up to 3 columns
+    while (columnsChecked < maxColumns && currentColumn < state.enemies[0].length) {
+      const enemies = getEnemiesInColumn(currentColumn);
+
+      if (enemies.length > 0) {
+        logMessage(`🪨 Landslide hits column ${currentColumn + 1}!`);
+        defeatedSomething = this.hitColumn(enemies) || defeatedSomething;
+        columnsChecked++;
+      }
+
+      // Continue only if something died
+      if (defeatedSomething) {
+        currentColumn++;
+        defeatedSomething = false;
+      } else {
+        break;
+      }
+    }
+  },
+
+  hitColumn: function (enemies) {
+    let defeated = false;
+    enemies.forEach(({ enemy, row, col }) => {
+      const tierMultiplier = Math.pow(1.2, this.tier);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+
+      // Apply visual and damage
+      showFloatingDamage(row, col, skillDamage);
+      const beforeHP = enemy.hp;
+      damageEnemy(enemy, skillDamage.damage, this.resonance);
+
+      if (beforeHP > 0 && enemy.hp <= 0) {
+        defeated = true;
+        renderAreaPanel();
+      }
+    });
+    return defeated;
+  },
+},
+{
+  id: "fireball",
+  name: "Fireball",
+  resonance: "fire",
+  get skillBaseDamage() {
+    return 10 * partyState.heroStats.attack;
+  },
+  get dotDamage() {
+    return 10 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  gemCost: 3,
+  tier: 3,
+  unlocked: true,
+  description: "Launches a fireball that explodes on impact, dealing fire damage to a 2x2 area around a random enemy.",
+  icon: "../../assets/images/icons/inferno.png",
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`Cannot afford to cast ${this.name}`);
+      return;
+    }
+
+    const activeEnemies = getActiveEnemies();
+    if (activeEnemies.length === 0) {
+      logMessage(`No enemies available for ${this.name}`);
+      return;
+    }
+
+    // Pick a random active enemy as the explosion origin
+    const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+    //console.log(`Fireball targets enemy at (${randomEnemy.position.row}, ${randomEnemy.position.col})`);
+    let { row, col } = randomEnemy.position;
+    //console.log(`Enemy position: row ${row}, col ${col}`);
+    const numRows = state.enemies.length;
+    const numCols = state.enemies[0].length;
+
+    // Adjust the top-left corner of the 2x2 zone so it stays within bounds
+    // The zone covers: (baseRow, baseCol), (baseRow+1, baseCol), (baseRow, baseCol+1), (baseRow+1, baseCol+1)
+    let baseRow = row;
+    let baseCol = col;
+
+    if (baseRow === numRows - 1) baseRow--; // shift up if on bottom edge
+    if (baseCol === numCols - 1) baseCol--; // shift left if on right edge
+
+    // Collect enemies in that adjusted 2x2 zone
+    const targets = [];
+    for (let r = baseRow; r < baseRow + 2; r++) {
+      for (let c = baseCol; c < baseCol + 2; c++) {
+        const enemy = state.enemies[r][c];
+        if (enemy && enemy.hp > 0) {
+          targets.push({ enemy, row: r, col: c });
+        }
+      }
+    }
+
+    // Apply damage + effects
+    targets.forEach(({ row, col }) => {
+      const enemy = state.enemies[row][col];
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+      const damage = skillDamageObject.damage;
+      damageEnemy(enemy, damage, this.resonance);
+      if (spellHandState.lastHeroSpellResonance === "fire") {
+        // Apply DOT for 5 seconds
+        applyDOT(enemy, "fire", this.dotDamage, 5);
+        logMessage(`🔥 Fire synergy! ${this.name} applies burn DOT!`);
+      }
+      handleSkillAnimation("flameArch", row, col);
+      showFloatingDamage(row, col, this.skillBaseDamage);
+      if (enemy.hp <= 0) renderAreaPanel();
+    });
+  spellHandState.lastHeroSpellResonance = this.resonance;  
+  },
+},
+{
+  id: "ring_of_fire",
+  name: "Ring of Fire",
+  resonance: "fire",
+  get skillBaseDamage() {
+    return 8 * partyState.heroStats.attack;
+  },
+  get dotDamage() {
+    return 8 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  gemCost: 3,
+  tier: 2,
+  unlocked: true,
+  description: "Engulfs the battlefield in flames, dealing fire damage to all enemies on the outer ring of the grid (not the center).",
+  icon: "../../assets/images/icons/inferno.png",
+  active: false,
+  targets: [],
+  currentTargetIndex: 0,
+  remainingDelay: 0,
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`Cannot afford to cast ${this.name}`);
+      return;
+    }
+
+    const targets = getEnemiesOnOuterRing();
+
+    if (targets.length === 0) {
+      logMessage(`No enemies on the outer ring to hit.`);
+      return;
+    }
+
+    this.targets = targets;
+    this.currentTargetIndex = 0;
+    this.remainingDelay = 0.2; // seconds between each flame hit
+    this.active = true;
+
+    logMessage("🔥 Casting Ring of Fire!");
+
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+  },
+
+  update: function (delta) {
+    if (!this.active) return;
+
+    this.remainingDelay -= delta;
+
+    if (this.remainingDelay <= 0 && this.currentTargetIndex < this.targets.length) {
+      const { row, col } = this.targets[this.currentTargetIndex];
+      const enemy = state.enemies[row][col];
+
+      if (enemy && enemy.hp > 0) {
+        const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+        const damage = skillDamageObject.damage;
+        damageEnemy(enemy, damage, this.resonance);
+        handleSkillAnimation("flameArch", row, col);
+        showFloatingDamage(row, col, this.skillBaseDamage);
+        if (spellHandState.lastHeroSpellResonance === "fire") {
+          // Apply DOT for 5 seconds
+          applyDOT(enemy, "fire", this.dotDamage, 5);
+          logMessage(`🔥 Fire synergy! ${this.name} applies burn DOT!`);
+        }
+        if (enemy.hp <= 0) renderAreaPanel();
+      } else {
+        logMessage(`🔥 Ring of Fire missed at (${row}, ${col})`);
+      }
+
+      this.currentTargetIndex++;
+      this.remainingDelay = 0.2;
+    }
+
+    if (this.currentTargetIndex >= this.targets.length) {
+      this.active = false;
+      spellHandState.lastHeroSpellResonance = this.resonance;
+      const idx = state.activeHeroSpells.indexOf(this);
+      if (idx !== -1) state.activeHeroSpells.splice(idx, 1);
+    }
+  },
+},
+{
+  id: "reaper",
+  name: "Reaper",
+  resonance: "undead",
+  tier: 4,
+  gemCost: 4,
+  get skillBaseDamage() {
+    return 30 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  unlocked: true,
+  description: "The Reaper hunts enemies marked by death. Deals damage to enemies with 5+ undead counters, one by one.",
+  icon: "../../assets/images/icons/breath.png",
+  active: false,
+  targets: [],
+  currentTargetIndex: 0,
+  remainingDelay: 0,
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`💀 Not enough gems to summon the Reaper.`);
+      return;
+    }
+
+    const activeEnemies = getActiveEnemies();
+    const markedTargets = [];
+
+    for (const enemy of activeEnemies) {
+      const row = enemy.position.row;
+      const col = enemy.position.col;
+
+      console.log(`Checking enemy at (${row}, ${col}) with undead counters: ${enemy?.counters?.undead || 0}`);
+
+      if (enemy?.counters?.undead >= 5) {
+        console.log(`Reaper found marked enemy at (${row}, ${col}) with ${enemy.counters.undead} undead counters.`);
+        markedTargets.push({ row, col });
+      }
+    }
+
+    if (markedTargets.length === 0) {
+      logMessage("💀 The Reaper found no souls marked for harvest. Replacing spell.");
+      replaceSpell();
+      return;
+    }
+
+    this.targets = markedTargets;
+    this.currentTargetIndex = 0;
+    this.remainingDelay = 0.25; // seconds between each execution
+    this.active = true;
+
+    logMessage("☠️ The Reaper begins its grim work...");
+
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+    spellHandState.lastHeroSpellResonance = this.resonance;
+  },
+
+  update: function (delta) {
+    if (!this.active) return;
+
+    this.remainingDelay -= delta;
+
+    if (this.remainingDelay <= 0 && this.currentTargetIndex < this.targets.length) {
+      const { row, col } = this.targets[this.currentTargetIndex];
+      const enemy = state.enemies[row][col];
+
+      if (enemy && enemy.hp > 0) {
+        const tierMultiplier = Math.pow(1.2, this.tier);
+        const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+        const damage = skillDamage.damage;
+        damageEnemy(enemy, damage, this.resonance);
+        handleSkillAnimation("lifeDrain", row, col);
+        showFloatingDamage(row, col, { damage, isCrit: false, type: this.resonance });
+        logMessage(`☠️ Reaper strikes enemy at (${row}, ${col})`);
+        if (enemy.hp <= 0) renderAreaPanel();
+      } else {
+        logMessage(`☠️ Reaper missed at (${row}, ${col})`);
+      }
+
+      this.currentTargetIndex++;
+      this.remainingDelay = 0.25;
+    }
+
+    if (this.currentTargetIndex >= this.targets.length) {
+      this.active = false;
+      const idx = state.activeHeroSpells.indexOf(this);
+      if (idx !== -1) state.activeHeroSpells.splice(idx, 1);
+    }
+  },
+},
+  {
+    id: "tornado",
+    name: "Tornado",
+    resonance: "air",
+    get skillBaseDamage() {
+      return 8 * partyState.heroStats.attack;
+    },
+    skillLevel: 1,
+    gemCost: 5,
+    tier: 3,
+    unlocked: true,
+    description: "Summons a roaming tornado that drifts across the grid, spreading counters between enemies.",
+    icon: "../../assets/images/icons/starfall.webp",
+
+    activate: function () {
+      if (state.resources.gems < this.gemCost) {
+        logMessage(`Cannot afford to cast ${this.name}`);
+        return;
+      }
+
+      const enemies = getActiveEnemies();
+      if (enemies.length === 0) {
+        logMessage("No enemies available to target.");
+        return;
+      }
+
+      // Pick a random starting enemy
+      const start = enemies[Math.floor(Math.random() * enemies.length)];
+      
+      logMessage(`🌪️ A Tornado begins swirling at (${start.position.row},${start.position.col})!`);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, start);
+
+      spawnTornado({
+        row: start.position.row,
+        col: start.position.col,
+        baseDamage: skillDamage.damage,
+        duration: 6, // seconds total
+        jumpInterval: 1.5, // seconds between jumps
+      });
+
+      handleSkillAnimation("tornado", start.position.row, start.position.col);
+    },
+  },
+
 
 
 ];
@@ -530,4 +981,24 @@ export function replaceSpell(){
     
       emit("spellHandUpdated");
       updateSpellDock();
+}
+
+// Get all enemies on the *outside edge* of the grid (but not center)
+function getEnemiesOnOuterRing() {
+  const enemies = [];
+  const numRows = state.enemies.length;
+  const numCols = state.enemies[0].length;
+
+  for (let row = 0; row < numRows; row++) {
+    for (let col = 0; col < numCols; col++) {
+      const isEdge = row === 0 || row === numRows - 1 || col === 0 || col === numCols - 1;
+      const isCenter = row === Math.floor(numRows / 2) && col === Math.floor(numCols / 2);
+      const enemy = state.enemies[row][col];
+
+      if (isEdge && !isCenter && enemy && enemy.hp > 0) {
+        enemies.push({ enemy, row, col });
+      }
+    }
+  }
+  return enemies;
 }

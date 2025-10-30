@@ -13,7 +13,7 @@ import { updateSummons } from "./systems/summonSystem.js";
 import { uiAnimations } from './systems/animations.js';
 import { updateSummonTimers, updateWaveTimer } from "./area.js";
 import { updateVisualEffects } from "./systems/effects.js";
-import { updateSpellDock } from "./systems/dockManager.js";
+import { updateTornados } from "./systems/tornadoManager.js";
 //import { updateRadiantEffects } from "./systems/radiantEffect.js";
 //import { calculateGemIncome } from "./incomeSystem.js";
 
@@ -76,6 +76,13 @@ function update(delta) {
       }
     }
   }
+  if (state.activeHeroSpells && state.activeHeroSpells.length > 0) {
+    for (let i = state.activeHeroSpells.length - 1; i >= 0; i--) {
+      const spell = state.activeHeroSpells[i];
+      if (spell.update) spell.update(delta);
+    }
+  }
+  updateTornados(delta);
 
   // Update sprite animations
   if (state.ui?.spriteAnimations) {
