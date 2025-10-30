@@ -1309,7 +1309,7 @@ export function castSpellFromHand(spellId, handIndex) {  // ✅ Add handIndex pa
   emit("spellCast", spellId);
   updateSpellDock(); // ✅ Update UI after casting
   
-  console.log(`Casted ${spell.name}`);
+//console.log(`Casted ${spell.name}`);
   return true;
 }
 

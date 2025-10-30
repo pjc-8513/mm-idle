@@ -1,4 +1,5 @@
 export const spellHandState = {
+  activeTornado: false,
   lastHeroSpellResonance: null,
   counter: 0, // counter for determining when to draw a new spell
   hand: [], // Array of spell IDs currently in hand

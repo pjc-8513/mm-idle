@@ -169,7 +169,7 @@ export function updateSpellDock() {
   if (dockState.type !== DOCK_TYPES.AREA) return;
   if (dockState.context?.type !== "quickSpells") return;
   dock.innerHTML = AREA_MENUS.quickSpells();
-  console.log('spell dock updated');
+  //console.log('spell dock updated');
 }
 
 export function updateDockIfEnemyChanged(updatedEnemy) {

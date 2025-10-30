@@ -14,7 +14,7 @@ export const classes = [
       description: "Scrappy brawler that gains damage per hit to the same target and pressures columns.",
       abilities: [
         { id: "pummel", unlockLevel: 1 },
-        { id: "followThrough", unlockLevel: 1 },
+        { id: "followThrough", unlockLevel: 1, active: false },
         { id: "speedBoost", unlockLevel: 5 }
       ],
       skills: {
@@ -43,7 +43,7 @@ export const classes = [
       growthPerLevel: { attack: 1, defense: 1 },
       abilities: [
         { id: "leadership", unlockLevel: 1 },
-        { id: "flameArch", unlockLevel: 1 }
+        { id: "flameArch", unlockLevel: 1, active: false }
         
       ],
       skills: {
@@ -83,7 +83,7 @@ export const classes = [
       hasAutoAttack: true,
       abilities: [
         { id: "weakSpot", unlockLevel: 1 },
-        { id: "poisonFlask", unlockLevel: 1 },
+        { id: "poisonFlask", unlockLevel: 1, active: false },
         { id: "lethalDose", unlockLevel: 5 }
       ],
       skills: {
@@ -109,7 +109,13 @@ export const classes = [
       hasAutoAttack: true,
       baseStats: { hp: partyState.heroStats.hp * 1.1, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.1, speed: 1.3 },
       growthPerLevel: { attack: 1, defense: 1 },
-      attackCooldown: 0
+      attackCooldown: 0,
+      abilities: [
+        { id: "summonAngel", unlockLevel: 5, active: false },        
+      ],
+      skills: {
+        summonAngel: { cooldownRemaining: 20000 },
+      },
     },
     { id: "templar", 
       name: "Templar", 
@@ -167,10 +173,19 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "earth",
-      hasAutoAttack: true,
+      hasAutoAttack: false,
       baseStats: { hp: partyState.heroStats.hp * 0.9, attack: partyState.heroStats.attack * 1.1, defense: 3, criticalChance: 0.1, speed: 1.3 },
       growthPerLevel: { attack: 1, defense: 1 },
-      attackCooldown: 0
+      attackCooldown: 0,
+      abilities: [
+        { id: "landslide", unlockLevel: 1, active: false },
+        { id: "earthquake", unlockLevel: 5, active: false },
+        
+      ],
+      skills: {
+        landslide: { cooldownRemaining: 8000 },
+        earthquake: { cooldownRemaining: 22000 }
+      },
     },
     { id: "archer", 
       name: "Archer", 

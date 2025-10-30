@@ -1,4 +1,4 @@
-import { state, partyState } from "./state.js";
+import { state, partyState, spellHandState } from "./state.js";
 import { renderResourceBar } from "./render.js";
 import { emit } from "./events.js";
 import { renderPartyPanel } from "./party.js";
@@ -82,7 +82,8 @@ function update(delta) {
       if (spell.update) spell.update(delta);
     }
   }
-  updateTornados(delta);
+  
+  if (spellHandState.activeTornado) updateTornados(delta);
 
   // Update sprite animations
   if (state.ui?.spriteAnimations) {
@@ -105,8 +106,11 @@ function updateSkills(delta) {
     for (const skillId in member.skills) {
       const skillDef = abilities.find(a => a.id === skillId);
       const skillState = member.skills[skillId];
-
-      if (skillDef.type === "active" && skillDef.cooldown) {
+      //console.log("[loop skill]", member.id, ' ', skillState);
+      //console.log("[loop skill update]", member.id, skillId, skillState.cooldownRemaining);
+      if (skillDef.type === "active" && skillDef.cooldown &&
+        (skillState.active === true)
+      ) {
         const previousRemaining = skillState.cooldownRemaining;
         skillState.cooldownRemaining = Math.max(0, skillState.cooldownRemaining - delta * 1000);
         

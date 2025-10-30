@@ -1,4 +1,5 @@
 import { state, partyState } from "../state.js";
+import { summonsState} from "../systems/summonSystem.js";
 import { emit, on } from "../events.js";
 import { getActiveEnemies, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, calculateSkillDamage } from "../systems/combatSystem.js";
 import { damageEnemy } from "../waveManager.js";
@@ -10,7 +11,7 @@ import { logMessage } from "../systems/log.js";
 import { addWaveTime, addTimeShield } from "../area.js";
 import { applyVisualEffect } from "../systems/effects.js";
 //import { createVampireMist, createRadiantBurst, createRadiantPulse, spawnRadiantBurst } from "../systems/radiantEffect.js";
-import { calculatePercentage } from "../systems/math.js";
+import { heroSpells } from "./heroSpells.js";
 
 on("summonExpired", handleSummonExpired);
 
@@ -108,7 +109,7 @@ export const abilities = [
                 physicalCounters > 0) {                
                 const finalBonus = (this.defaultBonus * (attacker.level * this.perLevelBonus)) * physicalCounters;
                 context.damage *= finalBonus;
-                console.log(`[Rogue weak spot] Physical counters: ${physicalCounters} finalBonus: ${finalBonus} context.damage: ${context.damage}`);
+                //console.log(`[Rogue weak spot] Physical counters: ${physicalCounters} finalBonus: ${finalBonus} context.damage: ${context.damage}`);
                 // Reset physical counters
                 target.counters.physical = 0; // Or delete target.counters.physical;
             }
@@ -258,12 +259,13 @@ export const abilities = [
         cooldown: 3500,
         class: "zombie",
         activate: function (attacker, target, context) {
+
             const randomEnemyObject = getRandomEnemy();
             if (!randomEnemyObject) return;
             const { enemy, enemyRow, enemyCol } = randomEnemyObject;
             //console.log(`[followThrough] ${Date.now()}`);
             // Deal damage to all enemies in target column
-           // console.log('[zombieAmbush] enemy: ', enemy);
+            console.log('[zombieAmbush] enemy: ', enemy);
             const enemies = getEnemiesInColumn(enemy.position.col);
            // console.log("[zombieAmbush] activated! target column: ", enemy.position.col);
            // console.log("[zombieAmbush] enemies: ", enemies);
@@ -350,6 +352,12 @@ export const abilities = [
   triggerOnHeal: function(healEvent) {
     const cleric = partyState.party.find(c => c.id === "cleric");
     if (!cleric) return;
+    const angel = summonsState.active.find(s => s.templateId === "angel");
+    if (angel) {
+      angel.duration += 10; // refresh angel duration by 10s per heal
+      // Optionally cap it at maxDuration
+      angel.duration = Math.min(angel.duration, angel.maxDuration);
+    }
     
     /*
     // Create radiant pulse effect
@@ -396,6 +404,20 @@ export const abilities = [
     console.log('[cleric] Radiant damage triggered by heal from:', healEvent.source);
   },
 },
+    {
+        id: "summonAngel",
+        name: "Summon Angel",
+        type: "active",
+        resonance: "light",
+        //description: `Summons an Angel to fight alongside you for 15 seconds. Summon duration refreshed on any heal event`,
+        cooldown: 20000,
+        class: "cleric",
+        activate: function () {
+            const angel = partyState.party.find(c => c.id === "angel");
+            if (angel) return; // already summoned
+            emit("requestSummon", { summonKey: "angel", class: "cleric" });
+        }
+      },
 
     {
         id: "feastOfAges",
@@ -525,7 +547,67 @@ export const abilities = [
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
         spritePath: '../../assets/images/sprites/tornado.webp',
-    },        
+    },
+    {
+      id: "landslide",
+      name: "Landslide",
+      type: "active",
+      resonance: "earth",
+      skillBaseDamage: 200,
+      spritePath: '../../assets/images/sprites/flame_arch.png',
+      cooldown: 8000,
+      class: "druid",
+      activate: function() {
+        const landslideSpell = heroSpells.find(spell => spell.id === "landslide");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        landslideSpell.activate();
+      }
+    },
+    {
+      id: "earthquake",
+      name: "Earthquake",
+      type: "active",
+      resonance: "earth",
+      skillBaseDamage: 200,
+      spritePath: '../../assets/images/sprites/flame_arch.png',
+      cooldown: 22000,
+      class: "druid",
+      activate: function() {
+        const earthquake = heroSpells.find(spell => spell.id === "earthquake");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        earthquake.activate();
+      }
+    },
+    {
+      id: "starFall",
+      name: "starFall",
+      type: "active",
+      resonance: "air",
+      skillBaseDamage: 200,
+      spritePath: '../../assets/images/sprites/follow_through.png',
+      cooldown: 9000,
+      class: "angel",
+      activate: function() {
+        const starFallSpell = heroSpells.find(spell => spell.id === "starFall");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        starFallSpell.activate();
+      }
+    },
+    {
+      id: "rot",
+      name: "rot",
+      type: "active",
+      resonance: "undead",
+      skillBaseDamage: 200,
+      spritePath: '../../assets/images/sprites/follow_through.png',
+      cooldown: 4500,
+      class: "ghostDragon",
+      activate: function() {
+        const rotSpell = heroSpells.find(spell => spell.id === "rot");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        rotSpell.activate();
+      }
+    },    
 ];
 
 

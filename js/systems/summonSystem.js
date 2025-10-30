@@ -3,7 +3,7 @@ import { partyState, updateTotalStats } from "../state.js";
 import { emit, on } from "../events.js";
 import { getBuildingLevel } from "../town.js";
 import { logMessage } from "./log.js";
-import { abilities } from "../content/abilities.js";
+//import { abilities } from "../content/abilities.js";
 
 // Summon definitions
 export const summonTemplates = {
@@ -29,12 +29,12 @@ export const summonTemplates = {
     hasAutoAttack: false,
     image: "../assets/images/summons/zombie.png",
     abilities: [
-        { id: "plague", unlockLevel: 1 },
-        { id: "zombieAmbush", unlockLevel: 1 }
+        { id: "plague", unlockLevel: 1, active: true },
+        { id: "zombieAmbush", unlockLevel: 1, active: true }
     ],
     skills: {
         plague: { active: true },
-        zombieAmbush: { cooldownRemaining: 3500 }
+        zombieAmbush: { cooldownRemaining: 3500, active: true }
     },
     order: 2
   },
@@ -48,10 +48,10 @@ export const summonTemplates = {
     hasAutoAttack: false,
     level: 1,
     abilities: [
-      { id: "feastOfAges", unlockLevel: 1}
+      { id: "feastOfAges", unlockLevel: 1, active: true}
     ],
     skills:{
-      feastOfAges: { cooldownRemaining: 5000 }
+      feastOfAges: { cooldownRemaining: 5000, active: true }
     },
     image: "../assets/images/summons/vampire.png",
     order: 3
@@ -65,9 +65,57 @@ export const summonTemplates = {
     baseStats: { hp: partyState.heroStats.hp * 0.5, attack: partyState.heroStats.attack * 1.5, defense: 1, criticalChance: 0.2, speed: 1.5 },
     hasAutoAttack: false,
     image: "../assets/images/summons/ghostdragon.png",
+    abilities: [
+      { id: "rot", unlockLevel: 1, active: true}
+    ],
+    skills:{
+      feastOfAges: { rot: 4500, active: true }
+    },
     order: 4
+  },
+  angel: {
+    id: "angel",
+    name: "Angel",
+    resonance: "light",
+    rarity: "Activated via skill",
+    baseDuration: 15,
+    hasAutoAttack: true,
+    baseStats: { hp: partyState.heroStats.hp * 0.4, attack: partyState.heroStats.attack * 1.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
+    abilities: [
+      { id: "starFall", unlockLevel: 1, active: true}
+    ],
+    skills:{
+      starFall: { cooldownRemaining: 9000, active: true }
+    },
   }
 };
+
+// Updated listener to find the summoner
+on("requestSummon", (data) => {
+  const { summonKey, class: summonerClass } = data;
+  
+  if (!summonKey || !summonerClass) {
+    console.error("requestSummon requires summonKey and class");
+    return;
+  }
+  
+  // Find the summoner in the party
+  const summoner = partyState.party.find(m => m.id === summonerClass);
+  
+  if (!summoner) {
+    console.error(`Summoner ${summonerClass} not found in party`);
+    return;
+  }
+  
+  // Check if this summon is already active
+  const existingSummon = summonsState.active.find(s => s.templateId === summonKey);
+  if (existingSummon) {
+    //console.log(`${summonKey} already summoned`);
+    return;
+  }
+  
+  createSummon(summonKey, summoner);
+});
 
 // Summon state tracking
 export const summonsState = {
@@ -84,11 +132,6 @@ export function initSummonSystem() {
   // Listen for enemy defeats from necromancers
   on("enemyDefeated", (data) => {
     handleEnemyDefeated(data);
-  });
-  
-  // Listen for party changes to clean up summons if necromancer removed
-  on("partyChanged", (party) => {
-    checkNecromancerInParty(party);
   });
   
   summonsState.initialized = true;
@@ -108,45 +151,35 @@ function handleEnemyDefeated(data) {
   });
 }
 
-// Attempt to summon a unit based on progression chain
-function attemptSummon(necromancer) {
-  const graveyardLevel = getBuildingLevel("graveyard") || 0;
-  const summonChance = 60 + graveyardLevel;
-  const roll = Math.random() * 100;
-  
-  if (roll <= summonChance) {
-    // Check what summons are currently active
-    const activeSummonTypes = summonsState.active.map(s => s.templateId);
-    
-    // Define the progression chain in order
-    const progressionChain = ['skeleton', 'zombie', 'vampire', 'ghostDragon'];
-    
-    // Find the first missing summon in the chain
-    let summonToCreate = null;
-    
-    for (const summonKey of progressionChain) {
-      if (!activeSummonTypes.includes(summonKey)) {
-        summonToCreate = summonKey;
-        break;
-      }
-    }
-    
-    // If all summons are active, do nothing
-    if (!summonToCreate) {
-      console.log("All summons already active - no new summon created");
-      return;
-    }
-    
-    // Create the summon
-    createSummon(summonToCreate, necromancer, graveyardLevel);
-  }
-}
-
-// Create a new summon
-function createSummon(summonKey, necromancer, graveyardLevel) {
+// Create a new summon - flexible for any summoner class
+function createSummon(summonKey, summoner = null, bonusLevel = 0) {
   const template = summonTemplates[summonKey];
   
-  const duration = template.baseDuration + (graveyardLevel * 2);
+  if (!template) {
+    console.error(`Summon template not found: ${summonKey}`);
+    return;
+  }
+  
+  // Determine summoner details
+  const summonerClass = summoner ? summoner.id : 'unknown';
+  const summonerLevel = summoner ? summoner.level : 1;
+  
+  // Calculate duration based on summoner type
+  let duration = template.baseDuration;
+  
+  // Apply class-specific bonuses
+  if (summonerClass === 'necromancer') {
+    // Necromancer gets graveyard bonuses
+    const graveyardLevel = getBuildingLevel("graveyard") || 0;
+    duration += graveyardLevel * 2;
+    bonusLevel = graveyardLevel;
+  } else if (summonerClass === 'cleric') {
+    // Cleric might get different bonuses (e.g., from temple level)
+    const templeLevel = getBuildingLevel("temple") || 0;
+    duration += templeLevel * 1.5;
+    bonusLevel = templeLevel;
+  }
+  // Future summoners can be added here (warlock -> demons, mage -> elementals, etc.)
   
   const newSummon = {
     id: `summon_${summonKey}_${Date.now()}`,
@@ -154,7 +187,8 @@ function createSummon(summonKey, necromancer, graveyardLevel) {
     name: template.name,
     duration: duration,
     maxDuration: duration,
-    level: necromancer.level || 1,
+    level: summonerLevel,
+    summonerClass: summonerClass, // Track who summoned this
     stats: {},
     attackCooldown: 0,
     isSummon: true,
@@ -164,8 +198,8 @@ function createSummon(summonKey, necromancer, graveyardLevel) {
     skills: template.skills ? { ...template.skills } : {}
   };
   
-  // Calculate stats
-  updateSummonStats(newSummon, template, graveyardLevel);
+  // Calculate stats based on summoner type
+  updateSummonStats(newSummon, template, bonusLevel, summonerClass);
   
   // Add to active summons
   summonsState.active.push(newSummon);
@@ -173,23 +207,110 @@ function createSummon(summonKey, necromancer, graveyardLevel) {
   // Add to party
   addSummonToParty(newSummon);
   
-  console.log(`Summoned ${template.name}!`);
+  //console.log(`${summonerClass} summoned ${template.name}!`);
   
-  emit("summonCreated", { summon: newSummon });
+  emit("summonCreated", { summon: newSummon, summoner: summonerClass });
 }
 
-// Update summon stats based on graveyard level
-function updateSummonStats(summon, template, graveyardLevel) {
-  const graveyardAttackBonus = graveyardLevel * 0.5;
+// Update summon stats based on summoner type and bonuses
+function updateSummonStats(summon, template, bonusLevel, summonerClass) {
+  let attackBonus = 0;
+  let hpMultiplier = 1.0;
+  let defenseBonus = 0;
+  
+  // Apply class-specific stat bonuses
+  switch(summonerClass) {
+    case 'necromancer':
+      // Graveyard increases attack
+      attackBonus = bonusLevel * 0.5;
+      break;
+      
+    case 'cleric':
+      // Temple might increase HP and defense
+      hpMultiplier = 1 + (bonusLevel * 0.1);
+      defenseBonus = bonusLevel * 0.2;
+      break;
+      
+    case 'warlock':
+      // Future: demons might get different bonuses
+      attackBonus = bonusLevel * 0.7;
+      break;
+      
+    case 'mage':
+      // Future: elementals might scale differently
+      attackBonus = bonusLevel * 0.4;
+      hpMultiplier = 1 + (bonusLevel * 0.15);
+      break;
+      
+    default:
+      // No bonuses for unknown summoners
+      break;
+  }
   
   summon.stats = {
-    hp: template.baseStats.hp,
+    hp: template.baseStats.hp * hpMultiplier,
     mp: template.baseStats.mp,
-    attack: template.baseStats.attack + graveyardAttackBonus,
-    defense: template.baseStats.defense,
+    attack: template.baseStats.attack + attackBonus,
+    defense: template.baseStats.defense + defenseBonus,
     criticalChance: template.baseStats.criticalChance,
     speed: template.baseStats.speed
   };
+}
+
+// Updated listener to find the summoner
+on("requestSummon", (data) => {
+  const { summonKey, class: summonerClass } = data;
+  
+  if (!summonKey || !summonerClass) {
+    console.error("requestSummon requires summonKey and class");
+    return;
+  }
+  
+  // Find the summoner in the party
+  const summoner = partyState.party.find(m => m.id === summonerClass);
+  
+  if (!summoner) {
+    console.error(`Summoner ${summonerClass} not found in party`);
+    return;
+  }
+  
+  // Check if this summon is already active
+  const existingSummon = summonsState.active.find(s => s.templateId === summonKey);
+  if (existingSummon) {
+    //console.log(`${summonKey} already summoned`);
+    return;
+  }
+  
+  createSummon(summonKey, summoner);
+});
+
+// Updated attemptSummon to use new signature
+function attemptSummon(necromancer) {
+  const graveyardLevel = getBuildingLevel("graveyard") || 0;
+  const summonChance = 60 + graveyardLevel;
+  const roll = Math.random() * 100;
+  
+  if (roll <= summonChance) {
+    const activeSummonTypes = summonsState.active.map(s => s.templateId);
+    const progressionChain = ['skeleton', 'zombie', 'vampire', 'ghostDragon'];
+    
+    let summonToCreate = null;
+    
+    for (const summonKey of progressionChain) {
+      if (!activeSummonTypes.includes(summonKey)) {
+        summonToCreate = summonKey;
+        break;
+      }
+    }
+    
+    if (!summonToCreate) {
+      //console.log("All summons already active - no new summon created");
+      return;
+    }
+    
+    // Now passes the necromancer object directly
+    createSummon(summonToCreate, necromancer);
+  }
 }
 
 // Add summon to party
@@ -211,7 +332,8 @@ function addSummonToParty(summon) {
     skills: template.skills ? { ...template.skills } : {}
   };
   
-  console.log(`[SUMMON] ${summon.templateId} added to party`);
+  //console.log(`[SUMMON] ${summon.templateId} added to party`);
+  //console.log(summon);
   partyState.party.push(partyMember);
   emit("partyChanged", partyState.party);
   updateTotalStats(); // 🔥 update totals after removing
@@ -255,20 +377,8 @@ function removeSummon(summon) {
     updateTotalStats(); // 🔥 update totals after removing
   }
   
-  console.log(`${template.name} expired`);
+  //console.log(`${template.name} expired`);
   emit("summonExpired", summon);
-}
-
-// Check if necromancer is still in party
-function checkNecromancerInParty(party) {
-  const hasNecromancer = party.some(m => m.id === "necromancer");
-  
-  if (!hasNecromancer && summonsState.active.length > 0) {
-    // Remove all summons if no necromancer
-    console.log("No necromancer in party - removing all summons");
-    const toRemove = [...summonsState.active];
-    toRemove.forEach(summon => removeSummon(summon));
-  }
 }
 
 // Get total summon power for display/stats

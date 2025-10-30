@@ -14,6 +14,7 @@ import { spellHandState } from '../state.js';
 import { updateSpellDock } from '../systems/dockManager.js';
 import { applyDOT } from "../systems/dotManager.js";
 import { spawnTornado } from "../systems/tornadoManager.js";
+import { addWaveTime } from '../area.js';
 
 export const heroSpells = [
     {
@@ -154,11 +155,11 @@ export const heroSpells = [
         return;
     }
     applyVisualEffect('dark-flash', 0.8);
-    console.log('Activating Breath of Decay');
+    //console.log('Activating Breath of Decay');
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
     
         enemies.forEach(enemy => {
-            console.log('Damaging enemy: ', enemy);
+            //console.log('Damaging enemy: ', enemy);
             const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
             damageEnemy(enemy, skillDamage.damage, this.resonance);
@@ -418,7 +419,7 @@ export const heroSpells = [
         damageEnemy(enemy, dmg, this.resonance);
         handleSkillAnimation("destroyUndead", row, col);
         showFloatingDamage(row, col, dmg, "#fffbe0"); // light glow
-        console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
+        //console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
         renderAreaPanel();
       }
     });
@@ -510,10 +511,6 @@ export const heroSpells = [
   starsRemaining: 0,
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`❌ Not enough gems to cast ${this.name}`);
-      return;
-    }
     //applyVisualEffect("air-flash", 1.2);
     applyVisualEffect('light-flash', 0.8);
     logMessage("🌠 Casting Star Fall!");
@@ -586,12 +583,7 @@ export const heroSpells = [
   icon: "../../assets/images/icons/earthquake.webp",
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`❌ Not enough gems to cast ${this.name}`);
-      return;
-    }
 
-    state.lastHeroSpellResonance = this.resonance;
     spellHandState.lastHeroSpellResonance = this.resonance;
     shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
     logMessage("🌋 Casting Landslide!");
@@ -838,10 +830,10 @@ export const heroSpells = [
       const row = enemy.position.row;
       const col = enemy.position.col;
 
-      console.log(`Checking enemy at (${row}, ${col}) with undead counters: ${enemy?.counters?.undead || 0}`);
+      //console.log(`Checking enemy at (${row}, ${col}) with undead counters: ${enemy?.counters?.undead || 0}`);
 
       if (enemy?.counters?.undead >= 5) {
-        console.log(`Reaper found marked enemy at (${row}, ${col}) with ${enemy.counters.undead} undead counters.`);
+       // console.log(`Reaper found marked enemy at (${row}, ${col}) with ${enemy.counters.undead} undead counters.`);
         markedTargets.push({ row, col });
       }
     }
@@ -928,19 +920,98 @@ export const heroSpells = [
       
       logMessage(`🌪️ A Tornado begins swirling at (${start.position.row},${start.position.col})!`);
       const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, start);
-
+      spellHandState.activeTornado = true;
       spawnTornado({
         row: start.position.row,
         col: start.position.col,
         baseDamage: skillDamage.damage,
-        duration: 6, // seconds total
+        duration: 10, // seconds total
         jumpInterval: 1.5, // seconds between jumps
       });
 
       handleSkillAnimation("tornado", start.position.row, start.position.col);
     },
   },
+{
+  id: "rot",
+  name: "Rot",
+  resonance: "undead",
+  tier: 3,
+  gemCost: 3,
+  icon: "../../assets/images/icons/breath.png",
+  get skillBaseDamage() {
+      return 18 * partyState.heroStats.attack;
+  },
+  description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
 
+  activate: function () {
+
+    const grid = state.enemies;
+    let infectedCount = 0;
+    spellHandState.lastHeroSpellResonance = this.resonance;
+    flashScreen("#552244", 600); // purple decay flash
+
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[row].length; col++) {
+        const enemy = grid[row][col];
+        if (!enemy || enemy.hp <= 0) continue;
+
+        // Skip undead and bosses entirely
+        if (enemy.type === "undead" || enemy.isBoss) continue;
+
+        // 25% or 35% chance to corrupt
+        let corruptionChance = 0.25;
+        const necromancer = partyState.party.find(c => c.id === "necromancer");
+        if (necromancer) corruptionChance = 0.35;
+        if (deterministicChance(corruptionChance)) {
+          // Apply DoT *before* changing type
+          const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+          applyDOT(enemy, "undead", skillDamage.damage, 5);
+          enemy.type = "undead";
+          infectedCount++;
+          renderAreaPanel();
+
+          //handleSkillAnimation("rot", row, col);
+          //showFloatingText(row, col, "☠️", "#bb66ff");
+        }
+      }
+    }
+
+    if (infectedCount > 0) {
+      logMessage(`${this.name} spreads corruption to ${infectedCount} enemy${infectedCount > 1 ? "ies" : "y"}!`);
+    } else {
+      logMessage(`${this.name} fizzles — no new hosts succumb to the rot.`);
+    }
+  }
+},
+{
+  id: "cure",
+  name: "Cure",
+  resonance: "light",
+  tier: 2,
+  gemCost: 2,
+  icon: "../../assets/images/icons/brilliant.png",
+  get skillBaseAmount() {
+      return 5;
+  },
+  description: "Recover 5 seconds. Double recovery if the last spell cast was light.",
+
+  activate: function () {
+    let recoveryAmount = this.skillBaseAmount;
+    if (spellHandState.lastHeroSpellResonance === "light") {
+      recoveryAmount *= 2;
+      logMessage("🌟 Light synergy! Cure recovery doubled!");
+    }
+    addWaveTime(recoveryAmount);
+    logMessage(`⏳ ${this.name} restores ${recoveryAmount} seconds to the wave timer.`);
+    spellHandState.lastHeroSpellResonance = this.resonance;
+    emit("healTriggered", { 
+      amount: recoveryAmount,
+      source: "heroSpell",
+      sourceCharacter: null
+    });
+  }
+},
 
 
 ];
@@ -1001,4 +1072,10 @@ function getEnemiesOnOuterRing() {
     }
   }
   return enemies;
+}
+
+let i = 0;
+function deterministicChance(probability) {
+  i = (i + 1) % 4; // 4 steps in the cycle
+  return i === 0; // 25% chance
 }
