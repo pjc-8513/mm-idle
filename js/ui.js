@@ -132,11 +132,11 @@ export function showPanel(panelId) {
     const resourceBarEl = document.getElementById("resourceBar");
     const sidePanelEl = document.getElementById("sidePanel");    
     removeBackgroundElement("game");
-    gameEl.style.backgroundImage = `url('../assets/images/${area.backgroundImg}')`;
+    gameEl.style.backgroundImage = `url('assets/images/${area.backgroundImg}')`;
     removeBackgroundElement("resourceBar");
-    resourceBarEl.style.backgroundImage = `url('../assets/images/${area.topImg}')`;
+    resourceBarEl.style.backgroundImage = `url('assets/images/${area.topImg}')`;
     removeBackgroundElement("sidePanel");
-    sidePanelEl.style.backgroundImage = `url('../assets/images/${area.sideImg}')`;
+    sidePanelEl.style.backgroundImage = `url('assets/images/${area.sideImg}')`;
     gameEl.classList.add("area-bg");
     resourceBarEl.classList.add("area-bg");
     sidePanelEl.classList.add("area-bg");
