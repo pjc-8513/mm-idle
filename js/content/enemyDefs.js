@@ -10,7 +10,7 @@ export const ENEMY_TEMPLATES = {
     maxMp: 15,
     row: 0,
     resistances: [],
-    image: "../../assets/images/enemies/dragonFly.webp",
+    image: "assets/images/enemies/dragonFly.webp",
     weaknesses: ["physical"],
     description: "Nuisance dragon flies common throughout the land."
   },
