@@ -61,7 +61,7 @@ function update(delta) {
   if (state.activeWave) updateSummons(delta);
   
   // update DOTs
-  updateDOTs(delta);
+  if (partyState.hasActiveDOTs) updateDOTs(delta);
   updateVisualEffects(delta); // ADD THIS LINE
   if (partyState.party.length !== 0) updateWaveTimer(delta); // ✅ add this line
     // ✅ Track hero buffs by delta

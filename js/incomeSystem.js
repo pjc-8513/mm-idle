@@ -59,3 +59,35 @@ export function addGems(amount) {
   state.resources.gems = Math.min(state.resources.gems + amount, state.resources.maxGems);
   emit("gemsChanged", state.resources.gems);
 }
+
+export function awardGems(enemyType) {
+  // award gems based on enemy type
+  //console.log(`Awarding gems for defeating enemy type: ${enemyType}`);
+  let gemsAwarded = 0;
+  switch (enemyType) {
+    case 'pest':
+      gemsAwarded = 1;
+      break;
+    case 'beast':
+      gemsAwarded = 2;
+      break;
+      case 'undead':
+      gemsAwarded = 2;
+      break;
+    case 'elemental':
+      gemsAwarded = 3;
+      break;
+      case 'demon':
+      gemsAwarded = 4;
+      break;
+      case 'dragon':
+      gemsAwarded = 5;
+      break;
+      case 'humanoid':
+      gemsAwarded = 2;
+      break;
+    default:
+      gemsAwarded = 1;
+  }
+  addGems(gemsAwarded);
+}

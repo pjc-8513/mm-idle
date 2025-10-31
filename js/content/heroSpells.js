@@ -1,4 +1,4 @@
-import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getRandomEnemy } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
@@ -27,7 +27,7 @@ export const heroSpells = [
 
         skillLevel: 1,
         gemCost: 3,
-        tier: 2,
+        tier: 3,
         unlocked: true,
         description: "Absorbs all counters from enemies, converts them to dark counters, redistributes them randomly, then deals dark damage based on how many each enemy has.",
         icon: "assets/images/icons/moonbeam.png",
@@ -83,12 +83,12 @@ export const heroSpells = [
         name: "Brilliant Light",
         resonance: "light",
         get skillBaseDamage() {
-            return 10 * partyState.heroStats.attack;
+            return 15 * partyState.heroStats.attack;
         },
 
         skillLevel: 1,
         gemCost: 3,
-        tier: 2,
+        tier: 3,
         unlocked: true,
         description: "Convert all active counters to a random counter type, then deals damage based on the type selected.",
         icon: "assets/images/icons/brilliant.png",
@@ -167,6 +167,42 @@ export const heroSpells = [
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
             });
       spellHandState.lastHeroSpellResonance = "undead";
+    },
+},
+    {
+	id: "flashOfSteel",
+	name: "Flash of Steel",
+	resonance: "physical",
+  get skillBaseDamage() {
+        return 3.8 * partyState.heroStats.attack;
+    },
+  get dotDamage() {
+      return 3.8 * partyState.heroStats.attack;
+  },  
+	skillLevel: 1,
+	gemCost: 1,
+    tier: 1,
+	description: "Deals a small amount of undead to rows of enemies based on skill level. Applies a DoT if the last spell cast was physical.",
+	icon: "assets/images/icons/flash.png",
+    unlocked: true,
+	activate: function () {
+    flashScreen('white', 600);
+    
+	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
+    
+        enemies.forEach(enemy => {
+            //console.log('Damaging enemy: ', enemy);
+            const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+           // console.log(`Calculated skill damage: ${skillDamage.damage}`);
+            damageEnemy(enemy, skillDamage.damage, this.resonance);
+            //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
+            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
+            if (spellHandState.lastHeroSpellResonance === "physical" && enemy.hp > 0) {
+                applyDOT(enemy, this.resonance, this.dotDamage, 5);
+            }
+            if (enemy.hp <= 0) renderAreaPanel();
+            });
+      spellHandState.lastHeroSpellResonance = "physical";
     },
 },
 {
@@ -511,6 +547,7 @@ export const heroSpells = [
   starsRemaining: 0,
 
   activate: function () {
+    
     //applyVisualEffect("air-flash", 1.2);
     applyVisualEffect('light-flash', 0.8);
     logMessage("🌠 Casting Star Fall!");
@@ -583,7 +620,7 @@ export const heroSpells = [
   icon: "assets/images/icons/earthquake.webp",
 
   activate: function () {
-
+    
     spellHandState.lastHeroSpellResonance = this.resonance;
     shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
     logMessage("🌋 Casting Landslide!");
@@ -661,10 +698,7 @@ export const heroSpells = [
   icon: "assets/images/icons/inferno.png",
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Cannot afford to cast ${this.name}`);
-      return;
-    }
+    
 
     const activeEnemies = getActiveEnemies();
     if (activeEnemies.length === 0) {
@@ -739,10 +773,7 @@ export const heroSpells = [
   remainingDelay: 0,
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Cannot afford to cast ${this.name}`);
-      return;
-    }
+    
 
     const targets = getEnemiesOnOuterRing();
 
@@ -818,10 +849,7 @@ export const heroSpells = [
   remainingDelay: 0,
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`💀 Not enough gems to summon the Reaper.`);
-      return;
-    }
+    
 
     const activeEnemies = getActiveEnemies();
     const markedTargets = [];
@@ -904,10 +932,7 @@ export const heroSpells = [
     icon: "assets/images/icons/starfall.webp",
 
     activate: function () {
-      if (state.resources.gems < this.gemCost) {
-        logMessage(`Cannot afford to cast ${this.name}`);
-        return;
-      }
+      
 
       const enemies = getActiveEnemies();
       if (enemies.length === 0) {
@@ -945,7 +970,7 @@ export const heroSpells = [
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
 
   activate: function () {
-
+    
     const grid = state.enemies;
     let infectedCount = 0;
     spellHandState.lastHeroSpellResonance = this.resonance;
@@ -997,6 +1022,7 @@ export const heroSpells = [
   description: "Recover 5 seconds. Double recovery if the last spell cast was light.",
 
   activate: function () {
+    
     let recoveryAmount = this.skillBaseAmount;
     if (spellHandState.lastHeroSpellResonance === "light") {
       recoveryAmount *= 2;
@@ -1012,6 +1038,209 @@ export const heroSpells = [
     });
   }
 },
+{
+  id: "sparks",
+  name: "Sparks",
+  resonance: "air",
+  get skillBaseDamage() {
+    return 7 * partyState.heroStats.attack;
+  },
+  gemCost: 3,
+  tier: 1,
+  unlocked: true,
+  description: "Releases 4 spark charges that each strike a random enemy. Consecutive Sparks increase damage.",
+  icon: "assets/images/icons/chain.png",
+
+  active: false,
+  sparksRemaining: 0,
+  remainingDelay: 0,
+
+  activate: function () {
+    applyVisualEffect('light-flash', 0.4);
+    logMessage("⚡ Casting Spark!");
+
+    // ===== COMBO STACK HANDLING =====
+    if (spellHandState.lastHeroSpellId === this.id) {
+      spellHandState.sparkComboCount = Math.min(spellHandState.sparkComboCount + 1, 5);
+    } else {
+      spellHandState.sparkComboCount = 1;
+    }
+
+    const comboMult = Math.pow(1.5, spellHandState.sparkComboCount - 1);
+    this.currentComboMult = comboMult;
+
+    if (spellHandState.sparkComboCount > 1) {
+      logMessage(`⚡ Combo Spark x${spellHandState.sparkComboCount}! Damage ×${comboMult.toFixed(2)}`);
+    }
+
+    // Prepare spark volleys
+    this.active = true;
+    this.sparksRemaining = 4;
+    this.remainingDelay = 0; // fire first spark immediately
+
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+
+    spellHandState.lastHeroSpellId = this.id;
+    spellHandState.lastHeroSpellResonance = this.resonance;
+  },
+
+  update: function (delta) {
+    if (!this.active) return;
+
+    this.remainingDelay -= delta;
+    if (this.remainingDelay <= 0 && this.sparksRemaining > 0) {
+      this.castSpark();
+      this.sparksRemaining--;
+      this.remainingDelay = 0.12; // delay between sparks
+    }
+
+    if (this.sparksRemaining <= 0) {
+      this.active = false;
+      const i = state.activeHeroSpells.indexOf(this);
+      if (i !== -1) state.activeHeroSpells.splice(i, 1);
+    }
+  },
+
+  castSpark: function () {
+    const target = getRandomEnemy(); // your provided function
+    if (!target) {
+      logMessage("⚡ Spark fizzles — no enemies!");
+      return;
+    }
+
+    const { enemy, row, col } = target;
+
+    const tierMultiplier = Math.pow(1.2, this.tier);
+    const baseDmg = this.skillBaseDamage * tierMultiplier;
+
+    const skillDamageObject = calculateHeroSpellDamage(
+      this.resonance,
+      baseDmg * this.currentComboMult,
+      enemy
+    );
+
+    damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+    handleSkillAnimation("sparks", row, col);
+    showFloatingDamage(row, col, skillDamageObject);
+    renderAreaPanel();
+  },
+},
+{
+  id: "poisonSpray",
+  name: "Poison Spray",
+  resonance: "poison",
+  get dotDamage() {
+    return 5.5 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  gemCost: 1,
+  tier: 1,
+  unlocked: true,
+  description: "A weak poison spray effecting a 2x2 grid.",
+  icon: "assets/images/icons/breath.png",
+
+  activate: function () {
+    
+    const activeEnemies = getActiveEnemies();
+    if (activeEnemies.length === 0) {
+      logMessage(`No enemies available for ${this.name}`);
+      return;
+    }
+
+    // Pick a random active enemy as the explosion origin
+    const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+    //console.log(`Fireball targets enemy at (${randomEnemy.position.row}, ${randomEnemy.position.col})`);
+    let { row, col } = randomEnemy.position;
+    //console.log(`Enemy position: row ${row}, col ${col}`);
+    const numRows = state.enemies.length;
+    const numCols = state.enemies[0].length;
+
+    // Adjust the top-left corner of the 2x2 zone so it stays within bounds
+    // The zone covers: (baseRow, baseCol), (baseRow+1, baseCol), (baseRow, baseCol+1), (baseRow+1, baseCol+1)
+    let baseRow = row;
+    let baseCol = col;
+
+    if (baseRow === numRows - 1) baseRow--; // shift up if on bottom edge
+    if (baseCol === numCols - 1) baseCol--; // shift left if on right edge
+
+    // Collect enemies in that adjusted 2x2 zone
+    const targets = [];
+    for (let r = baseRow; r < baseRow + 2; r++) {
+      for (let c = baseCol; c < baseCol + 2; c++) {
+        const enemy = state.enemies[r][c];
+        if (enemy && enemy.hp > 0) {
+          targets.push({ enemy, row: r, col: c });
+        }
+      }
+    }
+
+    // Apply damage + effects
+    targets.forEach(({ row, col }) => {
+      const enemy = state.enemies[row][col];
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.dotDamage, enemy);
+      const damage = skillDamageObject.damage;
+      applyDOT(enemy, "fire", this.dotDamage, 8);
+      handleSkillAnimation("poisonFlask", row, col);
+      if (enemy.hp <= 0) renderAreaPanel();
+    });
+  spellHandState.lastHeroSpellResonance = this.resonance;  
+  },
+},
+{
+  id: "falconer",
+  name: "Falconer",
+  resonance: "physical",
+  get skillBaseDamage() {
+    return 15 * partyState.heroStats.attack;
+  },
+  get dotDamage() {
+    return 8 * partyState.heroStats.attack;
+  },
+  skillLevel: 1,
+  gemCost: 2,
+  tier: 2,
+  unlocked: true,
+  description: "Send a trained falcon to strike the weakest enemy.",
+  icon: "assets/images/icons/moonbeam.png",
+
+  activate: function () {
+    //applyVisualEffect('slash-flash', 0.4);
+    logMessage("🦅 Falconer strikes!");
+
+    const enemies = getActiveEnemies();
+    if (!enemies || enemies.length === 0) {
+      logMessage("🦅 No enemies to strike.");
+      return;
+    }
+
+    // Find lowest HP enemy
+    const target = enemies.reduce((low, e) => (e.hp < low.hp ? e : low), enemies[0]);
+    if (!target) return;
+
+    const row = target.position.row;
+    const col = target.position.col;
+
+    const tierMultiplier = Math.pow(1.2, this.tier);
+    const baseDamage = this.skillBaseDamage * tierMultiplier;
+
+    const skillDamage = calculateHeroSpellDamage(
+      this.resonance,
+      baseDamage,
+      target
+    );
+
+    damageEnemy(target, skillDamage.damage, this.resonance);
+    handleSkillAnimation("falconer", row, col);
+    showFloatingDamage(row, col, skillDamage);
+    if (spellHandState.lastHeroSpellResonance === "physical" && target.hp > 0) {
+      applyDOT(target, this.resonance, this.dotDamage, 5);
+      }
+    if (target.hp <=0) renderAreaPanel();
+
+    spellHandState.lastHeroSpellResonance = this.resonance;
+  }
+}
 
 
 ];

@@ -1,6 +1,8 @@
 export const spellHandState = {
+  sparkComboCount: 0,
   activeTornado: false,
   lastHeroSpellResonance: null,
+  lastHeroSpellId: null,
   counter: 0, // counter for determining when to draw a new spell
   hand: [], // Array of spell IDs currently in hand
   maxHandSize: 5
@@ -19,6 +21,7 @@ export const partyState = {
                    undead: 100 },
   totalStats: {},
   maxPartySize: 4,
+  hasActiveDOTs: false,
   activeHeroBuffs: []
 }
 export const state = {

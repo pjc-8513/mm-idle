@@ -548,6 +548,44 @@ export const abilities = [
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
         spritePath: 'assets/images/sprites/tornado.webp',
     },
+        {
+      // sparks ability placeholder - used for spritepath for hero spell and archer class
+        id: "sparks",
+        name: "Sparks",
+        type: "active",
+        resonance: "air",
+        get skillBaseDamage() {
+          return 7 * partyState.heroStats.attack;
+        },
+        cooldown: 8000,
+        //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
+        spritePath: 'assets/images/sprites/sparks.webp',
+        class: "archer",
+        activate: function() {
+        const sparksSpell = heroSpells.find(spell => spell.id === "sparks");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        sparksSpell.activate();
+      }
+    },
+            {
+      // falconer ability placeholder - used for spritepath for hero spell and archer class
+        id: "falconer",
+        name: "Falconer",
+        type: "active",
+        resonance: "physical",
+        get skillBaseDamage() {
+          return 15 * partyState.heroStats.attack;
+        },
+        cooldown: 11000,
+        //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
+        spritePath: 'assets/images/sprites/falcon.webp',
+        class: "archer",
+        activate: function() {
+        const falconerSpell = heroSpells.find(spell => spell.id === "falconer");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        falconerSpell.activate();
+      }
+    },
     {
       id: "landslide",
       name: "Landslide",

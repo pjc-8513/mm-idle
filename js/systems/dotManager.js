@@ -1,7 +1,9 @@
-import { state } from "../state.js";
+import { state, partyState } from "../state.js";
 import { abilities } from "../content/abilities.js";
 import { damageEnemy } from "../waveManager.js";
 import { floatingTextManager } from "./floatingtext.js";
+import { renderAreaPanel } from "../area.js";
+
 // DOT Configuration
 const DOT_TICK_INTERVAL = 1.0; // Apply DOT damage every 1 second
 const DOT_BASE_DURATION = 6.0; // Base DOT duration in seconds
@@ -54,6 +56,8 @@ function calculateDOTBonuses(attacker, dotType) {
  * Call this from your update() function
  */
 export function updateDOTs(delta) {
+  let hasActiveDOTs = false;
+  
   for (let row = 0; row < state.enemies.length; row++) {
     for (let col = 0; col < state.enemies[row].length; col++) {
       const enemy = state.enemies[row][col];
@@ -67,6 +71,9 @@ export function updateDOTs(delta) {
       initializeEnemyDOT(enemy);
       
       if (enemy.DOT.length === 0) continue;
+      
+      // Mark that we have at least one active DOT
+      hasActiveDOTs = true;
       
       // Get or create timer for this enemy
       const timerKey = `${row}-${col}`;
@@ -84,6 +91,12 @@ export function updateDOTs(delta) {
       }
     }
   }
+  
+  // Update the party state flag
+  
+    //console.log("[DOT] hasActiveDOTs:", hasActiveDOTs);
+    partyState.hasActiveDOTs = hasActiveDOTs;
+  
 }
 
 /**
@@ -98,7 +111,9 @@ function applyDOTDamage(enemy, row, col, deltaTime) {
   //      duration: ${duration}, elapsed: ${elapsed}`);  
     // Apply the damage
     damageEnemy(enemy, damagePerTick * DOT_TICK_INTERVAL, type);
-    
+    if (enemy.hp <= 0) {
+      renderAreaPanel();
+    }
     // Update elapsed time
     const newElapsed = elapsed + DOT_TICK_INTERVAL;
     dot[3] = newElapsed;
@@ -153,5 +168,6 @@ export function applyDOT(enemy, type, totalDamage, baseDuration = DOT_BASE_DURAT
   } else {
     // New DOT: [type, damagePerSecond, duration, elapsed]
     enemy.DOT.push([type, damagePerSecond, finalDuration, 0]);
+    partyState.hasActiveDOTs = true;
   }
 }

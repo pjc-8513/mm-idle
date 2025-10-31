@@ -80,7 +80,7 @@ export const summonTemplates = {
     rarity: "Activated via skill",
     baseDuration: 15,
     hasAutoAttack: true,
-    baseStats: { hp: partyState.heroStats.hp * 0.4, attack: partyState.heroStats.attack * 1.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
+    baseStats: { hp: partyState.heroStats.hp * 0.4, attack: partyState.heroStats.attack * 3.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
     abilities: [
       { id: "starFall", unlockLevel: 1, active: true}
     ],

@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, spellHandState } from "./state.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { renderPartyPanel } from "./party.js";
 import { renderBuildingPanel } from "./town.js";
@@ -33,6 +33,7 @@ if (mainDock) {
       const spellId = spellBtn.dataset.spellId;
       const handIndex = parseInt(spellBtn.dataset.handIndex, 10);  // ✅ Get index
       castSpellFromHand(spellId, handIndex);  // ✅ Pass both
+      spellHandState.lastHeroSpellId = spellId;
       return;
     }
     

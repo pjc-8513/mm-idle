@@ -202,7 +202,15 @@ export const classes = [
       hasAutoAttack: true,
       baseStats: { hp: partyState.heroStats.hp * 0.6, attack: partyState.heroStats.attack * 1.2, defense: 2, criticalChance: 0.15, speed: 1.5 },
       growthPerLevel: { attack: 1, defense: 1 },
-      attackCooldown: 0 
+      attackCooldown: 0,
+      abilities: [
+        { id: "sparks", unlockLevel: 1, active: false },
+        { id: "falconer", unlockLevel: 5, active: false },        
+      ],
+      skills: {
+        sparks: { cooldownRemaining: 8000 },
+        falconer: { cooldownRemaining: 11000 },
+      }, 
     },
     { id: "ranger", 
       name: "Ranger", 
