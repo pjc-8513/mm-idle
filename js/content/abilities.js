@@ -61,7 +61,7 @@ export const abilities = [
         resonance: "physical",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
-        spritePath: '../../assets/images/sprites/follow_through.png',
+        spritePath: 'assets/images/sprites/follow_through.png',
         cooldown: 7000,
         class: "fighter",
         activate: function (attacker, target, context) {
@@ -122,7 +122,7 @@ export const abilities = [
   type: "active",
   resonance: "poison",
   skillBaseDamage: 700,
-  spritePath: "../../assets/images/sprites/poison_flask.png",
+  spritePath: "assets/images/sprites/poison_flask.png",
   cooldown: 8500,
   class: "rogue",
   activate: function (attacker, target, context) {
@@ -228,7 +228,7 @@ export const abilities = [
         resonance: "fire",
         skillBaseDamage: 200,
         //description: `Deals ${skillBaseDamage}% of attack in fire damage to every enemy on the same row as target`,
-        spritePath: '../../assets/images/sprites/flame_arch.png',
+        spritePath: 'assets/images/sprites/flame_arch.png',
         cooldown: 6500,
         class: "knight",
         activate: function (attacker, target, context) {
@@ -255,7 +255,7 @@ export const abilities = [
         resonance: "undead",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
-        spritePath: '../../assets/images/sprites/zombie_ambush.png',
+        spritePath: 'assets/images/sprites/zombie_ambush.png',
         cooldown: 3500,
         class: "zombie",
         activate: function (attacker, target, context) {
@@ -426,7 +426,7 @@ export const abilities = [
         resonance: "undead",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
-        spritePath: '../../assets/images/sprites/life_drain.png',
+        spritePath: 'assets/images/sprites/life_drain.png',
         cooldown: 5000,
         storedHP: 0,
         class: "vampire",
@@ -546,7 +546,7 @@ export const abilities = [
         resonance: "air",
         skillBaseDamage: 180,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
-        spritePath: '../../assets/images/sprites/tornado.webp',
+        spritePath: 'assets/images/sprites/tornado.webp',
     },
     {
       id: "landslide",
@@ -554,7 +554,7 @@ export const abilities = [
       type: "active",
       resonance: "earth",
       skillBaseDamage: 200,
-      spritePath: '../../assets/images/sprites/flame_arch.png',
+      spritePath: 'assets/images/sprites/flame_arch.png',
       cooldown: 8000,
       class: "druid",
       activate: function() {
@@ -569,7 +569,7 @@ export const abilities = [
       type: "active",
       resonance: "earth",
       skillBaseDamage: 200,
-      spritePath: '../../assets/images/sprites/flame_arch.png',
+      spritePath: 'assets/images/sprites/flame_arch.png',
       cooldown: 22000,
       class: "druid",
       activate: function() {
@@ -584,7 +584,7 @@ export const abilities = [
       type: "active",
       resonance: "air",
       skillBaseDamage: 200,
-      spritePath: '../../assets/images/sprites/follow_through.png',
+      spritePath: 'assets/images/sprites/follow_through.png',
       cooldown: 9000,
       class: "angel",
       activate: function() {
@@ -599,7 +599,7 @@ export const abilities = [
       type: "active",
       resonance: "undead",
       skillBaseDamage: 200,
-      spritePath: '../../assets/images/sprites/follow_through.png',
+      spritePath: 'assets/images/sprites/follow_through.png',
       cooldown: 4500,
       class: "ghostDragon",
       activate: function() {
