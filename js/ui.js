@@ -207,13 +207,13 @@ export function applyAreaBackground(area) {
   if (!area || !gameEl || !resourceBarEl || !sidePanelEl) return;
 
   removeBackgroundElement("game");
-  gameEl.style.backgroundImage = `url('../assets/images/${area.backgroundImg}')`;
+  gameEl.style.backgroundImage = `url('assets/images/${area.backgroundImg}')`;
 
   removeBackgroundElement("resourceBar");
-  resourceBarEl.style.backgroundImage = `url('../assets/images/${area.topImg}')`;
+  resourceBarEl.style.backgroundImage = `url('assets/images/${area.topImg}')`;
 
   removeBackgroundElement("sidePanel");
-  sidePanelEl.style.backgroundImage = `url('../assets/images/${area.sideImg}')`;
+  sidePanelEl.style.backgroundImage = `url('assets/images/${area.sideImg}')`;
 
   [gameEl, resourceBarEl, sidePanelEl].forEach(el => el.classList.add("area-bg"));
 }
