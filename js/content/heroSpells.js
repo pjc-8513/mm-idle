@@ -30,7 +30,7 @@ export const heroSpells = [
         tier: 2,
         unlocked: true,
         description: "Absorbs all counters from enemies, converts them to dark counters, redistributes them randomly, then deals dark damage based on how many each enemy has.",
-        icon: "../../assets/images/icons/moonbeam.png",
+        icon: "assets/images/icons/moonbeam.png",
 
         activate: function () {
             if (state.resources.gems < this.gemCost) {
@@ -91,7 +91,7 @@ export const heroSpells = [
         tier: 2,
         unlocked: true,
         description: "Convert all active counters to a random counter type, then deals damage based on the type selected.",
-        icon: "../../assets/images/icons/brilliant.png",
+        icon: "assets/images/icons/brilliant.png",
         activate: function () {
         if (state.resources.gems < this.gemCost) {
             logMessage(`Cannot afford to cast ${this.name}`);
@@ -147,7 +147,7 @@ export const heroSpells = [
 	gemCost: 1,
     tier: 1,
 	description: "Deals a small amount of undead to rows of enemies based on skill level.",
-	icon: "../../assets/images/icons/breath.png",
+	icon: "assets/images/icons/breath.png",
     unlocked: true,
 	activate: function () {
     if (state.resources.gems < this.gemCost) {
@@ -179,7 +179,7 @@ export const heroSpells = [
         return 20 * partyState.heroStats.attack;
     },
   description: "Shuffles all enemies on the grid. Enemies that move take earth damage, increased by your Earth and Physical counters. Consumes all Earth counters.",
-    icon: "../../assets/images/icons/earthquake.webp",
+    icon: "assets/images/icons/earthquake.webp",
     unlocked: true,
 
   activate: function () {
@@ -280,7 +280,7 @@ export const heroSpells = [
         return 20 * partyState.heroStats.attack;
     },
   description: "Deals water damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
-    icon: "../../assets/images/icons/brilliant.png",
+    icon: "assets/images/icons/brilliant.png",
 
   activate: function () {
     if (state.resources.gems < this.gemCost) {
@@ -354,7 +354,7 @@ export const heroSpells = [
   resonance: "light",
   tier: 3,
   gemCost: 3,
-  icon: "../../assets/images/icons/brilliant.png",
+  icon: "assets/images/icons/brilliant.png",
   get skillBaseDamage() {
     return 50 * partyState.heroStats.attack;
   },
@@ -434,7 +434,7 @@ export const heroSpells = [
   tier: 1,
   gemCost: 1,
   description: "Maxes out all party members' attack speed for a short duration.",
-  icon: "../../assets/images/icons/inferno.png",
+  icon: "assets/images/icons/inferno.png",
   duration: 8, // seconds — base duration
   unlocked: true,
   active: false,
@@ -505,7 +505,7 @@ export const heroSpells = [
   tier: 4,
   unlocked: true,
   description: "Calls down 9 falling stars that each target a random grid position. Empty tiles result in misses.",
-  icon: "../../assets/images/icons/starfall.webp",
+  icon: "assets/images/icons/starfall.webp",
   active: false,
   remainingDelay: 0,
   starsRemaining: 0,
@@ -580,7 +580,7 @@ export const heroSpells = [
   gemCost: 3,
   unlocked: true,
   description: "Crushes enemies column by column. If it defeats an enemy, the landslide continues to the next column (max 3).",
-  icon: "../../assets/images/icons/earthquake.webp",
+  icon: "assets/images/icons/earthquake.webp",
 
   activate: function () {
 
@@ -658,7 +658,7 @@ export const heroSpells = [
   tier: 3,
   unlocked: true,
   description: "Launches a fireball that explodes on impact, dealing fire damage to a 2x2 area around a random enemy.",
-  icon: "../../assets/images/icons/inferno.png",
+  icon: "assets/images/icons/inferno.png",
 
   activate: function () {
     if (state.resources.gems < this.gemCost) {
@@ -732,7 +732,7 @@ export const heroSpells = [
   tier: 2,
   unlocked: true,
   description: "Engulfs the battlefield in flames, dealing fire damage to all enemies on the outer ring of the grid (not the center).",
-  icon: "../../assets/images/icons/inferno.png",
+  icon: "assets/images/icons/inferno.png",
   active: false,
   targets: [],
   currentTargetIndex: 0,
@@ -811,7 +811,7 @@ export const heroSpells = [
   skillLevel: 1,
   unlocked: true,
   description: "The Reaper hunts enemies marked by death. Deals damage to enemies with 5+ undead counters, one by one.",
-  icon: "../../assets/images/icons/breath.png",
+  icon: "assets/images/icons/breath.png",
   active: false,
   targets: [],
   currentTargetIndex: 0,
@@ -901,7 +901,7 @@ export const heroSpells = [
     tier: 3,
     unlocked: true,
     description: "Summons a roaming tornado that drifts across the grid, spreading counters between enemies.",
-    icon: "../../assets/images/icons/starfall.webp",
+    icon: "assets/images/icons/starfall.webp",
 
     activate: function () {
       if (state.resources.gems < this.gemCost) {
@@ -938,7 +938,7 @@ export const heroSpells = [
   resonance: "undead",
   tier: 3,
   gemCost: 3,
-  icon: "../../assets/images/icons/breath.png",
+  icon: "assets/images/icons/breath.png",
   get skillBaseDamage() {
       return 18 * partyState.heroStats.attack;
   },
@@ -990,7 +990,7 @@ export const heroSpells = [
   resonance: "light",
   tier: 2,
   gemCost: 2,
-  icon: "../../assets/images/icons/brilliant.png",
+  icon: "assets/images/icons/brilliant.png",
   get skillBaseAmount() {
       return 5;
   },
