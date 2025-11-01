@@ -383,6 +383,17 @@ function calculateDamage(attacker, target) {
  * @returns 
  */
 export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
+  // check for enemy immunity (elementals are immune to their own element)
+  if (target.elementType === resonance && target.type === 'elemental') {
+            return {
+              damage: 0,
+              isCritical: false,
+              resonance,
+              multiplier: 0,
+              elementalMatchup: 'immune'
+            };
+          }
+
   // Base attack
   let baseDamage = attacker.stats.attack || 30;
   let isCritical = false;
@@ -432,6 +443,18 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
  * @returns 
  */
 export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
+    // check for enemy immunity (elementals are immune to their own element)
+    
+  if (target.elementType === resonance && target.type === 'elemental') {
+    console.log(`[immune check]: ${target.elementType} vs ${resonance}`);
+            return {
+              damage: 0,
+              isCritical: false,
+              resonance,
+              multiplier: 0,
+              elementalMatchup: 'immune'
+            };
+          }
   // Base attack
   let baseDamage = partyState.heroStats.attack || 30;
   let isCritical = false;

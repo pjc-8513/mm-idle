@@ -40,6 +40,7 @@ export function updateVisualEffects(delta) {
  * @param {number} duration - Duration in ms.
  */
 export function flashScreen(color = "white", duration = 500) {
+  if (state.activePanel !== "panelArea") return;
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
   overlay.style.top = 0;
@@ -62,6 +63,7 @@ export function flashScreen(color = "white", duration = 500) {
  * @param {number} intensity - Maximum pixel offset for the shake.
  */
 export function shakeScreen(duration = 500, intensity = 5) {
+  if (state.activePanel !== "panelArea") return;
   const container = document.querySelector("#game") || document.body; 
   if (!container) return;
 

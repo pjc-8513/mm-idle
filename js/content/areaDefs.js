@@ -53,11 +53,26 @@ export const AREA_TEMPLATES = {
       enemies: ["goblin", "lich", "masterArcher", "bandit", "cobra"],
       boss: "masterThief", 
       //unlocks: ["mistyIslands", "goblinWatch"],
-      //nextArea: "mistyIslands",
+      nextArea: "mireOfTheDamned",
       questId: "castleIronfist",
       backgroundImg: "main_bg.webp",
       sideImg: "area-side.webp",
       topImg: "area-top.webp"
+  },
+    mireOfTheDamned: {
+      id: "mireOfTheDamned",
+      name: "Mire of the Damned",
+      description: "A mire of the damned!",
+      maxWaves: 10,
+      //baseLevel: 1,
+      enemies: ["spectre", "evilSpirit", "harpy", "skeletonArcher", "spider"],
+      boss: "snergle", 
+      //unlocks: ["mistyIslands", "goblinWatch"],
+      //nextArea: "mistyIslands",
+      questId: "mireOfTheDamned",
+      backgroundImg: "mire-bg.webp",
+      sideImg: "mire-side.webp",
+      topImg: "mire-top.webp"
   },
   // more areas
 };

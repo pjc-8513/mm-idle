@@ -22,7 +22,7 @@ export const heroSpells = [
         name: "Moonbeam",
         resonance: "dark",
             get skillBaseDamage() {
-            return 3.8 * partyState.heroStats.attack;
+            return 3.8 * partyState.totalStats.attack || 90;
         },
 
         skillLevel: 1,
@@ -33,10 +33,7 @@ export const heroSpells = [
         icon: "assets/images/icons/moonbeam.png",
 
         activate: function () {
-            if (state.resources.gems < this.gemCost) {
-                logMessage(`Cannot afford to cast ${this.name}`);
-                return;
-            }
+            
             const enemies = getActiveEnemies();
             let totalCounters = 0;
 
@@ -70,7 +67,7 @@ export const heroSpells = [
             if (darkCount > 0) {
                 damageEnemy(enemy, skillDamage, this.resonance);
                 //handleSkillAnimation("moonbeam", enemy.position.row, enemy.position.col);
-                showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage);
+                showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
             }
 
             delete enemy.counters["dark"];; // Step 5: Consume all counters
@@ -83,7 +80,7 @@ export const heroSpells = [
         name: "Brilliant Light",
         resonance: "light",
         get skillBaseDamage() {
-            return 15 * partyState.heroStats.attack;
+            return 15 * partyState.totalStats.attack || 250;
         },
 
         skillLevel: 1,
@@ -93,10 +90,7 @@ export const heroSpells = [
         description: "Convert all active counters to a random counter type, then deals damage based on the type selected.",
         icon: "assets/images/icons/brilliant.png",
         activate: function () {
-        if (state.resources.gems < this.gemCost) {
-            logMessage(`Cannot afford to cast ${this.name}`);
-            return;
-        }
+        
         const damageMultipliers = {
             "dark": 0.5,
             "undead": 0.5,
@@ -131,7 +125,7 @@ export const heroSpells = [
             // Apply damage and animation
             damageEnemy(enemy, skillDamage, this.resonance);
             //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
-            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage);
+            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
         });
         spellHandState.lastHeroSpellResonance = "light";
         },
@@ -141,7 +135,7 @@ export const heroSpells = [
 	name: "Breath of Decay",
 	resonance: "undead",
         get skillBaseDamage() {
-        return 3.8 * partyState.heroStats.attack;
+        return 3.8 * partyState.totalStats.attack || 90;
     },
 	skillLevel: 1,
 	gemCost: 1,
@@ -150,10 +144,7 @@ export const heroSpells = [
 	icon: "assets/images/icons/breath.png",
     unlocked: true,
 	activate: function () {
-    if (state.resources.gems < this.gemCost) {
-        logMessage(`Cannot afford to cast ${this.name}`);
-        return;
-    }
+    
     applyVisualEffect('dark-flash', 0.8);
     //console.log('Activating Breath of Decay');
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
@@ -174,10 +165,10 @@ export const heroSpells = [
 	name: "Flash of Steel",
 	resonance: "physical",
   get skillBaseDamage() {
-        return 3.8 * partyState.heroStats.attack;
+        return 3.8 * partyState.totalStats.attack || 90;
     },
   get dotDamage() {
-      return 3.8 * partyState.heroStats.attack;
+      return 3.8 * partyState.totalStats.attack || 90;
   },  
 	skillLevel: 1,
 	gemCost: 1,
@@ -186,6 +177,7 @@ export const heroSpells = [
 	icon: "assets/images/icons/flash.png",
     unlocked: true,
 	activate: function () {
+    
     flashScreen('white', 600);
     
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
@@ -212,17 +204,14 @@ export const heroSpells = [
   tier: 4,
   gemCost: 4,
     get skillBaseDamage() {
-        return 20 * partyState.heroStats.attack;
+        return 20 * partyState.totalStats.attack || 300;
     },
   description: "Shuffles all enemies on the grid. Enemies that move take earth damage, increased by your Earth and Physical counters. Consumes all Earth counters.",
     icon: "assets/images/icons/earthquake.webp",
     unlocked: true,
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Cannot afford to cast ${this.name}`);
-      return;
-    }
+    
 
     const grid = state.enemies;
     const activeEnemies = [];
@@ -298,7 +287,7 @@ export const heroSpells = [
         const dmg = dmgObject.damage;
         damageEnemy(enemy, dmg, this.resonance);
         //handleSkillAnimation("earthquake", newRow, newCol);
-        showFloatingDamage(newRow, newCol, dmg);
+        showFloatingDamage(newRow, newCol, dmgObject);
         delete enemy.counters["dark"];; // Consume all counters
       }
     });
@@ -313,16 +302,13 @@ export const heroSpells = [
   tier: 2,
   gemCost: 3,
     get skillBaseDamage() {
-        return 20 * partyState.heroStats.attack;
+        return 20 * partyState.totalStats.attack || 300;
     },
   description: "Deals water damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
     icon: "assets/images/icons/brilliant.png",
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Cannot afford to cast ${this.name}`);
-      return;
-    }
+    
 
     const grid = state.enemies;
     const matchedEnemies = new Set();
@@ -369,7 +355,7 @@ export const heroSpells = [
         const dmg = skillDamageObject.damage;
         damageEnemy(enemy, dmg, this.resonance);
         handleSkillAnimation("flush", row, col);
-        showFloatingDamage(row, col, dmg);
+        showFloatingDamage(row, col, skillDamageObject);
         renderAreaPanel();
       }
     });
@@ -392,15 +378,12 @@ export const heroSpells = [
   gemCost: 3,
   icon: "assets/images/icons/brilliant.png",
   get skillBaseDamage() {
-    return 50 * partyState.heroStats.attack;
+    return 50 * partyState.totalStats.attack || 800;
   },
   description: "Smite the undead! If three undead line up in a row or column, they are struck by radiant light and take massive damage.",
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Cannot afford to cast ${this.name}`);
-      return;
-    }
+    
 
     const grid = state.enemies;
     const undeadMatches = new Set();
@@ -454,7 +437,7 @@ export const heroSpells = [
         const dmg = skillDamageObject.damage;
         damageEnemy(enemy, dmg, this.resonance);
         handleSkillAnimation("destroyUndead", row, col);
-        showFloatingDamage(row, col, dmg, "#fffbe0"); // light glow
+        showFloatingDamage(row, col, skillDamageObject);
         //console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
         renderAreaPanel();
       }
@@ -477,10 +460,7 @@ export const heroSpells = [
   remaining: 0,
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Not enough gems to cast ${this.name}`);
-      return;
-    }
+    
     // Duration logic (double if previous spell was fire)
     let duration = this.duration;
     if (spellHandState.lastHeroSpellResonance === "fire") {
@@ -534,7 +514,7 @@ export const heroSpells = [
   name: "Star Fall",
   resonance: "air",
   get skillBaseDamage() {
-        return 10 * partyState.heroStats.attack;
+        return 10 * partyState.totalStats.attack || 150;
     },
   skillLevel: 1,
   gemCost: 5,
@@ -611,7 +591,7 @@ export const heroSpells = [
   resonance: "earth",
   tier: 2,
   get skillBaseDamage() {
-      return 10 * partyState.heroStats.attack;
+      return 10 * partyState.totalStats.attack || 150;
   },
   skillLevel: 1,
   gemCost: 3,
@@ -685,10 +665,10 @@ export const heroSpells = [
   name: "Fireball",
   resonance: "fire",
   get skillBaseDamage() {
-    return 10 * partyState.heroStats.attack;
+    return 10 * partyState.totalStats.attack || 150;
   },
   get dotDamage() {
-    return 10 * partyState.heroStats.attack;
+    return 10 * partyState.totalStats.attack || 150;
   },
   skillLevel: 1,
   gemCost: 3,
@@ -745,7 +725,7 @@ export const heroSpells = [
         logMessage(`🔥 Fire synergy! ${this.name} applies burn DOT!`);
       }
       handleSkillAnimation("flameArch", row, col);
-      showFloatingDamage(row, col, this.skillBaseDamage);
+      showFloatingDamage(row, col, skillDamageObject);
       if (enemy.hp <= 0) renderAreaPanel();
     });
   spellHandState.lastHeroSpellResonance = this.resonance;  
@@ -756,10 +736,10 @@ export const heroSpells = [
   name: "Ring of Fire",
   resonance: "fire",
   get skillBaseDamage() {
-    return 8 * partyState.heroStats.attack;
+    return 8 * partyState.totalStats.attack || 120;
   },
   get dotDamage() {
-    return 8 * partyState.heroStats.attack;
+    return 8 * partyState.totalStats.attack || 120;
   },
   skillLevel: 1,
   gemCost: 3,
@@ -807,7 +787,7 @@ export const heroSpells = [
         const damage = skillDamageObject.damage;
         damageEnemy(enemy, damage, this.resonance);
         handleSkillAnimation("flameArch", row, col);
-        showFloatingDamage(row, col, this.skillBaseDamage);
+        showFloatingDamage(row, col, skillDamageObject);
         if (spellHandState.lastHeroSpellResonance === "fire") {
           // Apply DOT for 5 seconds
           applyDOT(enemy, "fire", this.dotDamage, 5);
@@ -837,7 +817,7 @@ export const heroSpells = [
   tier: 4,
   gemCost: 4,
   get skillBaseDamage() {
-    return 30 * partyState.heroStats.attack;
+    return 30 * partyState.totalStats.attack || 500;
   },
   skillLevel: 1,
   unlocked: true,
@@ -899,7 +879,7 @@ export const heroSpells = [
         const damage = skillDamage.damage;
         damageEnemy(enemy, damage, this.resonance);
         handleSkillAnimation("lifeDrain", row, col);
-        showFloatingDamage(row, col, { damage, isCrit: false, type: this.resonance });
+        showFloatingDamage(row, col, skillDamage);
         logMessage(`☠️ Reaper strikes enemy at (${row}, ${col})`);
         if (enemy.hp <= 0) renderAreaPanel();
       } else {
@@ -922,7 +902,7 @@ export const heroSpells = [
     name: "Tornado",
     resonance: "air",
     get skillBaseDamage() {
-      return 8 * partyState.heroStats.attack;
+      return 8 * partyState.totalStats.attack || 120;
     },
     skillLevel: 1,
     gemCost: 5,
@@ -965,7 +945,7 @@ export const heroSpells = [
   gemCost: 3,
   icon: "assets/images/icons/breath.png",
   get skillBaseDamage() {
-      return 18 * partyState.heroStats.attack;
+      return 18 * partyState.totalStats.attack || 300;
   },
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
 
@@ -1043,7 +1023,7 @@ export const heroSpells = [
   name: "Sparks",
   resonance: "air",
   get skillBaseDamage() {
-    return 7 * partyState.heroStats.attack;
+    return 7 * partyState.totalStats.attack || 100;
   },
   gemCost: 3,
   tier: 1,
@@ -1131,7 +1111,7 @@ export const heroSpells = [
   name: "Poison Spray",
   resonance: "poison",
   get dotDamage() {
-    return 5.5 * partyState.heroStats.attack;
+    return 5.5 * partyState.totalStats.attack || 110;
   },
   skillLevel: 1,
   gemCost: 1,
@@ -1192,10 +1172,10 @@ export const heroSpells = [
   name: "Falconer",
   resonance: "physical",
   get skillBaseDamage() {
-    return 15 * partyState.heroStats.attack;
+    return 15 * partyState.totalStats.attack || 200;
   },
   get dotDamage() {
-    return 8 * partyState.heroStats.attack;
+    return 8 * partyState.totalStats.attack || 120;
   },
   skillLevel: 1,
   gemCost: 2,
@@ -1240,7 +1220,87 @@ export const heroSpells = [
 
     spellHandState.lastHeroSpellResonance = this.resonance;
   }
+},
+{
+  id: "frostbite",
+  name: "Frostbite",
+  resonance: "water",
+  get skillBaseDamage() {
+    return 15 * partyState.totalStats.attack || 200;
+  },
+  tier: 1,
+  gemCost: 4,
+  icon: "assets/images/icons/frostbite.webp",
+  description: "Deals heavy water damage but is negated by fire type and fire counters.",
+
+  activate: function () {
+    if (state.resources.gems < this.gemCost) {
+      logMessage(`Not enough gems to cast ${this.name}.`);
+      return;
+    }
+
+    const enemies = getActiveEnemies().filter(e => e.elementType !== "fire"); // fire immune
+    if (enemies.length === 0) {
+      logMessage("No valid targets for Frostbite!");
+      return;
+    }
+
+    flashScreen("#a0d8f0", 800); // icy blue flash
+
+    enemies.forEach(enemy => {
+      const waterCount = enemy.counters["water"] || 0;
+      const fireCount = enemy.counters["fire"] || 0;
+
+      // Fire cancels water
+      const remaining = Math.max(0, waterCount - fireCount);
+
+      
+      const bonus = remaining * 2; // remaining chill intensifies
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage + bonus, enemy);
+      const skillDamage = skillDamageObject.damage;
+      damageEnemy(enemy, skillDamage, this.resonance);
+      handleSkillAnimation("sparks", enemy.position.row, enemy.position.col);
+      showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
+    
+
+    });
+    spellHandState.lastHeroSpellResonance = this.resonance;  
+    logMessage("❄️ Frostbite chills the battlefield!");
+  }
+},
+{
+  id: "dragonsBreath",
+  name: "Dragon's Breath",
+  resonance: "dark",
+  get skillBaseDamage() {
+    return 70 * partyState.totalStats.attack || 70;
+  },
+  skillLevel: 1,
+  gemCost: 6,
+  tier: 4,
+  unlocked: true,
+  description: "Highest single target spell. Dragons are immune to its effects.",
+  icon: "assets/images/icons/inferno.png",
+  activate: function () {
+    
+    const activeEnemies = getActiveEnemies().filter(e => e.type !== "dragon");
+    if (activeEnemies.length === 0) {
+      logMessage(`No valid targets for ${this.name}`);
+      return;
+    }
+    // Pick a random active enemy as the target
+    const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+    const { row, col } = randomEnemy.position;
+    const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, randomEnemy);
+    damageEnemy(randomEnemy, skillDamageObject.damage, this.resonance);
+    handleSkillAnimation("flameArch", row, col);
+    showFloatingDamage(row, col, skillDamageObject);
+    if (randomEnemy.hp <=0) renderAreaPanel();
+    spellHandState.lastHeroSpellResonance = this.resonance;  
+    logMessage(`🐉 Dragon's Breath scorches the enemy at (${row}, ${col})!`);
+  }
 }
+
 
 
 ];

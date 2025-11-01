@@ -10,7 +10,7 @@ export const classes = [
       gemPerSecond: 0,
       buildingRequired: { id: "farm", level: 1 },
       hasAutoAttack: true,
-      image: "assets/images/classes/fighter.png",
+      //image: "assets/images/classes/fighter.png",
       description: "Scrappy brawler that gains damage per hit to the same target and pressures columns.",
       abilities: [
         { id: "pummel", unlockLevel: 1 },
@@ -143,7 +143,7 @@ export const classes = [
     },    
     { id: "necromancer", 
       name: "Necromancer",
-      image: "assets/images/classes/necromancer.png", 
+     //image: "assets/images/classes/necromancer.png", 
       level: 0,
       goldCost: 60,
       gemCost: 0, 
@@ -163,7 +163,7 @@ export const classes = [
     }, 
     { id: "druid", 
       name: "Druid", 
-      image: "assets/images/classes/druid.png",
+     //image: "assets/images/classes/druid.png",
       level: 0,
       goldCost: 30,
       gemCost: 10, 
@@ -179,17 +179,19 @@ export const classes = [
       attackCooldown: 0,
       abilities: [
         { id: "landslide", unlockLevel: 1, active: false },
+        { id: "summonWaterElemental", unlockLevel: 1, active: false },
         { id: "earthquake", unlockLevel: 5, active: false },
         
       ],
       skills: {
         landslide: { cooldownRemaining: 8000 },
+        summonWaterElemental: { cooldownRemaining: 25000 },
         earthquake: { cooldownRemaining: 22000 }
       },
     },
     { id: "archer", 
       name: "Archer", 
-      image: "assets/images/classes/archer.png",
+     //image: "assets/images/classes/archer.png",
       level: 0,
       goldCost: 40,
       gemCost: 0, 
@@ -212,6 +214,7 @@ export const classes = [
         falconer: { cooldownRemaining: 11000 },
       }, 
     },
+    /* 
     { id: "ranger", 
       name: "Ranger", 
       image: "assets/images/classes/ranger.png",
@@ -254,4 +257,5 @@ export const classes = [
       growthPerLevel: { attack: 2, defense: 1 },
       attackCooldown: 0 
     }
+      */
 ];

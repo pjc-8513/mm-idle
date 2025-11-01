@@ -182,6 +182,62 @@ export const ENEMY_TEMPLATES = {
     weaknesses: ["light", "fire", "water"],
     description: "Nuisance liches common throughout the land."
   },
+  harpy: {
+    id: "harpy",
+    baseName: "Harpy",
+    type: "beast",
+    elementType: "dark",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["??"],
+    image: "assets/images/enemies/harpy.webp",
+    weaknesses: ["??"],
+    description: "Nuisance harpy common throughout the land."
+  },
+  spectre: {
+    id: "spectre",
+    baseName: "Spectre",
+    type: "undead",
+    elementType: "air",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["water"],
+    image: "assets/images/enemies/spectre.webp",
+    weaknesses: ["earth"],
+    description: "Nuisance spectre common throughout the land."
+  },
+  evilSpirit: {
+    id: "evilSpirit",
+    baseName: "Evil Spirit",
+    type: "elemental",
+    elementType: "undead",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["physical"],
+    image: "assets/images/enemies/willow.webp",
+    weaknesses: ["light", "fire", "water"],
+    description: "Nuisance spectre common throughout the land."
+  },
+  spider: {
+    id: "spider",
+    baseName: "spider",
+    type: "pest",
+    elementType: "pest",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: [],
+    image: "assets/images/enemies/spider.webp",
+    weaknesses: ["physical"],
+    description: "Nuisance spiders common throughout the land."
+  },
 
   // Boss Enemies
     swarm: {
@@ -246,6 +302,18 @@ export const ENEMY_TEMPLATES = {
       resistances: ["pest"],
       image: "assets/images/enemies/thief.webp",
       weaknesses: ["poison", "undead"]
+    },
+    snergle: {
+      id: "snergle",
+      baseName: "Snergle",
+      type: "humanoid",
+      elementType: "earth",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: ["air"],
+      image: "assets/images/enemies/snergle.webp",
+      weaknesses: ["fire"]
     },
 };
 

@@ -6,6 +6,7 @@ import { damageEnemy } from "../waveManager.js";
 import { handleSkillAnimation } from "../systems/animations.js";
 import { getEnemyCanvasPosition } from "../area.js";
 import { floatingTextManager } from "../systems/floatingtext.js";
+import { renderAreaPanel } from "../area.js";
 import { applyDOT } from "../systems/dotManager.js";
 import { logMessage } from "../systems/log.js";
 import { addWaveTime, addTimeShield } from "../area.js";
@@ -17,7 +18,7 @@ on("summonExpired", handleSummonExpired);
 
 function handleSummonExpired(summon){
   if (summon.name === "Vampire") {
-    console.log("handling vampire expired"); 
+    //console.log("handling vampire expired"); 
     
     // ✅ Find the ability in the array first
     const feastOfAges = abilities.find(a => a.id === "feastOfAges");
@@ -27,10 +28,15 @@ function handleSummonExpired(summon){
       feastOfAges.onVampireExpire(summon);
     }
   } else if (summon.name === "Ghost Dragon") {
-    console.log("handling ghost dragon expired");
+    //console.log("handling ghost dragon expired");
     const soulDetonation = abilities.find(a => a.id === "soulDetonation");
     if (soulDetonation && soulDetonation.onGhostDragonExpire){
       soulDetonation.onGhostDragonExpire(summon);
+    }
+  } else if (summon.name === "Water Elemental") {
+    const frostBiteSpell = heroSpells.find(spell => spell.id === "frostbite")
+    if (frostBiteSpell) {
+      frostBiteSpell.activate();
     }
   }
 }
@@ -616,6 +622,78 @@ export const abilities = [
         earthquake.activate();
       }
     },
+      {
+        id: "summonWaterElemental",
+        name: "Summon Water Elemental",
+        type: "active",
+        resonance: "water",
+        //description: `Summons a water element to fight alongside you for 10 seconds. Casts frostbite on expiration`,
+        cooldown: 25000,
+        class: "druid",
+        activate: function () {
+            const waterElemental = partyState.party.find(c => c.id === "waterElemental");
+            if (waterElemental) return; // already summoned
+            emit("requestSummon", { summonKey: "waterElemental", class: "druid" });
+        }
+      },
+      {
+        id: "splash",
+        name: "Splash",
+        type: "active",
+        resonance: "water",
+        get skillBaseDamage() {
+          return 5 * partyState.heroStats.attack;
+        },
+        cooldown: 3000,
+        spritePath: 'assets/images/sprites/sparks.webp',
+        class: "waterElemental",
+          activate: function (attacker) {
+            
+            const activeEnemies = getActiveEnemies();
+            if (activeEnemies.length === 0) {
+              logMessage(`No enemies available for ${this.name}`);
+              return;
+            }
+        
+            // Pick a random active enemy as the splash origin
+            const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+            //console.log(`Fireball targets enemy at (${randomEnemy.position.row}, ${randomEnemy.position.col})`);
+            let { row, col } = randomEnemy.position;
+            //console.log(`Enemy position: row ${row}, col ${col}`);
+            const numRows = state.enemies.length;
+            const numCols = state.enemies[0].length;
+        
+            // Adjust the top-left corner of the 2x2 zone so it stays within bounds
+            // The zone covers: (baseRow, baseCol), (baseRow+1, baseCol), (baseRow, baseCol+1), (baseRow+1, baseCol+1)
+            let baseRow = row;
+            let baseCol = col;
+        
+            if (baseRow === numRows - 1) baseRow--; // shift up if on bottom edge
+            if (baseCol === numCols - 1) baseCol--; // shift left if on right edge
+        
+            // Collect enemies in that adjusted 2x2 zone
+            const targets = [];
+            for (let r = baseRow; r < baseRow + 2; r++) {
+              for (let c = baseCol; c < baseCol + 2; c++) {
+                const enemy = state.enemies[r][c];
+                if (enemy && enemy.hp > 0) {
+                  targets.push({ enemy, row: r, col: c });
+                }
+              }
+            }
+        
+            // Apply damage + effects
+            targets.forEach(({ row, col }) => {
+              const enemy = state.enemies[row][col];
+              const skillDamageObject = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
+              const damage = skillDamageObject.damage;
+              damageEnemy(enemy, damage, this.resonance);
+              handleSkillAnimation("splash", row, col);
+              showFloatingDamage(row, col, this.skillBaseDamage);
+              if (enemy.hp <= 0) renderAreaPanel();
+            });
+          },
+      },
     {
       id: "starFall",
       name: "starFall",

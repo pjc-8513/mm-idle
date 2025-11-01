@@ -142,6 +142,8 @@ class FloatingTextManager {
       this.addText('WEAK', x, y, '#00ff00', 1200, 24, 'normal'); // Green
     } else if (matchup === 'resistance') {
       this.addText('RESIST', x, y, '#ff4444', 1200, 24, 'normal'); // Red
+    } else if (matchup === 'immune'){
+      this.addText('IMMUNE', x, y, '#ec587dff', 1200, 24, 'normal')
     }
     // No text for neutral
   }

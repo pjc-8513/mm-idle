@@ -66,25 +66,25 @@ export function awardGems(enemyType) {
   let gemsAwarded = 0;
   switch (enemyType) {
     case 'pest':
-      gemsAwarded = 1;
+      gemsAwarded = 0;
       break;
     case 'beast':
-      gemsAwarded = 2;
+      gemsAwarded = 1;
       break;
       case 'undead':
-      gemsAwarded = 2;
+      gemsAwarded = 1;
       break;
     case 'elemental':
-      gemsAwarded = 3;
+      gemsAwarded = 2;
       break;
       case 'demon':
-      gemsAwarded = 4;
+      gemsAwarded = 3;
       break;
       case 'dragon':
-      gemsAwarded = 5;
+      gemsAwarded = 4;
       break;
       case 'humanoid':
-      gemsAwarded = 2;
+      gemsAwarded = 1;
       break;
     default:
       gemsAwarded = 1;

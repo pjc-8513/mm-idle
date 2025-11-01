@@ -15,7 +15,7 @@ export const summonTemplates = {
     baseDuration: 15, // seconds
     baseStats: { hp: partyState.heroStats.hp * 0.1, attack: partyState.heroStats.attack * 0.5, defense: 1, criticalChance: 0.05, speed: 1.0 },
     hasAutoAttack: true,
-    image: "../assets/images/summons/skeleton.png",
+    //image: "assets/images/summons/skeleton.png",
     order: 1 // Position in progression chain
   },
   zombie: {
@@ -27,7 +27,7 @@ export const summonTemplates = {
     level: 1,
     baseStats: { hp: partyState.heroStats.hp * 0.2, attack: partyState.heroStats.attack * 0.75, defense: 1, criticalChance: 0.03, speed: 0.8 },
     hasAutoAttack: false,
-    image: "../assets/images/summons/zombie.png",
+    //image: "assets/images/summons/zombie.png",
     abilities: [
         { id: "plague", unlockLevel: 1, active: true },
         { id: "zombieAmbush", unlockLevel: 1, active: true }
@@ -53,7 +53,7 @@ export const summonTemplates = {
     skills:{
       feastOfAges: { cooldownRemaining: 5000, active: true }
     },
-    image: "../assets/images/summons/vampire.png",
+    //image: "assets/images/summons/vampire.png",
     order: 3
   },
   ghostDragon: {
@@ -64,7 +64,7 @@ export const summonTemplates = {
     baseDuration: 10,
     baseStats: { hp: partyState.heroStats.hp * 0.5, attack: partyState.heroStats.attack * 1.5, defense: 1, criticalChance: 0.2, speed: 1.5 },
     hasAutoAttack: false,
-    image: "../assets/images/summons/ghostdragon.png",
+    //image: "assets/images/summons/ghostdragon.png",
     abilities: [
       { id: "rot", unlockLevel: 1, active: true}
     ],
@@ -86,6 +86,21 @@ export const summonTemplates = {
     ],
     skills:{
       starFall: { cooldownRemaining: 9000, active: true }
+    },
+  },
+  waterElemental: {
+    id: "waterElemental",
+    name: "Water Elemental",
+    resonance: "water",
+    rarity: "Activated via skill",
+    baseDuration: 10,
+    hasAutoAttack: false,
+    baseStats: { hp: partyState.heroStats.hp * 0.4, attack: partyState.heroStats.attack * 2, defense: 2, criticalChance: 0.10, speed: 1 },
+    abilities: [
+      { id: "splash", unlockLevel: 1, active: true}
+    ],
+    skills:{
+      splash: { cooldownRemaining: 3000, active: true }
     },
   }
 };

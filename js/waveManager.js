@@ -478,6 +478,7 @@ const areaAssets = {
   mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
   bootlegBay: ["seaTerror.webp", "deathKnight.webp", "willow.webp", "pirateRaider.webp", "giantRat.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
   castleIronfist: ["thief.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp", "main.webp", "area-side.webp", "area-top.webp"],
+  mireOfTheDamned: ["spider.webp", "skeletonArcher.webp", "harpy.webp", "willow.webp", "spectre.webp", "snergle.webp"]
   // ...
 };
 
