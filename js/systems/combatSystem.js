@@ -378,11 +378,11 @@ function calculateDamage(attacker, target) {
 /**
  * 
  * @param {*} attacker 
- * @param {*} skillBaseDamage 
+ * @param {*} skillDamageRatio 
  * @param {*} target 
  * @returns 
  */
-export function calculateSkillDamage(attacker, resonance, skillBaseDamage, target) {
+export function calculateSkillDamage(attacker, resonance, skillDamageRatio, target) {
   // check for enemy immunity (elementals are immune to their own element)
   if (target.elementType === resonance && target.type === 'elemental') {
             return {
@@ -405,10 +405,10 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
     baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
   }
 
-  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
+  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillDamageRatio:', skillDamageRatio);
 
   // Step 1: Core skill damage
-  let skillDamage = baseDamage * (skillBaseDamage / 100);
+  let skillDamage = baseDamage * (skillDamageRatio / 100);
 
   // Step 2: Elemental bonus
   const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;
@@ -438,11 +438,11 @@ export function calculateSkillDamage(attacker, resonance, skillBaseDamage, targe
 /**
  * 
  * @param {*} attacker 
- * @param {*} skillBaseDamage 
+ * @param {*} skillDamageRatio 
  * @param {*} target 
  * @returns 
  */
-export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
+export function calculateHeroSpellDamage(resonance, skillDamageRatio, target) {
     // check for enemy immunity (elementals are immune to their own element)
     
   if (target.elementType === resonance && target.type === 'elemental') {
@@ -466,10 +466,10 @@ export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
     baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
   }
 
-  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillBaseDamage:', skillBaseDamage);
+  // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillDamageRatio:', skillDamageRatio);
 
   // Step 1: Core skill damage
-  let skillDamage = baseDamage * (skillBaseDamage / 100);
+  let skillDamage = baseDamage * skillDamageRatio;
 
   // Step 2: Elemental bonus
   const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;

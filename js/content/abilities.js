@@ -307,7 +307,7 @@ export const abilities = [
 
       if (roll <= chancePercent) {
         const bonusPercent = partyState.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
-        const finalDamage = Math.round((bonusPercent / 100) * partyState.heroStats.attack);
+        const finalDamage = Math.round((bonusPercent / 100) * partyState.heroBaseStats.attack);
         const skillDamage = calculateSkillDamage(attacker, this.resonance, finalDamage, enemy);
 
         applyDOT(enemy, this.resonance, skillDamage, 8, attacker);
@@ -561,7 +561,7 @@ export const abilities = [
         type: "active",
         resonance: "air",
         get skillBaseDamage() {
-          return 7 * partyState.heroStats.attack;
+          return 7 * partyState.heroBaseStats.attack;
         },
         cooldown: 8000,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
@@ -580,7 +580,7 @@ export const abilities = [
         type: "active",
         resonance: "physical",
         get skillBaseDamage() {
-          return 15 * partyState.heroStats.attack;
+          return 15 * partyState.heroBaseStats.attack;
         },
         cooldown: 11000,
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
@@ -642,7 +642,7 @@ export const abilities = [
         type: "active",
         resonance: "water",
         get skillBaseDamage() {
-          return 5 * partyState.heroStats.attack;
+          return 5 * partyState.heroBaseStats.attack;
         },
         cooldown: 3000,
         spritePath: 'assets/images/sprites/sparks.webp',

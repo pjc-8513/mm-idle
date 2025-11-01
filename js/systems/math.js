@@ -1,6 +1,7 @@
 import { partyState } from "../state.js";
 import { emit, on } from "../events.js";
 import { classes } from "../content/classes.js";
+import { heroSpells } from "../content/heroSpells.js";
 
 export function initMath() {
   console.log("Math system initialized");
@@ -189,4 +190,40 @@ export function addHeroBonus(stat, amount) {
   partyState.heroBonuses[stat] = (partyState.heroBonuses[stat] || 0) + amount;
   updateTotalStats(); // Affects all classes
   emit("heroBonusAdded", { stat, amount });
+}
+
+export function getSkillDamageRatio(skillId, wave) {
+  // look up skill
+  const skill = heroSpells.find(a => a.id === skillId);
+  // Base ratio depends on skill tier
+  const tierBaseRatios = {
+    1: 0.5,   // Tier 1: 50% of attack
+    2: 1.2,   // Tier 2: 120% of attack
+    3: 3.0,   // Tier 3: 300% of attack
+    4: 8.0,   // Tier 4: 800% of attack
+    5: 20.0   // Tier 5: 2000% of attack
+  };
+  
+  const baseRatio = tierBaseRatios[skill.tier] || 1.0;
+  
+  // Skill level scaling (similar to your enemy HP zone scaling)
+  const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  
+  // Wave-based scaling (matches enemy progression but slightly weaker)
+  // Using 1.03 instead of 1.035 means skills scale ~97% as fast as enemies
+  const waveScaling = Math.pow(1.03, wave - 1);
+  
+  // Zone scaling (matches enemy zones)
+  const zoneScaling = Math.pow(1.4, Math.floor((wave - 1) / 10));
+  
+  // Quantum-like polynomial scaling (softer than enemies)
+  // Enemies use R2=2.0, skills use R2=1.5 to stay slightly behind
+  const quantumScaling = Math.pow(
+    (1 + (wave - 1) / 25),
+    1.5
+  );
+  
+  const finalRatio = baseRatio * levelScaling * waveScaling * zoneScaling * quantumScaling;
+  
+  return finalRatio;
 }

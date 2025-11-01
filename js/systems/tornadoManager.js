@@ -4,6 +4,7 @@ import { damageEnemy } from "../waveManager.js";
 import { showFloatingDamage } from "../content/abilities.js";
 import { getAdjacentEnemies } from "../systems/combatSystem.js";
 import { handleSkillAnimation } from "../systems/animations.js";
+import { updateEnemiesGrid } from "../area.js";
 
 
 const tornados = [];
@@ -66,6 +67,7 @@ export function updateTornados(delta) {
       damageEnemy(currentEnemy, t.baseDamage, "air");
       showFloatingDamage(t.row, t.col, Math.round(t.baseDamage));
       handleSkillAnimation("tornado", t.row, t.col);
+      if (currentEnemy.hp<=0) updateEnemiesGrid();
     }
 
     // Jump to new target (interval-based)

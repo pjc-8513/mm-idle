@@ -7,8 +7,8 @@ import { state, partyState } from '../state.js';
 import { emit } from '../events.js';
 import { logMessage } from '../systems/log.js';
 import { applyVisualEffect, flashScreen, shakeScreen } from '../systems/effects.js';
-import { randInt } from '../systems/math.js';
-import { updateEnemyCard, updateEnemiesGrid } from '../area.js';
+import { randInt, getSkillDamageRatio } from '../systems/math.js';
+import { updateEnemiesGrid } from '../area.js';
 import { getBuildingLevel } from '../town.js';
 import { spellHandState } from '../state.js';
 import { updateSpellDock } from '../systems/dockManager.js';
@@ -21,10 +21,7 @@ export const heroSpells = [
         id: "moonbeam",
         name: "Moonbeam",
         resonance: "dark",
-            get skillBaseDamage() {
-            return 3.8 * partyState.totalStats.attack || 90;
-        },
-
+  //    skillDamageRatio: 3.5,
         skillLevel: 1,
         gemCost: 3,
         tier: 3,
@@ -33,7 +30,7 @@ export const heroSpells = [
         icon: "assets/images/icons/moonbeam.png",
 
         activate: function () {
-            
+            const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
             const enemies = getActiveEnemies();
             let totalCounters = 0;
 
@@ -59,9 +56,8 @@ export const heroSpells = [
             // Step 4: Deal damage and consume counters
             enemies.forEach(enemy => {
             const darkCount = enemy.counters["dark"] || 0;
-            const initialSkillDamage = this.skillBaseDamage * darkCount;
-            const skillDamageObject = calculateHeroSpellDamage(this.resonance, initialSkillDamage, enemy);
-            const skillDamage = skillDamageObject.damage;
+            const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+            const skillDamage = skillDamageObject.damage * darkCount;
 
 
             if (darkCount > 0) {
@@ -70,19 +66,16 @@ export const heroSpells = [
                 showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
             }
 
-            delete enemy.counters["dark"];; // Step 5: Consume all counters
+            delete enemy.counters[this.resonance];; // Step 5: Consume all counters
             });
-          spellHandState.lastHeroSpellResonance = "dark";
+          spellHandState.lastHeroSpellResonance = this.resonance;
         }
     },
     {
         id: "brilliantLight",
         name: "Brilliant Light",
         resonance: "light",
-        get skillBaseDamage() {
-            return 15 * partyState.totalStats.attack || 250;
-        },
-
+        //skillDamageRatio: 15,
         skillLevel: 1,
         gemCost: 3,
         tier: 3,
@@ -90,7 +83,8 @@ export const heroSpells = [
         description: "Convert all active counters to a random counter type, then deals damage based on the type selected.",
         icon: "assets/images/icons/brilliant.png",
         activate: function () {
-        
+        const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+        let targetsHit = false;
         const damageMultipliers = {
             "dark": 0.5,
             "undead": 0.5,
@@ -107,36 +101,39 @@ export const heroSpells = [
         const enemies = getActiveEnemies();
         const counterTypes = ["fire", "water", "poison", "light", "dark", "air", "undead", "physical"]; // define your game's counter types
         const newType = counterTypes[Math.floor(Math.random() * counterTypes.length)];
-        const initialSkillDamage = this.skillBaseDamage * damageMultipliers[newType];
+        //const initialSkillDamage = this.skillDamageRatio * damageMultipliers[newType];
         enemies.forEach(enemy => {
             const currentCounters = enemy.counters;
             const totalCounters = Object.values(currentCounters).reduce((sum, val) => sum + val, 0);
 
             // Step 2: Convert all counters to the new type
             enemy.counters = { [newType]: totalCounters };
-            
-            const skillDamageObject = calculateHeroSpellDamage(newType, initialSkillDamage, enemy);
-            const skillDamage = skillDamageObject.damage;
-            console.log(`Brilliant Light converting to ${newType} counters, dealing ${skillDamage} damage.`);
-
-            // Consume all counters
-            //enemy.counters = {};
-
-            // Apply damage and animation
-            damageEnemy(enemy, skillDamage, this.resonance);
-            //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
-            showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
+            if (totalCounters>0)console.log(`total counters: ${totalCounters}`);
+            const skillDamageObject = calculateHeroSpellDamage(newType, skillDamageRatio, enemy);
+            const skillDamage = (skillDamageObject.damage * totalCounters) * damageMultipliers[newType];
+            //console.log(`Brilliant Light converting to ${newType} counters, dealing ${skillDamage} damage.`);
+            //console.log(`formula damage: (${skillDamageObject.damage} * ${totalCounters}) * ${damageMultipliers[newType]}`);
+            //console.log('damage object: ', skillDamageObject)
+            if (skillDamage > 0){
+              damageEnemy(enemy, skillDamage, newType);
+              //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
+              showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
+              targetsHit = true;
+              if (enemy.hp <= 0) updateEnemiesGrid();
+            }
         });
-        spellHandState.lastHeroSpellResonance = "light";
+        if (!targetsHit) {
+          logMessage(`No damage for ${this.name} to deal. Drawing a spell scroll.`)
+          replaceSpell();
+        }
+        spellHandState.lastHeroSpellResonance = newType;
         },
     },
     {
 	id: "breathOfDecay",
 	name: "Breath of Decay",
 	resonance: "undead",
-        get skillBaseDamage() {
-        return 3.8 * partyState.totalStats.attack || 90;
-    },
+  //skillDamageRatio: 3.8, 
 	skillLevel: 1,
 	gemCost: 1,
     tier: 1,
@@ -144,47 +141,46 @@ export const heroSpells = [
 	icon: "assets/images/icons/breath.png",
     unlocked: true,
 	activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     applyVisualEffect('dark-flash', 0.8);
     //console.log('Activating Breath of Decay');
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
     
         enemies.forEach(enemy => {
             //console.log('Damaging enemy: ', enemy);
-            const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+            const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
             damageEnemy(enemy, skillDamage.damage, this.resonance);
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
+            if (enemy.hp<=0) updateEnemiesGrid();
             });
-      spellHandState.lastHeroSpellResonance = "undead";
+      spellHandState.lastHeroSpellResonance = this.resonance;
     },
 },
-    {
-	id: "flashOfSteel",
-	name: "Flash of Steel",
-	resonance: "physical",
-  get skillBaseDamage() {
+  {
+    id: "flashOfSteel",
+    name: "Flash of Steel",
+    resonance: "physical",
+    //baseSkillDamageRatio: 3.8,
+    get dotDamage() {
         return 3.8 * partyState.totalStats.attack || 90;
-    },
-  get dotDamage() {
-      return 3.8 * partyState.totalStats.attack || 90;
-  },  
-	skillLevel: 1,
-	gemCost: 1,
-    tier: 1,
-	description: "Deals a small amount of undead to rows of enemies based on skill level. Applies a DoT if the last spell cast was physical.",
-	icon: "assets/images/icons/flash.png",
-    unlocked: true,
+    },  
+    skillLevel: 1,
+    gemCost: 1,
+      tier: 1,
+    description: "Deals a small amount of undead to rows of enemies based on skill level. Applies a DoT if the last spell cast was physical.",
+    icon: "assets/images/icons/flash.png",
+      unlocked: true,
 	activate: function () {
-    
-    flashScreen('white', 600);
+  const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);  
+  flashScreen('white', 600);
     
 	const enemies = getEnemiesBasedOnSkillLevel(this.skillLevel);
     
         enemies.forEach(enemy => {
             //console.log('Damaging enemy: ', enemy);
-            const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+            const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
             damageEnemy(enemy, skillDamage.damage, this.resonance);
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
@@ -192,9 +188,9 @@ export const heroSpells = [
             if (spellHandState.lastHeroSpellResonance === "physical" && enemy.hp > 0) {
                 applyDOT(enemy, this.resonance, this.dotDamage, 5);
             }
-            if (enemy.hp <= 0) updateEnemyCard();
+            if (enemy.hp <= 0) updateEnemiesGrid();
             });
-      spellHandState.lastHeroSpellResonance = "physical";
+      spellHandState.lastHeroSpellResonance = this.resonance;
     },
 },
 {
@@ -202,16 +198,15 @@ export const heroSpells = [
   name: "Earthquake",
   resonance: "earth",
   tier: 4,
+  skillLevel: 1,
   gemCost: 4,
-    get skillBaseDamage() {
-        return 20 * partyState.totalStats.attack || 300;
-    },
+  //skillDamageRatio: 20,
   description: "Shuffles all enemies on the grid. Enemies that move take earth damage, increased by your Earth and Physical counters. Consumes all Earth counters.",
     icon: "assets/images/icons/earthquake.webp",
     unlocked: true,
 
   activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     const grid = state.enemies;
     const activeEnemies = [];
@@ -282,16 +277,16 @@ export const heroSpells = [
         enemy.position.row = newRow;
         enemy.position.col = newCol;
         updateEnemiesGrid();
-        updateEnemyCard();
-        const dmgObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * totalBonus, enemy);
-        const dmg = dmgObject.damage;
+        const dmgObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+        let dmg = dmgObject.damage;
+        if (totalBonus > 0) dmg = dmgObject.damage * totalBonus;
         damageEnemy(enemy, dmg, this.resonance);
         //handleSkillAnimation("earthquake", newRow, newCol);
         showFloatingDamage(newRow, newCol, dmgObject);
-        delete enemy.counters["dark"];; // Consume all counters
+        delete enemy.counters["earth", "physical"]; // Consume earth and physical counters
       }
     });
-    spellHandState.lastHeroSpellResonance = "earth";
+    spellHandState.lastHeroSpellResonance = this.resonance;
     logMessage(`${this.name} shakes the battlefield!`);
   }
 },
@@ -301,14 +296,12 @@ export const heroSpells = [
   resonance: "water",
   tier: 2,
   gemCost: 3,
-    get skillBaseDamage() {
-        return 20 * partyState.totalStats.attack || 300;
-    },
+  skillLevel: 1,
   description: "Deals water damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
     icon: "assets/images/icons/brilliant.png",
 
   activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     const grid = state.enemies;
     const matchedEnemies = new Set();
@@ -351,22 +344,23 @@ export const heroSpells = [
       }
 
       if (row !== null && col !== null) {
-        const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * dmgMultiplier, enemy);
+        const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio * dmgMultiplier, enemy);
         const dmg = skillDamageObject.damage;
         damageEnemy(enemy, dmg, this.resonance);
         handleSkillAnimation("flush", row, col);
         showFloatingDamage(row, col, skillDamageObject);
-        updateEnemyCard();
+        updateEnemiesGrid();
       }
     });
 
     if (matchedEnemies.size === 0) {
-      logMessage(`${this.name} found no aligned enemies.`);
+      logMessage(`${this.name} found no aligned enemies. Replacing scroll.`);
+      replaceSpell();
     } else {
         shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
         logMessage(`${this.name} strikes matched enemies with crushing force!`);
     }
-    spellHandState.lastHeroSpellResonance = "water";
+    spellHandState.lastHeroSpellResonance = this.resonance;
   }
   
 },
@@ -375,15 +369,13 @@ export const heroSpells = [
   name: "Destroy Undead",
   resonance: "light",
   tier: 3,
+  skillLevel: 1,
   gemCost: 3,
   icon: "assets/images/icons/brilliant.png",
-  get skillBaseDamage() {
-    return 50 * partyState.totalStats.attack || 800;
-  },
   description: "Smite the undead! If three undead line up in a row or column, they are struck by radiant light and take massive damage.",
 
   activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     const grid = state.enemies;
     const undeadMatches = new Set();
@@ -417,8 +409,8 @@ export const heroSpells = [
     shakeScreen(500, 5);
 
     // 🔹 Damage scaling
-    const holyMultiplier = 2.5; // because it’s “Destroy Undead”, it *hurts*
-    const base = this.skillBaseDamage * holyMultiplier;
+    const holyMultiplier = 2.5;
+    const base = skillDamageRatio * holyMultiplier;
 
     // Apply damage
     undeadMatches.forEach(enemy => {
@@ -439,7 +431,7 @@ export const heroSpells = [
         handleSkillAnimation("destroyUndead", row, col);
         showFloatingDamage(row, col, skillDamageObject);
         //console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
-        updateEnemyCard();
+        updateEnemiesGrid();
       }
     });
     spellHandState.lastHeroSpellResonance = "light";
@@ -451,6 +443,7 @@ export const heroSpells = [
   name: "Haste",
   resonance: "fire",
   tier: 1,
+  skillLevel: 1,
   gemCost: 1,
   description: "Maxes out all party members' attack speed for a short duration.",
   icon: "assets/images/icons/inferno.png",
@@ -506,16 +499,13 @@ export const heroSpells = [
         },
       });
     }
-    spellHandState.lastHeroSpellResonance = "fire";
+    spellHandState.lastHeroSpellResonance = this.resonance;
   },
 },
 {
   id: "starFall",
   name: "Star Fall",
   resonance: "air",
-  get skillBaseDamage() {
-        return 10 * partyState.totalStats.attack || 150;
-    },
   skillLevel: 1,
   gemCost: 5,
   tier: 4,
@@ -528,6 +518,7 @@ export const heroSpells = [
 
   activate: function () {
     
+
     //applyVisualEffect("air-flash", 1.2);
     applyVisualEffect('light-flash', 0.8);
     logMessage("🌠 Casting Star Fall!");
@@ -565,17 +556,17 @@ export const heroSpells = [
   },
 
   castStar: function () {
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     const randRow = randInt(0, state.enemies.length - 1);
     const randCol = randInt(0, state.enemies[randRow].length - 1);
     const enemy = state.enemies[randRow][randCol];
 
     if (enemy && enemy.hp > 0) {
-      const tierMultiplier = Math.pow(1.2, this.tier);
-      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
       damageEnemy(enemy, skillDamage.damage, this.resonance);
       handleSkillAnimation("followThrough", randRow, randCol);
       showFloatingDamage(randRow, randCol, skillDamage);
-      updateEnemyCard();
+      updateEnemiesGrid();
     } else {
       /*
       showFloatingText("Miss!", randRow, randCol, { color: "#b0c4de" });
@@ -590,9 +581,6 @@ export const heroSpells = [
   name: "Landslide",
   resonance: "earth",
   tier: 2,
-  get skillBaseDamage() {
-      return 10 * partyState.totalStats.attack || 150;
-  },
   skillLevel: 1,
   gemCost: 3,
   unlocked: true,
@@ -642,10 +630,10 @@ export const heroSpells = [
   },
 
   hitColumn: function (enemies) {
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     let defeated = false;
     enemies.forEach(({ enemy, row, col }) => {
-      const tierMultiplier = Math.pow(1.2, this.tier);
-      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
 
       // Apply visual and damage
       showFloatingDamage(row, col, skillDamage);
@@ -654,7 +642,7 @@ export const heroSpells = [
 
       if (beforeHP > 0 && enemy.hp <= 0) {
         defeated = true;
-        updateEnemyCard();
+        updateEnemiesGrid();
       }
     });
     return defeated;
@@ -664,9 +652,6 @@ export const heroSpells = [
   id: "fireball",
   name: "Fireball",
   resonance: "fire",
-  get skillBaseDamage() {
-    return 10 * partyState.totalStats.attack || 150;
-  },
   get dotDamage() {
     return 10 * partyState.totalStats.attack || 150;
   },
@@ -678,7 +663,7 @@ export const heroSpells = [
   icon: "assets/images/icons/inferno.png",
 
   activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     const activeEnemies = getActiveEnemies();
     if (activeEnemies.length === 0) {
@@ -716,7 +701,7 @@ export const heroSpells = [
     // Apply damage + effects
     targets.forEach(({ row, col }) => {
       const enemy = state.enemies[row][col];
-      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
       const damage = skillDamageObject.damage;
       damageEnemy(enemy, damage, this.resonance);
       if (spellHandState.lastHeroSpellResonance === "fire") {
@@ -726,7 +711,7 @@ export const heroSpells = [
       }
       handleSkillAnimation("flameArch", row, col);
       showFloatingDamage(row, col, skillDamageObject);
-      if (enemy.hp <= 0) updateEnemyCard();
+      if (enemy.hp <= 0) updateEnemiesGrid();
     });
   spellHandState.lastHeroSpellResonance = this.resonance;  
   },
@@ -735,9 +720,6 @@ export const heroSpells = [
   id: "ring_of_fire",
   name: "Ring of Fire",
   resonance: "fire",
-  get skillBaseDamage() {
-    return 8 * partyState.totalStats.attack || 120;
-  },
   get dotDamage() {
     return 8 * partyState.totalStats.attack || 120;
   },
@@ -775,6 +757,7 @@ export const heroSpells = [
 
   update: function (delta) {
     if (!this.active) return;
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     this.remainingDelay -= delta;
 
@@ -783,7 +766,7 @@ export const heroSpells = [
       const enemy = state.enemies[row][col];
 
       if (enemy && enemy.hp > 0) {
-        const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+        const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
         const damage = skillDamageObject.damage;
         damageEnemy(enemy, damage, this.resonance);
         handleSkillAnimation("flameArch", row, col);
@@ -793,7 +776,7 @@ export const heroSpells = [
           applyDOT(enemy, "fire", this.dotDamage, 5);
           logMessage(`🔥 Fire synergy! ${this.name} applies burn DOT!`);
         }
-        if (enemy.hp <= 0) updateEnemyCard();
+        if (enemy.hp <= 0) updateEnemiesGrid();
       } else {
         logMessage(`🔥 Ring of Fire missed at (${row}, ${col})`);
       }
@@ -816,9 +799,6 @@ export const heroSpells = [
   resonance: "undead",
   tier: 4,
   gemCost: 4,
-  get skillBaseDamage() {
-    return 30 * partyState.totalStats.attack || 500;
-  },
   skillLevel: 1,
   unlocked: true,
   description: "The Reaper hunts enemies marked by death. Deals damage to enemies with 5+ undead counters, one by one.",
@@ -866,6 +846,7 @@ export const heroSpells = [
 
   update: function (delta) {
     if (!this.active) return;
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     this.remainingDelay -= delta;
 
@@ -874,14 +855,13 @@ export const heroSpells = [
       const enemy = state.enemies[row][col];
 
       if (enemy && enemy.hp > 0) {
-        const tierMultiplier = Math.pow(1.2, this.tier);
-        const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage * tierMultiplier, enemy);
+        const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
         const damage = skillDamage.damage;
         damageEnemy(enemy, damage, this.resonance);
         handleSkillAnimation("lifeDrain", row, col);
         showFloatingDamage(row, col, skillDamage);
         logMessage(`☠️ Reaper strikes enemy at (${row}, ${col})`);
-        if (enemy.hp <= 0) updateEnemyCard();
+        if (enemy.hp <= 0) updateEnemiesGrid();
       } else {
         logMessage(`☠️ Reaper missed at (${row}, ${col})`);
       }
@@ -901,9 +881,6 @@ export const heroSpells = [
     id: "tornado",
     name: "Tornado",
     resonance: "air",
-    get skillBaseDamage() {
-      return 8 * partyState.totalStats.attack || 120;
-    },
     skillLevel: 1,
     gemCost: 5,
     tier: 3,
@@ -912,7 +889,7 @@ export const heroSpells = [
     icon: "assets/images/icons/starfall.webp",
 
     activate: function () {
-      
+      const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
       const enemies = getActiveEnemies();
       if (enemies.length === 0) {
@@ -924,7 +901,7 @@ export const heroSpells = [
       const start = enemies[Math.floor(Math.random() * enemies.length)];
       
       logMessage(`🌪️ A Tornado begins swirling at (${start.position.row},${start.position.col})!`);
-      const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, start);
+      const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, start);
       spellHandState.activeTornado = true;
       spawnTornado({
         row: start.position.row,
@@ -942,15 +919,13 @@ export const heroSpells = [
   name: "Rot",
   resonance: "undead",
   tier: 3,
+  skillLevel: 1,
   gemCost: 3,
   icon: "assets/images/icons/breath.png",
-  get skillBaseDamage() {
-      return 18 * partyState.totalStats.attack || 300;
-  },
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
 
   activate: function () {
-    
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     const grid = state.enemies;
     let infectedCount = 0;
     spellHandState.lastHeroSpellResonance = this.resonance;
@@ -970,11 +945,11 @@ export const heroSpells = [
         if (necromancer) corruptionChance = 0.35;
         if (deterministicChance(corruptionChance)) {
           // Apply DoT *before* changing type
-          const skillDamage = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, enemy);
+          const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
           applyDOT(enemy, "undead", skillDamage.damage, 5);
           enemy.type = "undead";
           infectedCount++;
-          updateEnemyCard();
+          updateEnemiesGrid();
 
           //handleSkillAnimation("rot", row, col);
           //showFloatingText(row, col, "☠️", "#bb66ff");
@@ -994,6 +969,7 @@ export const heroSpells = [
   name: "Cure",
   resonance: "light",
   tier: 2,
+  skillLevel: 1,
   gemCost: 2,
   icon: "assets/images/icons/brilliant.png",
   get skillBaseAmount() {
@@ -1022,11 +998,9 @@ export const heroSpells = [
   id: "sparks",
   name: "Sparks",
   resonance: "air",
-  get skillBaseDamage() {
-    return 7 * partyState.totalStats.attack || 100;
-  },
   gemCost: 3,
   tier: 1,
+  skillLevel: 1,
   unlocked: true,
   description: "Releases 4 spark charges that each strike a random enemy. Consecutive Sparks increase damage.",
   icon: "assets/images/icons/chain.png",
@@ -1083,6 +1057,8 @@ export const heroSpells = [
   },
 
   castSpark: function () {
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+    
     const target = getRandomEnemy(); // your provided function
     if (!target) {
       logMessage("⚡ Spark fizzles — no enemies!");
@@ -1091,28 +1067,24 @@ export const heroSpells = [
 
     const { enemy, row, col } = target;
 
-    const tierMultiplier = Math.pow(1.2, this.tier);
-    const baseDmg = this.skillBaseDamage * tierMultiplier;
-
     const skillDamageObject = calculateHeroSpellDamage(
       this.resonance,
-      baseDmg * this.currentComboMult,
+      skillDamageRatio,
       enemy
     );
-
-    damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+    //console.log(`combo: ${skillDamageObject.damage}`);
+    const dmg = skillDamageObject.damage * this.currentComboMult;
+    skillDamageObject.damage = dmg;
+    damageEnemy(enemy, dmg, this.resonance);
     handleSkillAnimation("sparks", row, col);
     showFloatingDamage(row, col, skillDamageObject);
-    updateEnemyCard();
+    updateEnemiesGrid();
   },
 },
 {
   id: "poisonSpray",
   name: "Poison Spray",
   resonance: "poison",
-  get dotDamage() {
-    return 5.5 * partyState.totalStats.attack || 110;
-  },
   skillLevel: 1,
   gemCost: 1,
   tier: 1,
@@ -1127,7 +1099,7 @@ export const heroSpells = [
       logMessage(`No enemies available for ${this.name}`);
       return;
     }
-
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     // Pick a random active enemy as the explosion origin
     const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
     //console.log(`Fireball targets enemy at (${randomEnemy.position.row}, ${randomEnemy.position.col})`);
@@ -1158,11 +1130,11 @@ export const heroSpells = [
     // Apply damage + effects
     targets.forEach(({ row, col }) => {
       const enemy = state.enemies[row][col];
-      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.dotDamage, enemy);
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
       const damage = skillDamageObject.damage;
-      applyDOT(enemy, "fire", this.dotDamage, 8);
+      applyDOT(enemy, this.resonance, skillDamageObject.damage, 8);
       handleSkillAnimation("poisonFlask", row, col);
-      if (enemy.hp <= 0) updateEnemyCard();
+      if (enemy.hp <= 0) updateEnemiesGrid();
     });
   spellHandState.lastHeroSpellResonance = this.resonance;  
   },
@@ -1171,12 +1143,6 @@ export const heroSpells = [
   id: "falconer",
   name: "Falconer",
   resonance: "physical",
-  get skillBaseDamage() {
-    return 15 * partyState.totalStats.attack || 200;
-  },
-  get dotDamage() {
-    return 8 * partyState.totalStats.attack || 120;
-  },
   skillLevel: 1,
   gemCost: 2,
   tier: 2,
@@ -1185,6 +1151,7 @@ export const heroSpells = [
   icon: "assets/images/icons/moonbeam.png",
 
   activate: function () {
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
     //applyVisualEffect('slash-flash', 0.4);
     logMessage("🦅 Falconer strikes!");
 
@@ -1201,12 +1168,9 @@ export const heroSpells = [
     const row = target.position.row;
     const col = target.position.col;
 
-    const tierMultiplier = Math.pow(1.2, this.tier);
-    const baseDamage = this.skillBaseDamage * tierMultiplier;
-
     const skillDamage = calculateHeroSpellDamage(
       this.resonance,
-      baseDamage,
+      skillDamageRatio,
       target
     );
 
@@ -1214,9 +1178,9 @@ export const heroSpells = [
     handleSkillAnimation("falconer", row, col);
     showFloatingDamage(row, col, skillDamage);
     if (spellHandState.lastHeroSpellResonance === "physical" && target.hp > 0) {
-      applyDOT(target, this.resonance, this.dotDamage, 5);
+      applyDOT(target, this.resonance, skillDamage.damage/2, 5);
       }
-    if (target.hp <=0) updateEnemyCard();
+    if (target.hp <=0) updateEnemiesGrid();
 
     spellHandState.lastHeroSpellResonance = this.resonance;
   }
@@ -1225,25 +1189,20 @@ export const heroSpells = [
   id: "frostbite",
   name: "Frostbite",
   resonance: "water",
-  get skillBaseDamage() {
-    return 15 * partyState.totalStats.attack || 200;
-  },
   tier: 1,
+  skillLevel: 1,
   gemCost: 4,
   icon: "assets/images/icons/frostbite.webp",
   description: "Deals heavy water damage but is negated by fire type and fire counters.",
 
   activate: function () {
-    if (state.resources.gems < this.gemCost) {
-      logMessage(`Not enough gems to cast ${this.name}.`);
-      return;
-    }
-
+    
     const enemies = getActiveEnemies().filter(e => e.elementType !== "fire"); // fire immune
     if (enemies.length === 0) {
       logMessage("No valid targets for Frostbite!");
       return;
     }
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     flashScreen("#a0d8f0", 800); // icy blue flash
 
@@ -1256,7 +1215,7 @@ export const heroSpells = [
 
       
       const bonus = remaining * 2; // remaining chill intensifies
-      const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage + bonus, enemy);
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio + bonus, enemy);
       const skillDamage = skillDamageObject.damage;
       damageEnemy(enemy, skillDamage, this.resonance);
       handleSkillAnimation("sparks", enemy.position.row, enemy.position.col);
@@ -1272,9 +1231,6 @@ export const heroSpells = [
   id: "dragonsBreath",
   name: "Dragon's Breath",
   resonance: "dark",
-  get skillBaseDamage() {
-    return 70 * partyState.totalStats.attack || 70;
-  },
   skillLevel: 1,
   gemCost: 6,
   tier: 4,
@@ -1288,14 +1244,15 @@ export const heroSpells = [
       logMessage(`No valid targets for ${this.name}`);
       return;
     }
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave) + 12;
     // Pick a random active enemy as the target
     const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
     const { row, col } = randomEnemy.position;
-    const skillDamageObject = calculateHeroSpellDamage(this.resonance, this.skillBaseDamage, randomEnemy);
+    const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, randomEnemy);
     damageEnemy(randomEnemy, skillDamageObject.damage, this.resonance);
     handleSkillAnimation("flameArch", row, col);
     showFloatingDamage(row, col, skillDamageObject);
-    if (randomEnemy.hp <=0) updateEnemyCard();
+    if (randomEnemy.hp <=0) updateEnemiesGrid();
     spellHandState.lastHeroSpellResonance = this.resonance;  
     logMessage(`🐉 Dragon's Breath scorches the enemy at (${row}, ${col})!`);
   }
