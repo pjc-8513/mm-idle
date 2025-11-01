@@ -1,7 +1,7 @@
-import { state, partyState, updateTotalStats } from "./state.js";
+import { state, partyState } from "./state.js";
 import { logMessage } from "./systems/log.js";
 import { emit, on } from "./events.js";
-import { calculateStats } from "./systems/math.js";
+import { calculateClassStats, updateTotalStats } from "./systems/math.js";
 import { classes } from "./content/classes.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 
@@ -302,44 +302,61 @@ function recruitClass(classId) {
   }
 }
 
-// --- Add/Remove from active party ---
-function togglePartyMember(classId) {
+/**
+ * Toggle a class member in/out of the active party
+ * @param {string} classId - The ID of the class to toggle
+ */
+export function togglePartyMember(classId) {
   const idx = partyState.party.findIndex(member => member.id === classId);
-  const clsTemplate = classes.find(c => c.id === classId);
-  if (!clsTemplate) return;
-  const clone = JSON.parse(JSON.stringify(clsTemplate));
-  // Use current global level (default 1)
-  const level = partyState.classLevels[classId] || 1;
-  clone.level = level;
-
+  
   if (idx !== -1) {
     // Remove from party
-    partyState.party.splice(idx, 1);
+    const removed = partyState.party.splice(idx, 1)[0];
     emit("partyChanged", partyState.party);
-    updateTotalStats(); // 🔥 update totals after removing
+    updateTotalStats();
     updateResonance();
-    } else {
-      // Count only non-summon members when checking space
-      const nonSummons = partyState.party.filter(m => !m.isSummon);
-      if (nonSummons.length < partyState.maxPartySize) {
-        // Add to party (only if unlocked)
-        if (partyState.unlockedClasses.includes(classId)) {
-          // Calculate stats before adding
-          clone.stats = calculateStats(clone, level);
-
-          // 🔥 Ensure correct skills are active
-          updateUnlockedSkills(clone);
-
-          console.log("Adding to party:", clone);
-          partyState.party.push(clone);
-          updateResonance();
-          emit("partyChanged", partyState.party);
-          updateTotalStats(); // 🔥 update totals after removing
-        }
-      } else {
-        console.warn("Party is full (ignoring summons).");
-      }
-    }
+    console.log(`Removed ${removed.name} from party`);
+    return;
+  }
+  
+  // Adding to party - validate first
+  if (!partyState.unlockedClasses.includes(classId)) {
+    console.warn(`Class ${classId} is not unlocked`);
+    return;
+  }
+  
+  // Count only non-summon members when checking space
+  const nonSummons = partyState.party.filter(m => !m.isSummon);
+  if (nonSummons.length >= partyState.maxPartySize) {
+    console.warn("Party is full (ignoring summons)");
+    return;
+  }
+  
+  // Find the class template
+  const classTemplate = classes.find(c => c.id === classId);
+  if (!classTemplate) {
+    console.error(`Class template not found for ${classId}`);
+    return;
+  }
+  
+  // Create a party member instance
+  const classLevel = partyState.classLevels[classId] || 1;
+  const partyMember = {
+    ...JSON.parse(JSON.stringify(classTemplate)), // Clone template
+    id: classId,
+    level: classLevel,
+    stats: calculateClassStats(classTemplate, classLevel)
+  };
+  
+  // Ensure correct skills are active based on level
+  updateUnlockedSkills(partyMember);
+  
+  console.log("Adding to party:", partyMember);
+  partyState.party.push(partyMember);
+  
+  emit("partyChanged", partyState.party);
+  updateResonance();
+  updateTotalStats();
 }
 
 // Party resonance logic

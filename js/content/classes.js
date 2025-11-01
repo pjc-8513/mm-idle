@@ -25,8 +25,30 @@ export const classes = [
       lastTarget: null,
       sameTargetStreak: 0,
       resonance: "physical",
-      baseStats: { hp: partyState.heroStats.hp, attack: partyState.heroStats.attack, defense: 3, criticalChance: 0.15, speed: 1 },
-      growthPerLevel: { attack: 1, defense: 1 },
+        // How much of the hero's stats this class gets
+      heroStatRatios: {
+        hp: 1,      // 120% of hero HP
+        attack: 1,  // 80% of hero attack
+        defense: 0.6  // 60% of hero defense
+      },
+      
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 5,
+        attack: 5,
+        defense: 10,
+        speed: 1.3,
+        criticalChance: 0.15
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 2,
+        defense: 3
+      },
+      //baseStats: { hp: partyState.heroStats.hp, attack: partyState.heroStats.attack, defense: 3, criticalChance: 0.15, speed: 1 },
+      //growthPerLevel: { attack: 1, defense: 1 },
       attackCooldown: 0
     },
     { id: "knight", 
@@ -39,8 +61,31 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "physical",
       hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 1.2, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.15, speed: 1.5 },
-      growthPerLevel: { attack: 1, defense: 1 },
+        // How much of the hero's stats this class gets
+      heroStatRatios: {
+        hp: 1.2,      // 120% of hero HP
+        attack: 0.8,  // 80% of hero attack
+        defense: 0.6  // 60% of hero defense
+      },
+      
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 5,
+        attack: 5,
+        defense: 10,
+        speed: 1,
+        criticalChance: 0.12
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 2,
+        defense: 3
+      },
+
+      //baseStats: { hp: partyState.heroStats.hp * 1.2, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.15, speed: 1.5 },
+      //growthPerLevel: { attack: 1, defense: 1 },
       abilities: [
         { id: "leadership", unlockLevel: 1 },
         { id: "flameArch", unlockLevel: 1, active: false }
@@ -65,8 +110,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "fire",
       hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 0.5, attack: partyState.heroStats.attack * 1.5, defense: 2, criticalChance: 0.1, speed: 1.2 },
-      growthPerLevel: { attack: 2, defense: 1 },
+      heroStatRatios: { hp: 0.5, attack: 1.5, defense: 2},
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 5,
+        defense: 10,
+        criticalChance: 0.1,
+        speed: 1.2
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 3
+      },
       attackCooldown: 0 
     },
     { id: "rogue", 
@@ -91,8 +150,22 @@ export const classes = [
         poisonFlask: { cooldownRemaining: 8000 },
         lethalDose: { active: false }
       },
-      baseStats: { hp: partyState.heroStats.hp * 0.7, attack: partyState.heroStats.attack * 1.3, defense: 2, criticalChance: 0.2, speed: 1.8 },
-      growthPerLevel: { attack: 1, defense: 1 },
+      heroStatRatios: { hp: 0.7, attack: 1.3, defense: 2 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 5,
+        defense: 10,
+        speed: 1.8,
+        criticalChance: 0.2
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 3
+      },
       attackCooldown: 0
     },
     { id: "cleric", 
@@ -107,8 +180,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "light",
       hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 1.1, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.1, speed: 1.3 },
-      growthPerLevel: { attack: 1, defense: 1 },
+      heroStatRatios: { hp: 1.1, attack: 0.8, defense: 3 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 5,
+        attack: 5,
+        defense: 10,
+        criticalChance: 0.1,
+        speed: 1.3
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 2,
+        defense: 3
+      },
       attackCooldown: 0,
       abilities: [
         { id: "summonAngel", unlockLevel: 5, active: false },        
@@ -130,8 +217,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "light",
       hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 1.2, attack: partyState.heroStats.attack * 0.8, defense: 3, criticalChance: 0.15, speed: 1.5 },
-      growthPerLevel: { attack: 1, defense: 1 },
+      heroStatRatios: { hp: 1.2, attack: 0.8, defense: 3 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 10,
+        attack: 5,
+        defense: 10,
+        speed: 1.5,
+        criticalChance: 0.15
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 2,
+        defense: 3
+      },
       abilities: [
         { id: "blindingLight", unlockLevel: 1 },
         
@@ -157,8 +258,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "dark",
       hasAutoAttack: false,
-      baseStats: { hp: partyState.heroStats.hp * 0.9, attack: 0, defense: 2, criticalChance: 0.1, speed: 1.2 },
-      growthPerLevel: { attack: 0, defense: 1 },
+      heroStatRatios: { hp: 0.9, attack: 1, defense: 2 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 10,
+        attack: 2,
+        defense: 10,
+        speed: 1.2,
+        criticalChance: 0.1
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 1,
+        defense: 3
+      },
       attackCooldown: 0
     }, 
     { id: "druid", 
@@ -174,8 +289,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "earth",
       hasAutoAttack: false,
-      baseStats: { hp: partyState.heroStats.hp * 0.9, attack: partyState.heroStats.attack * 1.1, defense: 3, criticalChance: 0.1, speed: 1.3 },
-      growthPerLevel: { attack: 1, defense: 1 },
+      heroStatRatios: { hp: 0.9, attack: 1.1, defense: 3 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 10,
+        attack: 5,
+        defense: 10,
+        speed: 1.3,
+        criticalChance: 0.1
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 2,
+        defense: 3
+      },
       attackCooldown: 0,
       abilities: [
         { id: "landslide", unlockLevel: 1, active: false },
@@ -202,8 +331,22 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "air",
       hasAutoAttack: true,
-      baseStats: { hp: partyState.heroStats.hp * 0.6, attack: partyState.heroStats.attack * 1.2, defense: 2, criticalChance: 0.15, speed: 1.5 },
-      growthPerLevel: { attack: 1, defense: 1 },
+      heroStatRatios: { hp: 0.6, attack: 1.2, defense: 2 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 10,
+        defense: 10,
+        speed: 1.5,
+        criticalChance: 0.2
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 3
+      },
       attackCooldown: 0,
       abilities: [
         { id: "sparks", unlockLevel: 1, active: false },

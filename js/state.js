@@ -9,21 +9,36 @@ export const spellHandState = {
 };
 
 export const partyState = {
+  // Hero progression
   heroLevel: 5,
   heroExp: 0,
-  heroGains: { attack: 5 },
-  unlockedClasses: [],
-  classLevels: {}, // map: { fighter: 1, cleric: 2 }
-  party: [],
-  heroStats: { hp: 10, attack: 30, defense: 0, criticalChance: 0.05, elementalPenetration: 0, weaknessBonus: 0},
-  elementalDmgModifiers: { physical: 100, fire: 100, water: 100, 
-                   air: 100, poison: 100, light: 100, dark: 100, 
-                   undead: 100 },
-  totalStats: {},
+  heroBaseStats: { hp: 10, attack: 30, defense: 5 }, // Base stats that scale with hero level
+  heroGrowthPerLevel: { hp: 5, attack: 3, defense: 1 }, // How much hero gains per level
+  
+  // External bonuses (blacksmith, upgrades, etc.)
+  heroBonuses: { attack: 0, defense: 0, hp: 0 }, // From buildings, items, etc.
+  
+  // Class management
+  unlockedClasses: [], // Array of class IDs
+  classLevels: {}, // { fighter: 1, cleric: 2 }
+  party: [], // Active party members
+  
+  // Combat modifiers
+  elementalDmgModifiers: { 
+    physical: 100, fire: 100, water: 100, air: 100, 
+    poison: 100, light: 100, dark: 100, undead: 100 
+  },
+  criticalChance: 0.05,
+  elementalPenetration: 0,
+  weaknessBonus: 0,
+  
+  // Cached totals (recalculated when party/levels change)
+  totalStats: { hp: 0, attack: 0, defense: 0 },
+  
   maxPartySize: 4,
   hasActiveDOTs: false,
   activeHeroBuffs: []
-}
+};
 export const state = {
   tick: 0,
   resources: {
@@ -131,19 +146,4 @@ export const quickSpellState = {
 
 export function initState() {
   console.log("Game state initialized");
-}
-
-export function updateTotalStats() {
-  const totals = { hp: 0, attack: 0, defense: 0 };
-
-  for (const member of partyState.party) {
-    if (!member.stats) continue;
-    totals.hp += Number(member.stats.hp) || 0;
-    totals.attack += Number(member.stats.attack) || 0;
-    totals.defense += Number(member.stats.defense) || 0;
-  }
-
-  totals.attack += Number(partyState.heroGains.attack) || 0;
-
-  partyState.totalStats = totals;
 }

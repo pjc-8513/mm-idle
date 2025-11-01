@@ -6,6 +6,7 @@ import { prefixes } from './content/definitions.js';
 import { logMessage } from './systems/log.js';
 import { uiAnimations } from './systems/animations.js';
 import { addGems } from './incomeSystem.js';
+import { levelUpHero } from './systems/math.js';
 
 // Quest configuration
 const QUEST_CONFIG = {
@@ -341,34 +342,6 @@ function addHeroExp(amount) {
  */
 function getExpForLevel(level) {
   return Math.pow(level, 2) * 100;
-}
-
-/**
- * Level up the hero
- */
-function levelUpHero() {
-  const expNeeded = getExpForLevel(partyState.heroLevel + 1);
-  partyState.heroExp -= expNeeded;  // expNeeded is correct here (requirement for NEXT level)
-  partyState.heroLevel++;
-
-  // But safeguard: don’t let exp go negative
-  if (partyState.heroExp < 0) partyState.heroExp = 0;
-
-  // Apply stat gains
-  if (partyState.heroGains) {
-    for (const [stat, value] of Object.entries(partyState.heroGains)) {
-      if (partyState.heroStats[stat] !== undefined) {
-        partyState.heroStats[stat] += value;
-      }
-    }
-  }
-
-  uiAnimations.triggerHeroLevelUp();
-
-  emit('heroLevelUp', {
-    level: partyState.heroLevel,
-    gains: partyState.heroGains
-  });
 }
 
 

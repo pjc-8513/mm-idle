@@ -190,7 +190,7 @@ export function removeEnemyTooltipById(enemyId) {
     //const container = document.querySelector(`[data-enemy-id="${uniqueId}"]`);    
     tooltip.style.display = "none";
     tooltip.remove();
-    console.log(`Tooltip for enemy ${enemyId} removed`);
+    //console.log(`Tooltip for enemy ${enemyId} removed`);
   }
 }
 

@@ -65,7 +65,7 @@ export const AREA_TEMPLATES = {
       description: "A mire of the damned!",
       maxWaves: 10,
       //baseLevel: 1,
-      enemies: ["spectre", "evilSpirit", "harpy", "skeletonArcher", "spider"],
+      enemies: ["spectre", "evilSpirit", "harpy", "skeletonArcher"],
       boss: "snergle", 
       //unlocks: ["mistyIslands", "goblinWatch"],
       //nextArea: "mistyIslands",

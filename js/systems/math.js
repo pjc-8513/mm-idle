@@ -8,7 +8,7 @@ export function initMath() {
 	updateElementalModifiers()
 });
   on("classUpgraded", ({ id, level }) => {
-    calculateStats(id, level);
+    calculateClassStats(id, level);
     updateElementalModifiers();
   });
 }
@@ -20,26 +20,7 @@ export function randInt(min, max) {
 export function chance(prob) {
   return Math.random() < prob;
 }
-/*
-// Calculate stats based on class levels
-export function calculateTotalStats() {
-  const totalStats = { hp: 0, mp: 0, attack: 0, defense: 0, criticalChance: 0, speed: 0 };
-  partyState.party.forEach(member => {
-    const cls = getClassById(member.id);
-    const level = partyState.classLevels[member.id] || 1;
-    if (cls && cls.baseStates && cls.growthPerLevel) {
-      totalStats.hp += cls.baseStates.hp + cls.growthPerLevel.hp * (level - 1);
-      totalStats.mp += cls.baseStates.mp + cls.growthPerLevel.mp * (level - 1);
-      totalStats.attack += cls.baseStates.attack + cls.growthPerLevel.attack * (level - 1);
-      totalStats.defense += cls.baseStates.defense + cls.growthPerLevel.defense * (level - 1);
-      totalStats.criticalChance += cls.baseStates.criticalChance || 0;
-      totalStats.speed += cls.baseStates.speed || 0;
-    }
-  });
-  state.totalStats = totalStats;
-  emit("statsUpdated", totalStats);
-}
-*/
+
 // Helper to get class data by ID
 export function getClassById(id) {
   console.log("Getting class by ID:", id);
@@ -48,31 +29,6 @@ export function getClassById(id) {
 
 export function calculatePercentage(number, percentage) {
 return (number * percentage) / 100;
-}
-
-/**
- * Calculates the stats for a character based on their level.
- * @param {Object} character - The character template object.
- * @param {number} level - The level to calculate stats for.
- * @returns {Object} - A new object with calculated stats.
- */
-export function calculateStats(character, level) {
-  /*
-  const character = getClassById(classId);
-  if (!character) {
-    console.warn(`Character with ID ${classId} not found.`);
-    return {};
-  }
-  */
-  const calculatedStats = {};
-
-  for (const stat in character.baseStats) {
-    const base = character.baseStats[stat] || 0;
-    const perLevel = character.growthPerLevel?.[stat] || 0;
-    calculatedStats[stat] = base + perLevel * (level - 1);
-  }
-
-  return calculatedStats;
 }
 
 // Calculate elemental stats in partyState.elementalDmgModifiers from resonance
@@ -136,3 +92,101 @@ export const suffixColors = {
   "B": "red",
   "": "white" // default for plain numbers
 };
+
+/**
+ * Calculate hero's current stats based on level
+ */
+export function getHeroStats() {
+  const stats = {};
+  for (const stat in partyState.heroBaseStats) {
+    const base = partyState.heroBaseStats[stat];
+    const growth = partyState.heroGrowthPerLevel[stat] || 0;
+    const bonus = partyState.heroBonuses[stat] || 0;
+    stats[stat] = base + (growth * (partyState.heroLevel - 1)) + bonus;
+  }
+  return stats;
+}
+
+/**
+ * Calculate a class member's stats based on their level AND hero stats
+ * @param {Object} classTemplate - The class definition
+ * @param {number} classLevel - The class's current level
+ * @returns {Object} - Calculated stats for this class instance
+ */
+export function calculateClassStats(classTemplate, classLevel) {
+  const heroStats = getHeroStats();
+  const stats = {};
+  
+  // Each class has a ratio of hero stats (e.g., fighter gets 80% of hero attack)
+  for (const stat in classTemplate.heroStatRatios) {
+    const ratio = classTemplate.heroStatRatios[stat];
+    const fromHero = (heroStats[stat] || 0) * ratio;
+    
+    // Plus their own base and growth
+    const classBase = classTemplate.baseStats?.[stat] || 0;
+    const classGrowth = classTemplate.growthPerLevel?.[stat] || 0;
+    const fromClass = classBase + (classGrowth * (classLevel - 1));
+    
+    stats[stat] = fromHero + fromClass;
+  }
+  
+  return stats;
+}
+
+/**
+ * Recalculate all party member stats and totals
+ */
+export function updateTotalStats() {
+  const totals = { hp: 0, attack: 0, defense: 0 };
+  
+  // Update each party member's stats first
+  for (const member of partyState.party) {
+    const classLevel = partyState.classLevels[member.id] || 1;
+    const classTemplate = classes.find(c => c.id === member.id);
+    
+    if (classTemplate) {
+      member.stats = calculateClassStats(classTemplate, classLevel);
+      member.level = classLevel;
+      
+      // Add to totals
+      totals.hp += member.stats.hp || 0;
+      totals.attack += member.stats.attack || 0;
+      totals.defense += member.stats.defense || 0;
+    }
+  }
+  
+  partyState.totalStats = totals;
+  emit("statsUpdated", totals);
+}
+
+/**
+ * Level up the hero
+ */
+export function levelUpHero() {
+  partyState.heroLevel++;
+  updateTotalStats(); // All classes benefit from hero level up
+  emit("heroLevelUp", partyState.heroLevel);
+}
+
+/**
+ * Level up a specific class
+ */
+export function levelUpClass(classId) {
+  partyState.classLevels[classId] = (partyState.classLevels[classId] || 1) + 1;
+  
+  // If this class is in the party, update stats
+  if (partyState.party.some(m => m.id === classId)) {
+    updateTotalStats();
+  }
+  
+  emit("classLevelUp", { id: classId, level: partyState.classLevels[classId] });
+}
+
+/**
+ * Add blacksmith or other external bonuses
+ */
+export function addHeroBonus(stat, amount) {
+  partyState.heroBonuses[stat] = (partyState.heroBonuses[stat] || 0) + amount;
+  updateTotalStats(); // Affects all classes
+  emit("heroBonusAdded", { stat, amount });
+}

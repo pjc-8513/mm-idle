@@ -456,11 +456,11 @@ export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
             };
           }
   // Base attack
-  let baseDamage = partyState.heroStats.attack || 30;
+  let baseDamage = partyState.heroBaseStats.attack || 30;
   let isCritical = false;
 
   // Critical hits
-  const critChance = partyState.heroStats.criticalChance || 0;
+  const critChance = partyState.heroBaseStats.criticalChance || 0;
   if (Math.random() < critChance) {
     isCritical = true;
     baseDamage *= COMBAT_CONFIG.CRITICAL_DAMAGE_MULTIPLIER;
@@ -479,8 +479,8 @@ export function calculateHeroSpellDamage(resonance, skillBaseDamage, target) {
   const elementalMultiplier = getElementalMultiplier(
     resonance,
     target.elementType,
-    partyState.heroStats.elementalPenetration || 0,
-    partyState.heroStats.weaknessBonus || 0
+    partyState.heroBaseStats.elementalPenetration || 0,
+    partyState.heroBaseStats.weaknessBonus || 0
   );
 
   const finalDamage = Math.max(1, Math.floor(skillDamage * elementalMultiplier));

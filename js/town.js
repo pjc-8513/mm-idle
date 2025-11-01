@@ -1,9 +1,10 @@
-import { state, partyState, updateTotalStats } from "./state.js";
+import { state, partyState } from "./state.js";
 import { emit, on } from "./events.js";
 import { buildings } from "./content/buildingDefs.js";
+import { classes } from "./content/classes.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 import { updateUnlockedSkills } from "./party.js";
-import { calculateStats } from "./systems/math.js";
+import { calculateClassStats, updateTotalStats, levelUpClass } from "./systems/math.js";
 import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
 import { BUILDING_MENUS } from "./content/buildingMenu.js";
 
@@ -375,41 +376,55 @@ function upgradeBuilding(buildingId) {
       state.buildings.push({ id: buildingId, level: 1 });
     }
 
+    if (building.upgradedClasses) upgradeLinkedClasses(building);
     // --- NEW: upgrade linked classes ---
-    if (building.upgradedClasses) {
-      const upgraded = Array.isArray(building.upgradedClasses)
-        ? building.upgradedClasses
-        : [building.upgradedClasses];
-
-      upgraded.forEach(uc => {
-        const classId = uc.id;
-
-        partyState.classLevels[classId] = (partyState.classLevels[classId] || 1) + 1;
-
-        const newLevel = partyState.classLevels[classId];
-
-        // Update unlocked class reference
-        const unlockedClass = partyState.unlockedClasses.find(c => c.id === classId);
-        if (unlockedClass) unlockedClass.level = newLevel;
-
-        // 🔥 NEW: Update party member if present
-        const partyMember = partyState.party.find(p => p.id === classId);
-        if (partyMember) {
-          partyMember.level = newLevel;
-          updateUnlockedSkills(partyMember); // check for skill unlocks
-          partyMember.stats = calculateStats(partyMember, newLevel);
-          emit("partyMemberUpdated", partyMember);
-          updateTotalStats(); // 🔥 update totals after removing
-        }
-
-        emit("classUpgraded", { id: classId, level: newLevel });
-      });
-    }
     // Emit upgrade event with building data
     emit("buildingUpgraded", { ...building, level: buildingData ? buildingData.level : 1 });
 
     emit("goldChanged", state.resources.gold);
     if (state.resources.gems !== lastTotalGems) emit("gemsChanged", state.resources.gems);
     emit("buildingsChanged", state.buildings);
+  }
+}
+
+/**
+ * Upgrade classes linked to a building
+ * @param {Object} building - The building object with upgradedClasses property
+ */
+export function upgradeLinkedClasses(building) {
+  if (!building.upgradedClasses) return;
+  
+  const upgraded = Array.isArray(building.upgradedClasses)
+    ? building.upgradedClasses
+    : [building.upgradedClasses];
+  
+  upgraded.forEach(upgrade => {
+    const classId = upgrade.id;
+    const levelsToAdd = upgrade.levels || 1; // Allow upgrading by multiple levels
+    
+    // Increase class level
+    partyState.classLevels[classId] = (partyState.classLevels[classId] || 1) + levelsToAdd;
+    const newLevel = partyState.classLevels[classId];
+    
+    console.log(`Upgraded ${classId} to level ${newLevel}`);
+    
+    // Update party member if currently in party
+    const partyMember = partyState.party.find(p => p.id === classId);
+    if (partyMember) {
+      const classTemplate = classes.find(c => c.id === classId);
+      if (classTemplate) {
+        partyMember.level = newLevel;
+        partyMember.stats = calculateClassStats(classTemplate, newLevel);
+        updateUnlockedSkills(partyMember);
+        emit("partyMemberUpdated", partyMember);
+      }
+    }
+    
+    emit("classUpgraded", { id: classId, level: newLevel });
+  });
+  
+  // Only recalculate totals once after all upgrades
+  if (upgraded.some(u => partyState.party.some(p => p.id === u.id))) {
+    updateTotalStats();
   }
 }
