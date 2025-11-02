@@ -5,6 +5,7 @@ import { renderPartyPanel } from "./party.js";
 import { classes } from "./content/classes.js";
 import { buildings } from "./content/buildingDefs.js";
 import { abilities } from "./content/abilities.js";
+import { heroSpells } from "./content/heroSpells.js";
 import { combatState, executeAttack, calculateAttackInterval, stopAutoAttack, startAutoAttack } from "./systems/combatSystem.js";
 import { floatingTextManager } from './systems/floatingtext.js';
 import { renderQuestPanelAnimations } from "./questManager.js";
@@ -82,7 +83,25 @@ function update(delta) {
       if (spell.update) spell.update(delta);
     }
   }
-  
+    if (partyState.activeEchoes && partyState.activeEchoes.length > 0) {
+    // Debug logging
+  //console.log("Echo queue:", partyState.activeEchoes.map(e => ({ id: e.spellId, delay: e.delay })));
+    for (let i = partyState.activeEchoes.length - 1; i >= 0; i--) {
+      const echo = partyState.activeEchoes[i];
+      echo.delay -= delta * 1000;
+
+      // When delay finishes, cast and remove from queue
+      if (echo.delay <= 0) {
+      // remove highlight before casting
+      const sorceress = partyState.party.find(c => c.id === "sorceress");
+      if (sorceress) sorceress.isEchoing = false;
+        const spell = heroSpells.find(s => s.id === echo.spellId);
+        if (spell) spell.activate(true); // mark as echo cast (no re-echo)
+        partyState.activeEchoes.splice(i, 1);
+      }
+      
+    }
+  }
   if (spellHandState.activeTornado) updateTornados(delta);
 
   // Update sprite animations

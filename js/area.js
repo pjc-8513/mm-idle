@@ -360,9 +360,10 @@ function renderPartyDisplay() {
 
 function renderPartyMember(member, cls) {
   const level = partyState.classLevels[cls.id] || 1;
+  const echoClass = member.isEchoing ? "echo-active" : "";
   
   return `
-    <div class="party-member-vertical" data-class-id="${cls.id}">
+    <div class="party-member-vertical ${echoClass}" data-class-id="${cls.id}">
       <div class="party-image-vertical">
         <img src="../assets/images/classes/${cls.id}.png" alt="${cls.name}" 
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -922,6 +923,18 @@ function addVerticalPartyCSS() {
       border-color: #2196f3;
       transform: translateX(2px);
     }
+
+    /* Sorceress Echo Highlight */
+    .party-member-vertical.echo-active {
+      background: rgba(255, 100, 100, 0.25) !important;
+      border-color: rgba(255, 50, 50, 0.8) !important;
+      box-shadow: 0 0 10px rgba(255, 50, 50, 0.6);
+    }
+
+    .party-member-vertical.echo-active:hover {
+      background: rgba(255, 140, 140, 0.4) !important;
+    }
+
     
     .summon-member {
       background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);

@@ -52,8 +52,8 @@ export const buildings = [
     goldCost: 50,
     gemCost: 0,
     goldIncomePerHit: 0,
-    gemPerSecond: 0.0167, // 1 gem per minute
-    buildingRequired: { id: "mine", level: 10 }
+    //gemPerSecond: 0.0167, // 1 gem per minute
+    buildingRequired: { id: "mine", level: 5 }
   },
   { id: "barracks",
     name: "Barracks", 
@@ -122,8 +122,11 @@ export const buildings = [
     gemCost: 0,
     goldIncomePerHit: 0,
     gemPerSecond: 0,
-    upgradedClasses: { id: "mage"},
-    buildingRequired: { id: "barracks", level: 1 }
+    upgradedClasses: { id: "sorceress"},
+    buildingRequired: [
+      { id: "barracks", level: 1 },
+      { id: "gemMine", level: 1 }
+    ]
   },
   {
     id: "library",

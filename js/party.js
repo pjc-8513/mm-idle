@@ -15,6 +15,7 @@ let lastPartyState = {
 
 export function initPartyPanel() {
   // Re-render whenever gold or party composition changes
+  /*
   on("goldChanged", () => {
     if (document.getElementById("panelParty").classList.contains("active")) {
       renderPartyPanel();
@@ -26,7 +27,7 @@ export function initPartyPanel() {
       renderPartyPanel();
     }
   });
-
+*/
   on("partyChanged", () => {
     if (document.getElementById("panelParty").classList.contains("active")) {
       renderPartyPanel();
@@ -314,7 +315,7 @@ export function togglePartyMember(classId) {
     const removed = partyState.party.splice(idx, 1)[0];
     emit("partyChanged", partyState.party);
     updateTotalStats();
-    updateResonance();
+    updateElementalModifiers();
     console.log(`Removed ${removed.name} from party`);
     return;
   }

@@ -40,7 +40,8 @@ export const partyState = {
   
   maxPartySize: 4,
   hasActiveDOTs: false,
-  activeHeroBuffs: []
+  activeHeroBuffs: [],
+  activeEchoes: []
 };
 export const state = {
   tick: 0,

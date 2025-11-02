@@ -15,6 +15,7 @@ import { updateSpellDock } from '../systems/dockManager.js';
 import { applyDOT } from "../systems/dotManager.js";
 import { spawnTornado } from "../systems/tornadoManager.js";
 import { addWaveTime } from '../area.js';
+import { renderPartyPanel } from '../party.js';
 
 export const heroSpells = [
     {
@@ -662,7 +663,17 @@ export const heroSpells = [
   description: "Launches a fireball that explodes on impact, dealing fire damage to a 2x2 area around a random enemy.",
   icon: "assets/images/icons/inferno.png",
 
-  activate: function () {
+  activate: function (isEcho=false) {
+    // search for sorceress and add an echo of fireball if found
+    const sorceress = partyState.party.find(c => c.id === "sorceress");
+    if (sorceress && !isEcho) {
+      if (!partyState.activeEchoes) partyState.activeEchoes = [];
+      partyState.activeEchoes.push({
+        spellId: this.id,
+        delay: 1500,   // 1.5s delay
+        isEcho: true
+      });
+    }
     const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
 
     const activeEnemies = getActiveEnemies();
@@ -734,8 +745,20 @@ export const heroSpells = [
   currentTargetIndex: 0,
   remainingDelay: 0,
 
-  activate: function () {
-    
+  activate: function (isEcho=false) {
+    // search for sorceress and add an echo of ring of fire if found
+    const sorceress = partyState.party.find(c => c.id === "sorceress");
+    if (sorceress && !isEcho) {
+      if (!partyState.activeEchoes) partyState.activeEchoes = [];
+      // mark sorceress echo ui state
+      sorceress.isEchoing = true;
+      partyState.activeEchoes.push({
+        spellId: this.id,
+        delay: 3500,   // 1.5s delay
+        isEcho: true
+      });
+      renderPartyPanel();
+    }
 
     const targets = getEnemiesOnOuterRing();
 

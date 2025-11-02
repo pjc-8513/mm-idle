@@ -97,8 +97,8 @@ export const classes = [
       },
       attackCooldown: 0
     },
-    { id: "mage", 
-      name: "Mage", 
+    { id: "sorceress", 
+      name: "Sorceress", 
       level: 0,
       goldCost: 30,
       gemCost: 5, 
@@ -110,6 +110,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "fire",
       hasAutoAttack: true,
+      isEchoing: false,
       heroStatRatios: { hp: 0.5, attack: 1.5, defense: 2},
       // Class's own base stats (independent of hero)
       baseStats: {
