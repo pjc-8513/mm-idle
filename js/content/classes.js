@@ -235,10 +235,11 @@ export const classes = [
       },
       abilities: [
         { id: "blindingLight", unlockLevel: 1 },
-        
+        { id: "might", unlockLevel: 1 }
       ],
       skills: {
         blindingLight: { active: true },
+        might: { cooldownRemaining: 14000}
       },
       attackCooldown: 0
     },    

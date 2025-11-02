@@ -1,7 +1,7 @@
 import { state, partyState } from "./state.js";
 import { logMessage } from "./systems/log.js";
 import { emit, on } from "./events.js";
-import { calculateClassStats, updateTotalStats } from "./systems/math.js";
+import { calculateClassStats, updateElementalModifiers, updateTotalStats } from "./systems/math.js";
 import { classes } from "./content/classes.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 
@@ -355,17 +355,18 @@ export function togglePartyMember(classId) {
   partyState.party.push(partyMember);
   
   emit("partyChanged", partyState.party);
-  updateResonance();
+  updateElementalModifiers();
   updateTotalStats();
 }
 
 // Party resonance logic
 const resonanceBonuses = {
-  2: 50,
-  3: 100,
-  4: 200
+  2: 0.50,
+  3: 1.00,
+  4: 2.00
 };
 
+/* now uses math/updateElementalModifiers
 function updateResonance() {
   const resonanceCounts = {};
 
@@ -383,6 +384,7 @@ function updateResonance() {
   });
   console.log('[party resonance]: ', partyState.elementalDmgModifiers);
 }
+*/
 
 /**
  * Updates a class's skills based on its abilities and current level.

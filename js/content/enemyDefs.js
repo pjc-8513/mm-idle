@@ -210,6 +210,48 @@ export const ENEMY_TEMPLATES = {
     weaknesses: ["earth"],
     description: "Nuisance spectre common throughout the land."
   },
+  emeraldOoze: {
+    id: "emeraldOoze",
+    baseName: "Emerald Ooze",
+    type: "elemental",
+    elementType: "poison",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["physical"],
+    image: "assets/images/enemies/emeraldOoze.webp",
+    weaknesses: ["water"],
+    description: "Nuisance emerald ooze common throughout the land."
+  },
+  medusa: {
+    id: "medusa",
+    baseName: "Medusa",
+    type: "beast",
+    elementType: "earth",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["fire"],
+    image: "assets/images/enemies/medusa.webp",
+    weaknesses: ["air"],
+    description: "Nuisance medusa common throughout the land."
+  },
+  royalGriffin: {
+    id: "royalGriffin",
+    baseName: "Royal Griffin",
+    type: "beast",
+    elementType: "air",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["water"],
+    image: "assets/images/enemies/royalGriffin.webp",
+    weaknesses: ["earth"],
+    description: "Nuisance royal griffin common throughout the land."
+  },
   evilSpirit: {
     id: "evilSpirit",
     baseName: "Evil Spirit",
@@ -238,6 +280,46 @@ export const ENEMY_TEMPLATES = {
     weaknesses: ["physical"],
     description: "Nuisance spiders common throughout the land."
   },
+    seaSerpent: {
+      id: "seaSerpent",
+      baseName: "Sea Serpent",
+            type: "beast",
+      elementType: "water",
+      tier: 1,
+      isBoss: false,
+      maxMp: 30,
+      resistances: ["fire"],
+      image: "assets/images/enemies/seaTerror.webp",
+      weaknesses: ["air"]
+    },
+    waterSpirit: {
+      id: "waterSpirit",
+      baseName: "Water Spirit",
+      type: "elemental",
+      elementType: "water",
+      tier: 1,
+      speed: 2,
+      maxMp: 15,
+      row: 0,
+      resistances: ["fire"],
+      image: "assets/images/enemies/waterSpirit.webp",
+      weaknesses: ["air"],
+      description: "Nuisance water spirit common throughout the land."
+  },
+  hydra: {
+    id: "hydra",
+    baseName: "hydra",
+    type: "beast",
+    elementType: "poison",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["physical"],
+    image: "assets/images/enemies/hydra.webp",
+    weaknesses: ["water"],
+    description: "Nuisance hydra common throughout the land."
+  },
 
   // Boss Enemies
     swarm: {
@@ -251,6 +333,30 @@ export const ENEMY_TEMPLATES = {
       resistances: [],
       image: "assets/images/enemies/swarm.webp",
       weaknesses: ["physical"]
+    },
+    ethric: {
+      id: "ethric",
+      baseName: "Ethric",
+      type: "humanoid",
+      elementType: "undead",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: ["physical"],
+      image: "assets/images/enemies/lich.webp",
+      weaknesses: ["light", "fire", "water"]
+    },
+    frostDrake: {
+      id: "frostDrake",
+      baseName: "Frost Drake",
+      type: "dragon",
+      elementType: "water",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: ["fire"],
+      image: "assets/images/enemies/frostDrake.webp",
+      weaknesses: ["air"]
     },
     goblinKing: {
     id: "goblinKing",
@@ -287,7 +393,7 @@ export const ENEMY_TEMPLATES = {
       tier: "boss",
       isBoss: true,
       maxMp: 30,
-      resistances: [],
+      resistances: ["fire"],
       image: "assets/images/enemies/seaTerror.webp",
       weaknesses: ["air"]
     },

@@ -61,6 +61,53 @@ export const BUILDING_MENUS = {
       </div>
     `;
   },
+  blacksmith: (building) => {
+        // 🔍 Find building info in state.buildings array
+    const b = state.buildings.find(b => b.id === building.id);
+    const buildingLevel = b ? b.level : 0;
+
+    if (buildingLevel <= 0) {
+      return `
+        <h3>Blacksmith</h3>
+        <p>This building hasn't been constructed yet.</p>
+        <p>Build it first in order to increase hero attack!</p>
+      `;
+    } else {
+    return `
+      <h3>Blacksmith</h3>
+        <div class="building-stats">
+        <p>Level up to raise the attack of your hero!</p>
+      </div>
+      <div>
+        <p>Current attack bonus: ${partyState.heroBonuses.attack} </p>
+      </div>
+    `;
+    }
+  },
+  library: (building) => {
+            // 🔍 Find building info in state.buildings array
+    const b = state.buildings.find(b => b.id === building.id);
+    const buildingLevel = b ? b.level : 0;
+
+    if (buildingLevel <= 0) {
+      return `
+        <h3>Library</h3>
+        <p>This building hasn't been constructed yet.</p>
+        <p>Build it first in order to unlock spell drops and increase element effectiveness!</p>
+      `;
+    } else {
+      const bonus = (buildingLevel * 50) / 100;
+      return`
+      <h3>Library</h3>
+      <div class="building-stats">
+        <p>Level up to raise the tier of spell drops available and increase spell effectiveness!</p>
+      </div>
+      <div>
+        <p>Current spell modifier bonus from library: ${bonus} </p>
+      </div>
+      `;
+    }
+  },
   inn: (building) => {
         // 🔍 Find building info in state.buildings array
     const b = state.buildings.find(b => b.id === building.id);

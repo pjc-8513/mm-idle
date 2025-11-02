@@ -7,7 +7,7 @@ import { awardGems } from "./incomeSystem.js";
 import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
-import { getBonusGoldMultiplier, renderAreaPanel } from "./area.js";
+import { getBonusGoldMultiplier, renderAreaPanel, updateEnemiesGrid } from "./area.js";
 import { prefixes } from "./content/definitions.js";
 import { stopAutoAttack, startAutoAttack, setTarget } from "./systems/combatSystem.js";
 import { applyAreaBackground } from "./ui.js";
@@ -94,6 +94,7 @@ export function initWaveManager() {
 
 // waveManager.js
 on("enemyDefeated", ({ enemy }) => {
+  updateEnemiesGrid();
   // award a gem for each enemy defeated
   awardGems(enemy.type);
   // Check if all enemies in this column are cleared
@@ -478,7 +479,9 @@ const areaAssets = {
   mistyIslands: ["goblinKing.webp", "goblin.webp", "skeletonArcher.webp", "mage.webp", "bandit.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
   bootlegBay: ["seaTerror.webp", "deathKnight.webp", "willow.webp", "pirateRaider.webp", "giantRat.webp", "misty-bg.webp", "misty-side.webp", "misty-top.webp"],
   castleIronfist: ["thief.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp", "main.webp", "area-side.webp", "area-top.webp"],
-  mireOfTheDamned: ["spider.webp", "skeletonArcher.webp", "harpy.webp", "willow.webp", "spectre.webp", "snergle.webp"]
+  mireOfTheDamned: ["spider.webp", "skeletonArcher.webp", "harpy.webp", "willow.webp", "spectre.webp", "snergle.webp"],
+  freeHaven: ["lich.webp", "royalGriffin.webp", "medusa.webp", "emeraldOoze.webp"],
+  eelInfestedWaters:["frostDrake.webp", "waterSpirit.webp", "seaTerror.webp", "hydra.webp"]
   // ...
 };
 

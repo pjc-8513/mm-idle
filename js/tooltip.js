@@ -1,4 +1,5 @@
 import { getEnemyCanvasPosition } from "./area.js";
+import { formatNumber } from "./systems/math.js";
 // tooltip.js
 
 /**
@@ -129,6 +130,10 @@ if (!buildingUpgradeLimit.met) {
 export function showEnemyTooltip(container, enemy) {
   const tooltip = ensureEnemyTooltip(container);
   const pos = getEnemyCanvasPosition(enemy.position.row, enemy.position.col);
+  let displayHp = enemy.hp;
+  let displayMaxHp = enemy.maxHp;
+  displayMaxHp = formatNumber(enemy.maxHp);
+  displayHp = formatNumber(displayHp);
   if (!tooltip || !enemy) return;
 
   const formatList = (obj) =>
@@ -138,7 +143,7 @@ export function showEnemyTooltip(container, enemy) {
 
   tooltip.innerHTML = `
     <strong>${enemy.prefix} ${enemy.name}</strong><br>
-    <div><strong>HP:</strong> ${enemy.hp} / ${enemy.maxHp}</div>
+    <div><strong>HP:</strong> ${displayHp.text} / ${displayMaxHp.text}</div>
     <div><strong>Type:</strong> ${enemy.type} (${enemy.elementType})</div>
     <div><strong>Weaknesses:</strong> ${formatList(enemy.weaknesses)}</div>
     <div><strong>Counters:</strong> ${formatList(enemy.counters)}</div>

@@ -36,14 +36,14 @@ return (number * percentage) / 100;
 
 export function updateElementalModifiers() {
   const baseModifiers = {
-    physical: 100,
-    fire: 100,
-    water: 100,
-    air: 100,
-    poison: 100,
-    light: 100,
-    dark: 100,
-    undead: 100
+    physical: 1,
+    fire: 1,
+    water: 1,
+    air: 1,
+    poison: 1,
+    light: 1,
+    dark: 1,
+    undead: 1
   };
 
   // Count how many members share each resonance
@@ -59,10 +59,10 @@ export function updateElementalModifiers() {
   for (const element in baseModifiers) {
     const count = resonanceCounts[element] || 0;
     let bonus = 0;
-    if (count === 2) bonus = 25;
-    else if (count === 3) bonus = 50;
-    else if (count === 4) bonus = 100;
-
+    if (count === 2) bonus = 0.25;
+    else if (count === 3) bonus = 0.50;
+    else if (count === 4) bonus = 1.00;
+    bonus += partyState.heroBonuses[element] || 0;
     baseModifiers[element] += bonus;
   }
   partyState.elementalDmgModifiers = { ...baseModifiers };
@@ -197,10 +197,10 @@ export function getSkillDamageRatio(skillId, wave) {
   const skill = heroSpells.find(a => a.id === skillId);
   // Base ratio depends on skill tier
   const tierBaseRatios = {
-    1: 0.5,   // Tier 1: 50% of attack
-    2: 1.2,   // Tier 2: 120% of attack
-    3: 3.0,   // Tier 3: 300% of attack
-    4: 8.0,   // Tier 4: 800% of attack
+    1: 3.5,   // Tier 1: 350% of attack
+    2: 5.2,   // Tier 2: 520% of attack
+    3: 9.0,   // Tier 3: 900% of attack
+    4: 15.0,   // Tier 4: 1500% of attack
     5: 20.0   // Tier 5: 2000% of attack
   };
   

@@ -12,11 +12,14 @@ export const partyState = {
   // Hero progression
   heroLevel: 5,
   heroExp: 0,
-  heroBaseStats: { hp: 10, attack: 100, defense: 5 }, // Base stats that scale with hero level
+  heroBaseStats: { hp: 10, attack: 50, defense: 5 }, // Base stats that scale with hero level
   heroGrowthPerLevel: { hp: 5, attack: 10, defense: 1 }, // How much hero gains per level
   
   // External bonuses (blacksmith, upgrades, etc.)
-  heroBonuses: { attack: 0, defense: 0, hp: 0 }, // From buildings, items, etc.
+  heroBonuses: { attack: 0, defense: 0, hp: 0,
+    physical: 0, fire: 0, water: 0, air: 0,
+    poison: 0, light: 0, dark: 0, undead: 0
+   }, // From buildings, items, etc.
   
   // Class management
   unlockedClasses: [], // Array of class IDs
@@ -25,8 +28,8 @@ export const partyState = {
   
   // Combat modifiers
   elementalDmgModifiers: { 
-    physical: 100, fire: 100, water: 100, air: 100, 
-    poison: 100, light: 100, dark: 100, undead: 100 
+    physical: 1, fire: 1, water: 1, air: 1, 
+    poison: 1, light: 1, dark: 1, undead: 1 
   },
   criticalChance: 0.05,
   elementalPenetration: 0,

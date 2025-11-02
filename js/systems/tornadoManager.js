@@ -2,9 +2,10 @@
 import { spellHandState, state } from "../state.js";
 import { damageEnemy } from "../waveManager.js";
 import { showFloatingDamage } from "../content/abilities.js";
-import { getAdjacentEnemies } from "../systems/combatSystem.js";
+import { calculateHeroSpellDamage, getAdjacentEnemies } from "../systems/combatSystem.js";
 import { handleSkillAnimation } from "../systems/animations.js";
 import { updateEnemiesGrid } from "../area.js";
+import { getSkillDamageRatio } from "./math.js";
 
 
 const tornados = [];
@@ -64,8 +65,12 @@ export function updateTornados(delta) {
       t.damageTimer = 0;
       
       // Deal damage in discrete chunks
+      const skillDamageRatio = getSkillDamageRatio("tornado", state.currentWave);
+      const baseDamageObject = calculateHeroSpellDamage("air", skillDamageRatio, currentEnemy);
+      t.baseDamage = baseDamageObject.damage / 3;
+      baseDamageObject.damage = t.baseDamage;
       damageEnemy(currentEnemy, t.baseDamage, "air");
-      showFloatingDamage(t.row, t.col, Math.round(t.baseDamage));
+      showFloatingDamage(t.row, t.col, baseDamageObject);
       handleSkillAnimation("tornado", t.row, t.col);
       if (currentEnemy.hp<=0) updateEnemiesGrid();
     }

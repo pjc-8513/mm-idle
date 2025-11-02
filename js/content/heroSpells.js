@@ -119,7 +119,7 @@ export const heroSpells = [
               //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
               showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
               targetsHit = true;
-              if (enemy.hp <= 0) updateEnemiesGrid();
+              //if (enemy.hp <= 0) updateEnemiesGrid();
             }
         });
         if (!targetsHit) {
@@ -153,7 +153,7 @@ export const heroSpells = [
             damageEnemy(enemy, skillDamage.damage, this.resonance);
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
-            if (enemy.hp<=0) updateEnemiesGrid();
+            //if (enemy.hp<=0) updateEnemiesGrid();
             });
       spellHandState.lastHeroSpellResonance = this.resonance;
     },
@@ -188,7 +188,7 @@ export const heroSpells = [
             if (spellHandState.lastHeroSpellResonance === "physical" && enemy.hp > 0) {
                 applyDOT(enemy, this.resonance, this.dotDamage, 5);
             }
-            if (enemy.hp <= 0) updateEnemiesGrid();
+            //if (enemy.hp <= 0) updateEnemiesGrid();
             });
       spellHandState.lastHeroSpellResonance = this.resonance;
     },
@@ -276,7 +276,7 @@ export const heroSpells = [
       if (newRow !== oldRow || newCol !== oldCol) {
         enemy.position.row = newRow;
         enemy.position.col = newCol;
-        updateEnemiesGrid();
+        //updateEnemiesGrid();
         const dmgObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
         let dmg = dmgObject.damage;
         if (totalBonus > 0) dmg = dmgObject.damage * totalBonus;
@@ -349,7 +349,7 @@ export const heroSpells = [
         damageEnemy(enemy, dmg, this.resonance);
         handleSkillAnimation("flush", row, col);
         showFloatingDamage(row, col, skillDamageObject);
-        updateEnemiesGrid();
+        //updateEnemiesGrid();
       }
     });
 
@@ -431,7 +431,7 @@ export const heroSpells = [
         handleSkillAnimation("destroyUndead", row, col);
         showFloatingDamage(row, col, skillDamageObject);
         //console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
-        updateEnemiesGrid();
+        //updateEnemiesGrid();
       }
     });
     spellHandState.lastHeroSpellResonance = "light";
@@ -566,7 +566,7 @@ export const heroSpells = [
       damageEnemy(enemy, skillDamage.damage, this.resonance);
       handleSkillAnimation("followThrough", randRow, randCol);
       showFloatingDamage(randRow, randCol, skillDamage);
-      updateEnemiesGrid();
+      //updateEnemiesGrid();
     } else {
       /*
       showFloatingText("Miss!", randRow, randCol, { color: "#b0c4de" });
@@ -642,7 +642,7 @@ export const heroSpells = [
 
       if (beforeHP > 0 && enemy.hp <= 0) {
         defeated = true;
-        updateEnemiesGrid();
+        //updateEnemiesGrid();
       }
     });
     return defeated;
@@ -711,7 +711,7 @@ export const heroSpells = [
       }
       handleSkillAnimation("flameArch", row, col);
       showFloatingDamage(row, col, skillDamageObject);
-      if (enemy.hp <= 0) updateEnemiesGrid();
+      //if (enemy.hp <= 0) updateEnemiesGrid();
     });
   spellHandState.lastHeroSpellResonance = this.resonance;  
   },
@@ -776,7 +776,7 @@ export const heroSpells = [
           applyDOT(enemy, "fire", this.dotDamage, 5);
           logMessage(`🔥 Fire synergy! ${this.name} applies burn DOT!`);
         }
-        if (enemy.hp <= 0) updateEnemiesGrid();
+        //if (enemy.hp <= 0) updateEnemiesGrid();
       } else {
         logMessage(`🔥 Ring of Fire missed at (${row}, ${col})`);
       }
@@ -861,7 +861,7 @@ export const heroSpells = [
         handleSkillAnimation("lifeDrain", row, col);
         showFloatingDamage(row, col, skillDamage);
         logMessage(`☠️ Reaper strikes enemy at (${row}, ${col})`);
-        if (enemy.hp <= 0) updateEnemiesGrid();
+        //if (enemy.hp <= 0) updateEnemiesGrid();
       } else {
         logMessage(`☠️ Reaper missed at (${row}, ${col})`);
       }
@@ -907,7 +907,7 @@ export const heroSpells = [
         row: start.position.row,
         col: start.position.col,
         baseDamage: skillDamage.damage,
-        duration: 10, // seconds total
+        duration: 6, // seconds total
         jumpInterval: 1.5, // seconds between jumps
       });
 
@@ -949,7 +949,7 @@ export const heroSpells = [
           applyDOT(enemy, "undead", skillDamage.damage, 5);
           enemy.type = "undead";
           infectedCount++;
-          updateEnemiesGrid();
+          //updateEnemiesGrid();
 
           //handleSkillAnimation("rot", row, col);
           //showFloatingText(row, col, "☠️", "#bb66ff");
@@ -1078,7 +1078,7 @@ export const heroSpells = [
     damageEnemy(enemy, dmg, this.resonance);
     handleSkillAnimation("sparks", row, col);
     showFloatingDamage(row, col, skillDamageObject);
-    updateEnemiesGrid();
+    //updateEnemiesGrid();
   },
 },
 {
@@ -1134,7 +1134,7 @@ export const heroSpells = [
       const damage = skillDamageObject.damage;
       applyDOT(enemy, this.resonance, skillDamageObject.damage, 8);
       handleSkillAnimation("poisonFlask", row, col);
-      if (enemy.hp <= 0) updateEnemiesGrid();
+      //if (enemy.hp <= 0) updateEnemiesGrid();
     });
   spellHandState.lastHeroSpellResonance = this.resonance;  
   },
@@ -1180,7 +1180,7 @@ export const heroSpells = [
     if (spellHandState.lastHeroSpellResonance === "physical" && target.hp > 0) {
       applyDOT(target, this.resonance, skillDamage.damage/2, 5);
       }
-    if (target.hp <=0) updateEnemiesGrid();
+    //if (target.hp <=0) updateEnemiesGrid();
 
     spellHandState.lastHeroSpellResonance = this.resonance;
   }

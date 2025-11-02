@@ -313,8 +313,8 @@ function calculateDamage(attacker, target) {
   // convert damage to resonance element damage
   const resonance = attacker.resonance || 'physical';
 
-  const elementConvert = partyState.elementalDmgModifiers[resonance] / 100;
- // console.log('elementConvert: ', elementConvert);
+  const elementConvert = partyState.elementalDmgModifiers[resonance] || 1;
+  //console.log('elementConvert: ', elementConvert);
   //baseDamage = calculatePercentage(baseDamage, elementConvert);
   baseDamage *= elementConvert;
   
@@ -411,8 +411,8 @@ export function calculateSkillDamage(attacker, resonance, skillDamageRatio, targ
   let skillDamage = baseDamage * (skillDamageRatio / 100);
 
   // Step 2: Elemental bonus
-  const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;
-  skillDamage *= (1 + elementBonus);
+  const elementBonus = partyState.elementalDmgModifiers[resonance] || 0;
+  skillDamage *= elementBonus;
 
   // Step 3: Apply resistances and weaknesses
   const elementalMultiplier = getElementalMultiplier(
@@ -472,8 +472,8 @@ export function calculateHeroSpellDamage(resonance, skillDamageRatio, target) {
   let skillDamage = baseDamage * skillDamageRatio;
 
   // Step 2: Elemental bonus
-  const elementBonus = (partyState.elementalDmgModifiers[resonance] || 0) / 100;
-  skillDamage *= (1 + elementBonus);
+  const elementBonus = partyState.elementalDmgModifiers[resonance] || 1;
+  skillDamage * elementBonus;
 
   // Step 3: Apply resistances and weaknesses
   const elementalMultiplier = getElementalMultiplier(

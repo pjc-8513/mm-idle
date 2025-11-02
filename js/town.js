@@ -4,7 +4,7 @@ import { buildings } from "./content/buildingDefs.js";
 import { classes } from "./content/classes.js";
 import { attachRequirementTooltip } from "./tooltip.js";
 import { updateUnlockedSkills } from "./party.js";
-import { calculateClassStats, updateTotalStats, levelUpClass } from "./systems/math.js";
+import { calculateClassStats, updateTotalStats, levelUpClass, addHeroBonus, updateElementalModifiers } from "./systems/math.js";
 import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
 import { BUILDING_MENUS } from "./content/buildingMenu.js";
 
@@ -374,6 +374,19 @@ function upgradeBuilding(buildingId) {
       buildingData.level++;
     } else {
       state.buildings.push({ id: buildingId, level: 1 });
+    }
+    if (building.id === "blacksmith") addHeroBonus('attack', 5);
+    if (building.id === 'library'){
+      partyState.heroBonuses.fire += 0.50;
+      partyState.heroBonuses.air += 0.50;
+      partyState.heroBonuses.water += 0.50;
+      partyState.heroBonuses.earth += 0.50;
+      partyState.heroBonuses.light += 0.50;
+      partyState.heroBonuses.dark += 0.50;
+      partyState.heroBonuses.poison += 0.50;
+      partyState.heroBonuses.physical += 0.50;
+      partyState.heroBonuses.undead += 0.50;
+      updateElementalModifiers();
     }
 
     if (building.upgradedClasses) upgradeLinkedClasses(building);

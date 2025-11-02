@@ -184,12 +184,7 @@ function createSummon(summonKey, summoner = null, bonusLevel = 0) {
   let duration = template.baseDuration;
   
   // Apply class-specific bonuses
-  if (summonerClass === 'necromancer') {
-    // Necromancer gets graveyard bonuses
-    const graveyardLevel = getBuildingLevel("graveyard") || 0;
-    duration += graveyardLevel * 2;
-    bonusLevel = graveyardLevel;
-  } else if (summonerClass === 'cleric') {
+  if (summonerClass === 'cleric') {
     // Cleric might get different bonuses (e.g., from temple level)
     const templeLevel = getBuildingLevel("temple") || 0;
     duration += templeLevel * 1.5;

@@ -68,11 +68,41 @@ export const AREA_TEMPLATES = {
       enemies: ["spectre", "evilSpirit", "harpy", "skeletonArcher"],
       boss: "snergle", 
       //unlocks: ["mistyIslands", "goblinWatch"],
-      //nextArea: "mistyIslands",
+      nextArea: "freeHaven",
       questId: "mireOfTheDamned",
       backgroundImg: "mire-bg.webp",
       sideImg: "mire-side.webp",
       topImg: "mire-top.webp"
+  },
+  freeHaven: {
+    id: "freeHaven",
+    name: "Free Haven",
+    description: "Free Haven is the oldest and most prosperous city in the Kingdom.",
+    maxWaves: 10,
+    //baseLevel: 1,
+    enemies: ["dragonFly", "medusa", "emeraldOoze", "royalGriffin"],
+    boss: "ethric", 
+    //unlocks: ["mistyIslands", "goblinWatch"],
+    nextArea: "eelInfestedWaters",
+    questId: "freeHaven",
+    backgroundImg: "main_bg.webp",
+    sideImg: "area-side.webp",
+    topImg: "area-top.webp"
+  },
+  eelInfestedWaters: {
+    id: "eelInfestedWaters",
+    name: "Eel Infested Waters",
+    description: "Be careful of travelling the waters north and east of Silver Cove.",
+    maxWaves: 10,
+    //baseLevel: 1,
+    enemies: ["seaSerpent", "hydra", "waterSpirit" ],
+    boss: "frostDrake", 
+    //unlocks: ["mistyIslands", "goblinWatch"],
+    //nextArea: "mistyIslands",
+    questId: "eelInfestedWaters",
+    backgroundImg: "misty-bg.webp",
+    sideImg: "misty-side.webp",
+    topImg: "misty-top.webp"
   },
   // more areas
 };

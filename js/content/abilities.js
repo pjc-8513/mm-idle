@@ -13,6 +13,7 @@ import { addWaveTime, addTimeShield } from "../area.js";
 import { applyVisualEffect } from "../systems/effects.js";
 //import { createVampireMist, createRadiantBurst, createRadiantPulse, spawnRadiantBurst } from "../systems/radiantEffect.js";
 import { heroSpells } from "./heroSpells.js";
+import { addHeroBonus, updateTotalStats } from "../systems/math.js";
 
 on("summonExpired", handleSummonExpired);
 
@@ -723,7 +724,50 @@ export const abilities = [
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
         rotSpell.activate();
       }
-    },    
+    },
+    {
+    id: 'might',
+    name: 'Might',
+    cooldown: 14000,
+    class: 'templar',
+    buffAmount: 100,
+    type: 'active',
+    resonance: 'light',
+    description: 'Increases attack for 7 seconds',
+    active: 'false',
+    remaining: 0,
+    duration: 7,
+    activate: function (){
+    
+      let duration = this.duration;
+      // Apply visual
+      applyVisualEffect("light-flash", 0.8);
+      logMessage(`✨ ${this.name} activated!`);
+      // Activate buff
+      this.active = true;
+      this.remaining = duration;
+      // apply this buff
+      addHeroBonus('attack', this.buffAmount);
+
+    // Register buff for delta tracking
+    if (!partyState.activeHeroBuffs) partyState.activeHeroBuffs = [];
+    const existingBuff = partyState.activeHeroBuffs.find(b => b.id === this.id);
+    if (!existingBuff) {
+      partyState.activeHeroBuffs.push({
+        id: this.id,
+        remaining: this.remaining,
+        onExpire: () => {
+          // Restore original might
+          partyState.heroBonuses.attack = partyState.heroBonuses.attack - this.buffAmount;
+          updateTotalStats();
+          console.log('bonuses:', partyState.heroBonuses);
+          this.active = false;
+          logMessage("⚡ Might has worn off.");
+        },
+      });
+    }
+    }
+    },
 ];
 
 
