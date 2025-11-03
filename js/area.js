@@ -17,14 +17,14 @@ import { heroSpells } from "./content/heroSpells.js";
    Wave Timer Management (Delta Time)
    -------------------------*/
 
-const BASE_MIN_TIME = 20;        // minimum seconds
-const BASE_MAX_TIME = 40;        // maximum seconds
+const BASE_MIN_TIME = 10;        // minimum seconds
+const BASE_MAX_TIME = 30;        // maximum seconds
 const HP_TIME_RATIO = 2;         // each point of HP = 2 seconds of wave time
 let maxTimeUpgradeBonus = 0;     // can be modified by items/upgrades later
 let MAX_TIMESHIELD = 10;  // e.g. from building upgrades
 let timeShield = 0;
-let timeRemaining = 40;
-let maxTime = 40;
+let timeRemaining = 30;
+let maxTime = 30;
 let waveActive = false;
 let paused = false;
 

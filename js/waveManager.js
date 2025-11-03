@@ -55,34 +55,41 @@ function getRandomPrefix(heroLevel) {
 
 // NOTE: We need to update this function signature to accept the enemy type
 function getEnemyHP(wave, enemyType, isBoss = false) {
-  const W_minus_1 = wave - 1;
-
-  // 1. Base HP and standard scaling
-  let hp = SCALING.baseHP
-    // Standard Exponential (R1)
-    * Math.pow(SCALING.r, W_minus_1)
-    // Zone Multiplier
-    * Math.pow(SCALING.zone_multiplier, Math.floor(W_minus_1 / SCALING.zone_length));
-
-  // 2. Quantum Scaling (Polynomial Factor)
-  // Get the R2 adjustment for the specific enemy type, defaulting to 0
-  const typeAdjustment = SCALING.type_r2_adjustments[enemyType] || 0;
-  const effective_r2 = SCALING.poly_r2 + typeAdjustment;
-
-  // Polynomial Term: (1 + (W-1) / S)^(R2 + Adjustment)
-  const quantum_scaling_term = Math.pow(
-    (1 + W_minus_1 / SCALING.poly_s),
-    effective_r2
-  );
+  const W = Math.max(1, wave);
   
-  hp *= quantum_scaling_term;
+  // Base HP
+  let hp = SCALING.baseHP;
 
-  // 3. Boss and Spike Multipliers (applied after the base scaling)
-  if (isBoss) hp *= SCALING.boss_base_multiplier;
-  if (SCALING.spike_set.includes(wave)) hp *= SCALING.spike_factor;
+  // Core wave growth — softer curve
+  hp *= Math.pow(1.01, W); // instead of 1.035
+
+  // Optional: small zone bumps every 10 waves, mild
+  const zoneBoost = Math.floor((W - 1) / SCALING.zone_length);
+  hp *= Math.pow(1.15, zoneBoost); // instead of 1.5
+
+  // Enemy type flavor multipliers (keep your chart!)
+  const typeMult = {
+    pest: 0.9,
+    undead: 0.95,
+    humanoid: 1.05,
+    demon: 1.15,
+    beast: 1.0,
+    elemental: 1.1,
+    construct: 1.2,
+    dragon: 1.3,
+  }[enemyType] || 1.0;
+
+  hp *= typeMult;
+
+  // Boss modifier
+  if (isBoss) hp *= 12;
+
+  // Spike waves (same as before)
+  if (SCALING.spike_set.includes(W)) hp *= SCALING.spike_factor;
 
   return Math.floor(hp);
 }
+
 
 export function initWaveManager() {
   // Listen for wave-related events

@@ -84,30 +84,129 @@ export const BUILDING_MENUS = {
     `;
     }
   },
-  library: (building) => {
-            // 🔍 Find building info in state.buildings array
-    const b = state.buildings.find(b => b.id === building.id);
-    const buildingLevel = b ? b.level : 0;
+library: (building) => {
+  const b = state.buildings.find(b => b.id === building.id);
+  const buildingLevel = b ? b.level : 0;
 
-    if (buildingLevel <= 0) {
-      return `
-        <h3>Library</h3>
-        <p>This building hasn't been constructed yet.</p>
-        <p>Build it first in order to unlock spell drops and increase element effectiveness!</p>
-      `;
-    } else {
-      const bonus = (buildingLevel * 50) / 100;
-      return`
+  if (buildingLevel <= 0) {
+    return `
       <h3>Library</h3>
-      <div class="building-stats">
-        <p>Level up to raise the tier of spell drops available and increase spell effectiveness!</p>
+      <p>This building hasn't been constructed yet.</p>
+      <p>Build it first in order to unlock spell drops and increase element effectiveness!</p>
+    `;
+  }
+
+  const elements = [
+    { id: 'fire', label: 'Fire', icon: '🔥', color: '#ff4500', resource: 'gold' },
+    { id: 'water', label: 'Water', icon: '💧', color: '#1e90ff', resource: 'gold' },
+    { id: 'air', label: 'Air', icon: '💨', color: '#87ceeb', resource: 'gold' },
+    { id: 'earth', label: 'Earth', icon: '🌍', color: '#8b4513', resource: 'gold' }
+  ];
+
+  const elementCards = elements.map(elem => {
+    const modifier = partyState.elementalDmgModifiers[elem.id] || 1;
+    const bonusPercent = ((modifier - 1) * 100).toFixed(0);
+    const currentLevel = Math.round((modifier - 1) / 0.10); // Calculate upgrade level
+    
+    // Base cost is 100, increases by 50% per level
+    const baseCost = 100;
+    const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
+    
+    const canAfford = state.resources[elem.resource] >= upgradeCost;
+    const btnColor = canAfford ? elem.color : '#333';
+    
+    return `
+      <div class="library-element-card" 
+           style="border-color: ${elem.color};">
+        <div class="element-icon" style="color: ${elem.color};">
+          ${elem.icon}
+        </div>
+        <div class="element-name">${elem.label}</div>
+        <div class="element-bonus">+${bonusPercent}%</div>
+        <div class="element-cost">${upgradeCost} ${elem.resource}</div>
+        <button 
+          class="element-upgrade-btn"
+          style="background: ${btnColor}; ${!canAfford ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+          onclick="upgradeLibraryElement('${elem.id}')"
+          ${!canAfford ? 'disabled' : ''}
+        >
+          Upgrade
+        </button>
       </div>
-      <div>
-        <p>Current spell modifier bonus from library: ${bonus} </p>
-      </div>
-      `;
-    }
-  },
+    `;
+  }).join('');
+
+  return `
+    <h3>Library</h3>
+    <div class="building-stats">
+      <p>Invest in elemental research to increase damage effectiveness!</p>
+    </div>
+    <div class="library-elements-container">
+      ${elementCards}
+    </div>
+    <style>
+      .library-elements-container {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+      .library-element-card {
+        flex: 1;
+        background: rgba(20, 20, 30, 0.6);
+        border: 2px solid #666;
+        border-radius: 8px;
+        padding: 10px 8px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+      .library-element-card:hover {
+        background: rgba(30, 30, 40, 0.8);
+        transform: translateY(-2px);
+      }
+      .element-icon {
+        font-size: 2em;
+        margin-bottom: 6px;
+      }
+      .element-name {
+        font-weight: 600;
+        font-size: 0.95em;
+        margin-bottom: 4px;
+        color: #fff;
+      }
+      .element-bonus {
+        font-size: 0.85em;
+        color: #4ade80;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .element-cost {
+        font-size: 0.8em;
+        color: #fbbf24;
+        margin-bottom: 8px;
+      }
+      .element-upgrade-btn {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 0.85em;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        color: #fff;
+      }
+      .element-upgrade-btn:not(:disabled):hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+      }
+      .element-upgrade-btn:disabled {
+        cursor: not-allowed;
+      }
+    </style>
+  `;
+},
+
   inn: (building) => {
         // 🔍 Find building info in state.buildings array
     const b = state.buildings.find(b => b.id === building.id);
@@ -349,3 +448,46 @@ function enforceInnSlotLimits() {
     }
   }
 }
+
+// Add this window function below the library menu definition:
+
+window.upgradeLibraryElement = function(elementId) {
+  const modifier = partyState.elementalDmgModifiers[elementId] || 1;
+  const currentLevel = Math.round((modifier - 1) / 0.10);
+  
+  // Calculate cost (base 100, increases 50% per level)
+  const baseCost = 100;
+  const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
+  
+  // Determine which resource to use (all use gold for now, but easily extensible)
+  const resourceType = 'gold';
+  
+  if (state.resources[resourceType] >= upgradeCost) {
+    // Deduct cost
+    state.resources[resourceType] -= upgradeCost;
+    
+    // Apply upgrade
+    partyState.elementalDmgModifiers[elementId] += 0.10;
+    
+    // Update elemental modifiers (call your existing function)
+    if (typeof updateElementalModifiers === 'function') {
+      updateElementalModifiers();
+    }
+    
+    logMessage(`${elementId.charAt(0).toUpperCase() + elementId.slice(1)} magic enhanced! +10% damage`);
+    emit("goldChanged", state.resources.gold);
+    
+    // Re-render the library menu
+    const dock = document.getElementById("mainDock");
+    if (dock) {
+      const currentBuildingId = dock.getAttribute("data-building-id");
+      if (currentBuildingId === "library") {
+        const building = state.buildings.find(b => b.id === currentBuildingId) 
+          || { id: currentBuildingId, name: "Library" };
+        dock.innerHTML = BUILDING_MENUS.library(building);
+      }
+    }
+  } else {
+    logMessage(`Not enough ${resourceType}! Need ${upgradeCost}.`);
+  }
+};

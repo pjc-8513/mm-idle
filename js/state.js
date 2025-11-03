@@ -17,7 +17,7 @@ export const partyState = {
   
   // External bonuses (blacksmith, upgrades, etc.)
   heroBonuses: { attack: 0, defense: 0, hp: 0,
-    physical: 0, fire: 0, water: 0, air: 0,
+    physical: 0, fire: 0, water: 0, air: 0, earth: 0,
     poison: 0, light: 0, dark: 0, undead: 0
    }, // From buildings, items, etc.
   
@@ -28,7 +28,7 @@ export const partyState = {
   
   // Combat modifiers
   elementalDmgModifiers: { 
-    physical: 1, fire: 1, water: 1, air: 1, 
+    physical: 1, fire: 1, water: 1, air: 1, earth: 0,
     poison: 1, light: 1, dark: 1, undead: 1 
   },
   criticalChance: 0.05,
@@ -97,6 +97,7 @@ export const state = {
     slots: [null, null, null, null], // Each slot holds a class ID or null
     goldIncomeMultiplier: 1.0 // Starts at 1.0, increases by 0.2 per assignment
   },
+  //libraryUpgrade: 'fire',
   spells: [],
   equipment: [],
   currentArea: "newSorpigal",

@@ -2,6 +2,7 @@ import { partyState } from "../state.js";
 import { emit, on } from "../events.js";
 import { classes } from "../content/classes.js";
 import { heroSpells } from "../content/heroSpells.js";
+import { abilities } from "../content/abilities.js";
 
 export function initMath() {
   console.log("Math system initialized");
@@ -40,6 +41,7 @@ export function updateElementalModifiers() {
     fire: 1,
     water: 1,
     air: 1,
+    earth: 1,
     poison: 1,
     light: 1,
     dark: 1,
@@ -197,10 +199,10 @@ export function getSkillDamageRatio(skillId, wave) {
   const skill = heroSpells.find(a => a.id === skillId);
   // Base ratio depends on skill tier
   const tierBaseRatios = {
-    1: 3.5,   // Tier 1: 350% of attack
-    2: 5.2,   // Tier 2: 520% of attack
-    3: 9.0,   // Tier 3: 900% of attack
-    4: 15.0,   // Tier 4: 1500% of attack
+    1: 2.5,   // Tier 1: 250% of attack
+    2: 3.2,   // Tier 2: 320% of attack
+    3: 7.0,   // Tier 3: 700% of attack
+    4: 11.5,   // Tier 4: 1150% of attack
     5: 20.0   // Tier 5: 2000% of attack
   };
   
@@ -213,17 +215,33 @@ export function getSkillDamageRatio(skillId, wave) {
   // Using 1.03 instead of 1.035 means skills scale ~97% as fast as enemies
   const waveScaling = Math.pow(1.03, wave - 1);
   
-  // Zone scaling (matches enemy zones)
-  const zoneScaling = Math.pow(1.4, Math.floor((wave - 1) / 10));
+  const finalRatio = baseRatio * levelScaling * waveScaling;
   
-  // Quantum-like polynomial scaling (softer than enemies)
-  // Enemies use R2=2.0, skills use R2=1.5 to stay slightly behind
-  const quantumScaling = Math.pow(
-    (1 + (wave - 1) / 25),
-    1.5
-  );
+  return finalRatio;
+}
+
+export function getAbilityDamageRatio(skillId, wave) {
+  // look up skill
+  const skill = abilities.find(a => a.id === skillId);
+  // Base ratio depends on skill tier
+  const tierBaseRatios = {
+    1: 0.5,   // Tier 1: 250% of attack
+    2: 1.2,   // Tier 2: 320% of attack
+    3: 3.0,   // Tier 3: 700% of attack
+    4: 8.0,   // Tier 4: 1150% of attack
+    5: 20.0   // Tier 5: 2000% of attack
+  };
   
-  const finalRatio = baseRatio * levelScaling * waveScaling * zoneScaling * quantumScaling;
+  const baseRatio = tierBaseRatios[skill.tier] || 1.0;
+  
+  // Skill level scaling (similar to your enemy HP zone scaling)
+  const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  
+  // Wave-based scaling (matches enemy progression but slightly weaker)
+  // Using 1.03 instead of 1.035 means skills scale ~97% as fast as enemies
+  const waveScaling = Math.pow(1.03, wave - 1);
+  
+  const finalRatio = baseRatio * levelScaling * waveScaling;
   
   return finalRatio;
 }

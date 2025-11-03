@@ -111,6 +111,12 @@ export const classes = [
       resonance: "fire",
       hasAutoAttack: true,
       isEchoing: false,
+      abilities: [
+        { id: "flamePillar", unlockLevel: 1, active: false }
+      ],
+      skills: {
+        flamePillar: { cooldownRemaining: 6500 }
+      },
       heroStatRatios: { hp: 0.5, attack: 1.5, defense: 2},
       // Class's own base stats (independent of hero)
       baseStats: {

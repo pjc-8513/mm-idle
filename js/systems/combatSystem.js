@@ -395,7 +395,7 @@ export function calculateSkillDamage(attacker, resonance, skillDamageRatio, targ
           }
 
   // Base attack
-  let baseDamage = attacker.stats.attack || 30;
+  let baseDamage = partyState.totalStats.attack || 90;
   let isCritical = false;
 
   // Critical hits

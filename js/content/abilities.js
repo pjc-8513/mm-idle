@@ -13,7 +13,7 @@ import { addWaveTime, addTimeShield } from "../area.js";
 import { applyVisualEffect } from "../systems/effects.js";
 //import { createVampireMist, createRadiantBurst, createRadiantPulse, spawnRadiantBurst } from "../systems/radiantEffect.js";
 import { heroSpells } from "./heroSpells.js";
-import { addHeroBonus, updateTotalStats } from "../systems/math.js";
+import { addHeroBonus, getAbilityDamageRatio, updateTotalStats } from "../systems/math.js";
 
 on("summonExpired", handleSummonExpired);
 
@@ -53,26 +53,40 @@ export const abilities = [
         cooldown: null, // passive skills do not have cooldown
         defaultBonus: 1,
         perLevelBonus: 0.10,
-        applyPassive: function (attacker, target, context) {
-            // e.g. increase damage if same target
-            if (context.sameTargetStreak > 0) {
-                const finalBonus = this.defaultBonus + (attacker.level * this.perLevelBonus);
-                context.damage *= Math.round(1 + context.sameTargetStreak * finalBonus);
-            }
-        }        
+        applyPassive(attacker, target, context) {
+            if (!context.sameTargetStreak || context.sameTargetStreak <= 0) return;
+
+            // Gain scaling based on level
+            const percentPerStack = this.defaultBonus + (attacker.level * this.perLevelBonus); 
+            // Example lvl 30: 1 + (30 * 0.1) = 4% per stack
+
+            // Cap stacks so we don't go infinite idle god mode
+            const stacks = Math.min(context.sameTargetStreak, 50); // cap at 50 stacks
+
+            // convert to multiplier
+            const bonusMultiplier = 1 + (percentPerStack / 100) * stacks;
+
+            context.damage *= bonusMultiplier;
+        }
+        
     },
     {
         id: "followThrough",
         name: "Follow Through",
         type: "active",
         resonance: "physical",
-        skillBaseDamage: 180,
+        tier: 1,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
         //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
         spritePath: 'assets/images/sprites/follow_through.png',
         cooldown: 7000,
         class: "fighter",
         activate: function (attacker, target, context) {
             if (!target) return;
+            const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
             //console.log(`[followThrough] ${Date.now()}`);
             // Deal damage to all enemies in target column
             const enemies = getEnemiesInColumn(target.position.col);
@@ -81,13 +95,48 @@ export const abilities = [
             enemies.forEach(({ enemy, row, col }) => {
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
-                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(enemy, skillDamage.damage, this.resonance);
+                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+                damageEnemy(enemy, skillDamageObject.damage, this.resonance);
                 handleSkillAnimation("followThrough", row, col);
-                showFloatingDamage(row, col, skillDamage); // show floating text
+                showFloatingDamage(row, col, skillDamageObject); // show floating text
             });
         }
           
+    },
+    {
+      id: "flamePillar",
+      name: "Flame Pillar",
+      type: "active",
+      resonance: "fire",
+      tier: 1,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      //skillBaseDamage: 180,
+      //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
+      spritePath: 'assets/images/sprites/flamePillar.webp',
+      cooldown: 6500,
+      class: "sorceress",
+      activate: function (attacker, target, context) {
+          if (!target) return;
+          const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+          //console.log(`[followThrough] ${Date.now()}`);
+          // Deal damage to all enemies in target column
+          const enemies = getEnemiesInColumn(target.position.col);
+          // console.log("[followThrough] activated! target column: ", target.position.col);
+          // console.log("[followThrough] enemies: ", enemies);
+          enemies.forEach(({ enemy, row, col }) => {
+              //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
+          //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
+              const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+              console.log('skillDamageObject: ', skillDamageObject);
+              damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+              handleSkillAnimation("flamePillar", row, col);
+              showFloatingDamage(row, col, skillDamageObject); // show floating text
+          });
+      }
+        
     },    
     {
         id: "speedBoost",
@@ -110,12 +159,13 @@ export const abilities = [
         defaultBonus: 5,
         perLevelBonus: 0.10,
         applyPassive: function (attacker, target, context) {
+            const levelBonus = this.defaultBonus + (attacker.level * this.perLevelBonus);
             // Ensure counters and level are valid
             const physicalCounters = target.counters.physical || 0;
             if (context.isCrit && target.counters && attacker.level !== undefined &&
                 physicalCounters > 0) {                
-                const finalBonus = (this.defaultBonus * (attacker.level * this.perLevelBonus)) * physicalCounters;
-                context.damage *= finalBonus;
+                const bonusMultiplier = 1 + (levelBonus / 100) * physicalCounters;
+                context.damage *= bonusMultiplier;
                 //console.log(`[Rogue weak spot] Physical counters: ${physicalCounters} finalBonus: ${finalBonus} context.damage: ${context.damage}`);
                 // Reset physical counters
                 target.counters.physical = 0; // Or delete target.counters.physical;
@@ -128,26 +178,30 @@ export const abilities = [
   name: "Poison Flask",
   type: "active",
   resonance: "poison",
-  skillBaseDamage: 700,
+  tier: 1,
+  get skillLevel(){
+    const character = partyState.party.find(c => c.id === this.class);
+    return character ? character.level : 1; // or some other default value
+  },
   spritePath: "assets/images/sprites/poison_flask.png",
   cooldown: 8500,
   class: "rogue",
   activate: function (attacker, target, context) {
     if (!target) return;
-
+    const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
     const randomEnemyObject = getRandomEnemy();
     if (!randomEnemyObject) return;
 
     const { enemy, row, col } = randomEnemyObject;
 
-    const skillDamage = calculateSkillDamage(
+    const skillDamageObject = calculateSkillDamage(
       attacker,
       this.resonance,
-      this.skillBaseDamage,
+      skillDamageRatio,
       enemy
     );
 
-    applyDOT(enemy, "poison", skillDamage, 6, attacker);
+    applyDOT(enemy, "poison", skillDamageObject, 6, attacker);
 
     // 🧩 Apply all linked utility effects automatically
     applyUtilityEffects(attacker, this.id, enemy, row, col);
@@ -168,23 +222,23 @@ export const abilities = [
   cooldown: null,
   defaultBonus: 20,
   perLevelBonus: 0.10,
-    applyUtility(enemy, attacker) {
-        if (!enemy || !attacker) return { bonusPercent: 0, resonance: this.resonance };
+  applyUtility(enemy, attacker) {
+    if (!enemy || !attacker) return { bonusPercent: 0, resonance: this.resonance };
 
-        // Step 1: Calculate total percent damage
-        // Example: at level 50 -> 20 + (0.1 * 50) = 25%
-        const totalPercent = partyState.elementalDmgModifiers.poison + this.defaultBonus + (this.perLevelBonus * attacker.level);
+    const totalPercent = partyState.elementalDmgModifiers.poison 
+      + this.defaultBonus 
+      + (this.perLevelBonus * attacker.level);
 
-        // Step 2: Convert to HP-based damage
-        // e.g. 25% of enemy max HP
-        const bonusDamage = enemy.maxHp * (totalPercent / 100);
+    const cappedPercent = Math.min(totalPercent, 8); // cap at 8% max HP
+    const bonusDamage = enemy.currentHp * (cappedPercent / 100); // not max HP
 
-        return { 
-            bonusDamage,             // absolute HP-based damage
-            percent: totalPercent,   // for reference/logging
-            resonance: this.resonance
-        };
-    }
+    return {
+      bonusDamage,
+      percent: cappedPercent,
+      resonance: this.resonance,
+    };
+  }
+
 },
 
 {
@@ -233,14 +287,18 @@ export const abilities = [
         name: "Flame Arch",
         type: "active",
         resonance: "fire",
-        skillBaseDamage: 200,
+        tier: 1,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
         //description: `Deals ${skillBaseDamage}% of attack in fire damage to every enemy on the same row as target`,
         spritePath: 'assets/images/sprites/flame_arch.png',
         cooldown: 6500,
         class: "knight",
         activate: function (attacker, target, context) {
             if (!target) return;
-            
+            const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
             // Deal damage to all enemies in target column
             const enemies = getEnemiesInRow(target.position.row);
            // console.log("[followThrough] activated! target column: ", target.position.col);
@@ -248,10 +306,10 @@ export const abilities = [
             enemies.forEach(({ enemy, row, col }) => {
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
-                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(enemy, skillDamage.damage, this.resonance);
+                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+                damageEnemy(enemy, skillDamageObject.damage, this.resonance);
                 handleSkillAnimation("flameArch", row, col);
-                showFloatingDamage(row, col, skillDamage); // show floating text
+                showFloatingDamage(row, col, skillDamageObject); // show floating text
             });
         }
     },

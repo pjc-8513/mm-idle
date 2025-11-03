@@ -48,7 +48,9 @@ export const incomeSystem = {
 
 // Example multiplier function (expand later)
 function getBonusGoldMultiplier() {
-  return 1; // could factor in artifacts, wave clears, buffs, etc.
+  let bonus=0;
+  bonus += state.innAssignments.goldIncomeMultiplier
+  return bonus; // could factor in artifacts, wave clears, buffs, etc.
 }
 
 export function addGems(amount) {

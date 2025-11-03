@@ -375,20 +375,15 @@ function upgradeBuilding(buildingId) {
     } else {
       state.buildings.push({ id: buildingId, level: 1 });
     }
-    if (building.id === "blacksmith") addHeroBonus('attack', 5);
+    if (building.id === "blacksmith"){ 
+      const attackBonus = 2 + Math.floor((buildingData.level ** 0.8) * 0.1);
+      addHeroBonus('attack', attackBonus);}
+      /*
     if (building.id === 'library'){
-      partyState.heroBonuses.fire += 0.50;
-      partyState.heroBonuses.air += 0.50;
-      partyState.heroBonuses.water += 0.50;
-      partyState.heroBonuses.earth += 0.50;
-      partyState.heroBonuses.light += 0.50;
-      partyState.heroBonuses.dark += 0.50;
-      partyState.heroBonuses.poison += 0.50;
-      partyState.heroBonuses.physical += 0.50;
-      partyState.heroBonuses.undead += 0.50;
+      partyState.heroBonuses[state.libraryUpgrade] += 0.10;
       updateElementalModifiers();
     }
-
+      */
     if (building.upgradedClasses) upgradeLinkedClasses(building);
     // --- NEW: upgrade linked classes ---
     // Emit upgrade event with building data
