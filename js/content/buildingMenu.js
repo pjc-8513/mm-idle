@@ -5,6 +5,7 @@ import { abilities } from "./abilities.js";
 import { emit, on } from "../events.js";
 import { logMessage } from "../systems/log.js";
 import { getBuildingLevel } from "../town.js";
+import { updateElementalModifiers } from "../systems/math.js";
 //import { openDock } from "../systems/dockManager.js";
 
 export function initBuildingMenu() {
@@ -467,7 +468,8 @@ window.upgradeLibraryElement = function(elementId) {
     state.resources[resourceType] -= upgradeCost;
     
     // Apply upgrade
-    partyState.elementalDmgModifiers[elementId] += 0.10;
+    //partyState.elementalDmgModifiers[elementId] += 0.10;
+    partyState.heroBonuses[elementId] += 0.10;
     
     // Update elemental modifiers (call your existing function)
     if (typeof updateElementalModifiers === 'function') {

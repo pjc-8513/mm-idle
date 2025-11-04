@@ -105,10 +105,17 @@ export function getHeroStats() {
     const base = partyState.heroBaseStats[stat];
     const growth = partyState.heroGrowthPerLevel[stat] || 0;
     const bonus = partyState.heroBonuses[stat] || 0;
-    stats[stat] = base + (growth * (partyState.heroLevel - 1)) + bonus;
+    //stats[stat] = base + (growth * (partyState.heroLevel - 1)) + bonus;
+    stats[stat] = Math.floor(base * (1+ partyState.heroLevel * growth) + bonus);
   }
   return stats;
 }
+
+const CLASS_ROLE_TIERS = {
+  dps:     { atkRatio: 1.00, growth: 0.05 }, // +5% atk per class lvl
+  caster:  { atkRatio: 0.70, growth: 0.08 }, // +8% per class lvl
+  support: { atkRatio: 0.40, growth: 0.03 }  // +3% per class lvl
+};
 
 /**
  * Calculate a class member's stats based on their level AND hero stats
@@ -116,25 +123,49 @@ export function getHeroStats() {
  * @param {number} classLevel - The class's current level
  * @returns {Object} - Calculated stats for this class instance
  */
+
 export function calculateClassStats(classTemplate, classLevel) {
-  const heroStats = getHeroStats();
+  const hero = getHeroStats();
+  const role = CLASS_ROLE_TIERS[classTemplate.role];
+  const lvl = classLevel - 1;  // lvl 1 = baseline
+
   const stats = {};
-  
-  // Each class has a ratio of hero stats (e.g., fighter gets 80% of hero attack)
+
+  // Loop same keys as old system so nothing breaks
   for (const stat in classTemplate.heroStatRatios) {
-    const ratio = classTemplate.heroStatRatios[stat];
-    const fromHero = (heroStats[stat] || 0) * ratio;
-    
-    // Plus their own base and growth
-    const classBase = classTemplate.baseStats?.[stat] || 0;
-    const classGrowth = classTemplate.growthPerLevel?.[stat] || 0;
-    const fromClass = classBase + (classGrowth * (classLevel - 1));
-    
-    stats[stat] = fromHero + fromClass;
+    const ratio = classTemplate.heroStatRatios[stat] ?? 0;
+    const heroVal = hero[stat] || 0;
+
+    if (stat === "hp") {
+      stats.hp = Math.floor(hero.hp * (ratio || 1));
+    }
+    else if (stat === "defense") {
+      stats.defense = Math.floor(hero.defense * (ratio || 0.5));
+    }
+    else if (stat === "attack") {
+      const attackMultiplier = 1 + (lvl * role.growth);
+      stats.attack = Math.floor(hero.attack * (role.atkRatio ?? 1) * attackMultiplier);
+    }
+    else {
+      // Fallback = legacy behavior for misc stats (speed, crit, etc.)
+      const base = classTemplate.baseStats?.[stat] || 0;
+      const growth = classTemplate.growthPerLevel?.[stat] || 0;
+      stats[stat] = (heroVal * ratio) + (base + growth * lvl);
+    }
   }
-  
+
+  // Safety: ensure speed + crit at least exist even if not in heroStatRatios
+  stats.speed = stats.speed ??
+    ((classTemplate.baseStats?.speed || 1) +
+     (classTemplate.growthPerLevel?.speed || 0) * lvl);
+
+  stats.criticalChance = stats.criticalChance ??
+    ((classTemplate.baseStats?.criticalChance || 0) +
+     (classTemplate.growthPerLevel?.criticalChance || 0) * lvl);
+
   return stats;
 }
+
 
 /**
  * Recalculate all party member stats and totals
@@ -157,7 +188,7 @@ export function updateTotalStats() {
       totals.defense += member.stats.defense || 0;
     }
   }
-  
+  updateElementalModifiers();
   partyState.totalStats = totals;
   emit("statsUpdated", totals);
 }
@@ -194,7 +225,7 @@ export function addHeroBonus(stat, amount) {
   emit("heroBonusAdded", { stat, amount });
 }
 
-export function getSkillDamageRatio(skillId, wave) {
+export function getSkillDamageRatio(skillId, wave, overrideLevel=null) {
   // look up skill
   const skill = heroSpells.find(a => a.id === skillId);
   // Base ratio depends on skill tier
@@ -209,7 +240,9 @@ export function getSkillDamageRatio(skillId, wave) {
   const baseRatio = tierBaseRatios[skill.tier] || 1.0;
   
   // Skill level scaling (similar to your enemy HP zone scaling)
-  const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  //const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  const effectiveLevel = overrideLevel !== null ? overrideLevel : skill.skillLevel;
+  const levelScaling = Math.pow(1.15, effectiveLevel - 1);
   
   // Wave-based scaling (matches enemy progression but slightly weaker)
   // Using 1.03 instead of 1.035 means skills scale ~97% as fast as enemies

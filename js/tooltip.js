@@ -142,7 +142,7 @@ export function showEnemyTooltip(container, enemy) {
       : `<em>None</em>`;
 
   tooltip.innerHTML = `
-    <strong>${enemy.prefix} ${enemy.name}</strong><br>
+    <strong>${enemy.name}</strong><br>
     <div><strong>HP:</strong> ${displayHp.text} / ${displayMaxHp.text}</div>
     <div><strong>Type:</strong> ${enemy.type} (${enemy.elementType})</div>
     <div><strong>Weaknesses:</strong> ${formatList(enemy.weaknesses)}</div>

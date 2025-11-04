@@ -619,6 +619,10 @@ export const abilities = [
         name: "Sparks",
         type: "active",
         resonance: "air",
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },        
         get skillBaseDamage() {
           return 7 * partyState.heroBaseStats.attack;
         },
@@ -629,7 +633,7 @@ export const abilities = [
         activate: function() {
         const sparksSpell = heroSpells.find(spell => spell.id === "sparks");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
-        sparksSpell.activate();
+        sparksSpell.activate(this.skillLevel);
       }
     },
             {
@@ -638,6 +642,10 @@ export const abilities = [
         name: "Falconer",
         type: "active",
         resonance: "physical",
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },         
         get skillBaseDamage() {
           return 15 * partyState.heroBaseStats.attack;
         },
@@ -648,7 +656,7 @@ export const abilities = [
         activate: function() {
         const falconerSpell = heroSpells.find(spell => spell.id === "falconer");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
-        falconerSpell.activate();
+        falconerSpell.activate(this.skillLevel);
       }
     },
     {

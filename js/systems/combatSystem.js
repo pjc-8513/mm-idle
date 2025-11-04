@@ -408,7 +408,7 @@ export function calculateSkillDamage(attacker, resonance, skillDamageRatio, targ
   // console.log('[Skill Damage] baseDamage:', baseDamage, 'skillDamageRatio:', skillDamageRatio);
 
   // Step 1: Core skill damage
-  let skillDamage = baseDamage * (skillDamageRatio / 100);
+  let skillDamage = baseDamage * skillDamageRatio;
 
   // Step 2: Elemental bonus
   const elementBonus = partyState.elementalDmgModifiers[resonance] || 0;

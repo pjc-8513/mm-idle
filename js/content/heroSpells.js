@@ -23,7 +23,10 @@ export const heroSpells = [
         name: "Moonbeam",
         resonance: "dark",
   //    skillDamageRatio: 3.5,
-        skillLevel: 1,
+        get skillLevel() {
+          const library = state.buildings.find(c => c.id === 'library');
+          return library ? library.level : 1;
+        },
         gemCost: 3,
         tier: 3,
         unlocked: true,
@@ -77,7 +80,10 @@ export const heroSpells = [
         name: "Brilliant Light",
         resonance: "light",
         //skillDamageRatio: 15,
-        skillLevel: 1,
+        get skillLevel() {
+          const library = state.buildings.find(c => c.id === 'library');
+          return library ? library.level : 1;
+        },
         gemCost: 3,
         tier: 3,
         unlocked: true,
@@ -135,7 +141,10 @@ export const heroSpells = [
 	name: "Breath of Decay",
 	resonance: "undead",
   //skillDamageRatio: 3.8, 
-	skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
 	gemCost: 1,
     tier: 1,
 	description: "Deals a small amount of undead to rows of enemies based on skill level.",
@@ -167,7 +176,10 @@ export const heroSpells = [
     get dotDamage() {
         return 3.8 * partyState.totalStats.attack || 90;
     },  
-    skillLevel: 1,
+    get skillLevel() {
+      const library = state.buildings.find(c => c.id === 'library');
+      return library ? library.level : 1;
+    },
     gemCost: 1,
       tier: 1,
     description: "Deals a small amount of undead to rows of enemies based on skill level. Applies a DoT if the last spell cast was physical.",
@@ -199,7 +211,10 @@ export const heroSpells = [
   name: "Earthquake",
   resonance: "earth",
   tier: 4,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 4,
   //skillDamageRatio: 20,
   description: "Shuffles all enemies on the grid. Enemies that move take earth damage, increased by your Earth and Physical counters. Consumes all Earth counters.",
@@ -297,7 +312,10 @@ export const heroSpells = [
   resonance: "water",
   tier: 2,
   gemCost: 3,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   description: "Deals water damage to enemies aligned in rows or columns of three with matching types or elements. Double damage if both match.",
     icon: "assets/images/icons/brilliant.png",
 
@@ -370,7 +388,10 @@ export const heroSpells = [
   name: "Destroy Undead",
   resonance: "light",
   tier: 3,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 3,
   icon: "assets/images/icons/brilliant.png",
   description: "Smite the undead! If three undead line up in a row or column, they are struck by radiant light and take massive damage.",
@@ -444,7 +465,10 @@ export const heroSpells = [
   name: "Haste",
   resonance: "fire",
   tier: 1,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 1,
   description: "Maxes out all party members' attack speed for a short duration.",
   icon: "assets/images/icons/inferno.png",
@@ -507,7 +531,10 @@ export const heroSpells = [
   id: "starFall",
   name: "Star Fall",
   resonance: "air",
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 5,
   tier: 4,
   unlocked: true,
@@ -582,7 +609,10 @@ export const heroSpells = [
   name: "Landslide",
   resonance: "earth",
   tier: 2,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 3,
   unlocked: true,
   description: "Crushes enemies column by column. If it defeats an enemy, the landslide continues to the next column (max 3).",
@@ -656,7 +686,10 @@ export const heroSpells = [
   get dotDamage() {
     return 10 * partyState.totalStats.attack || 150;
   },
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 3,
   tier: 3,
   unlocked: true,
@@ -734,7 +767,10 @@ export const heroSpells = [
   get dotDamage() {
     return 8 * partyState.totalStats.attack || 120;
   },
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 3,
   tier: 2,
   unlocked: true,
@@ -822,7 +858,10 @@ export const heroSpells = [
   resonance: "undead",
   tier: 4,
   gemCost: 4,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   unlocked: true,
   description: "The Reaper hunts enemies marked by death. Deals damage to enemies with 5+ undead counters, one by one.",
   icon: "assets/images/icons/breath.png",
@@ -904,7 +943,10 @@ export const heroSpells = [
     id: "tornado",
     name: "Tornado",
     resonance: "air",
-    skillLevel: 1,
+    get skillLevel() {
+      const library = state.buildings.find(c => c.id === 'library');
+      return library ? library.level : 1;
+    },
     gemCost: 5,
     tier: 3,
     unlocked: true,
@@ -942,7 +984,10 @@ export const heroSpells = [
   name: "Rot",
   resonance: "undead",
   tier: 3,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 3,
   icon: "assets/images/icons/breath.png",
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
@@ -992,7 +1037,10 @@ export const heroSpells = [
   name: "Cure",
   resonance: "light",
   tier: 2,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 2,
   icon: "assets/images/icons/brilliant.png",
   get skillBaseAmount() {
@@ -1023,7 +1071,11 @@ export const heroSpells = [
   resonance: "air",
   gemCost: 3,
   tier: 1,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
+  classSkillLevel: null, // used during active casting
   unlocked: true,
   description: "Releases 4 spark charges that each strike a random enemy. Consecutive Sparks increase damage.",
   icon: "assets/images/icons/chain.png",
@@ -1032,10 +1084,10 @@ export const heroSpells = [
   sparksRemaining: 0,
   remainingDelay: 0,
 
-  activate: function () {
+  activate: function (modifiedLevel=this.skillLevel) {
     applyVisualEffect('light-flash', 0.4);
     logMessage("⚡ Casting Spark!");
-
+    this.classSkillLevel = modifiedLevel;
     // ===== COMBO STACK HANDLING =====
     if (spellHandState.lastHeroSpellId === this.id) {
       spellHandState.sparkComboCount = Math.min(spellHandState.sparkComboCount + 1, 5);
@@ -1080,7 +1132,7 @@ export const heroSpells = [
   },
 
   castSpark: function () {
-    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     
     const target = getRandomEnemy(); // your provided function
     if (!target) {
@@ -1096,6 +1148,7 @@ export const heroSpells = [
       enemy
     );
     //console.log(`combo: ${skillDamageObject.damage}`);
+    
     const dmg = skillDamageObject.damage * this.currentComboMult;
     skillDamageObject.damage = dmg;
     damageEnemy(enemy, dmg, this.resonance);
@@ -1108,7 +1161,10 @@ export const heroSpells = [
   id: "poisonSpray",
   name: "Poison Spray",
   resonance: "poison",
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 1,
   tier: 1,
   unlocked: true,
@@ -1163,18 +1219,90 @@ export const heroSpells = [
   },
 },
 {
+  id: "rockBlast",
+  name: "Rock Blast",
+  resonance: "earth",
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
+  gemCost: 1,
+  tier: 1,
+  unlocked: true,
+  description: "A boulder effecting a 2x2 grid.",
+  icon: "assets/images/icons/earthquake.webp",
+
+  activate: function () {
+    
+    const activeEnemies = getActiveEnemies();
+    if (activeEnemies.length === 0) {
+      logMessage(`No enemies available for ${this.name}`);
+      return;
+    }
+    
+    // Pick a random active enemy as the explosion origin
+    const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+    //console.log(`Fireball targets enemy at (${randomEnemy.position.row}, ${randomEnemy.position.col})`);
+    let { row, col } = randomEnemy.position;
+    //console.log(`Enemy position: row ${row}, col ${col}`);
+    const numRows = state.enemies.length;
+    const numCols = state.enemies[0].length;
+
+    // Adjust the top-left corner of the 2x2 zone so it stays within bounds
+    // The zone covers: (baseRow, baseCol), (baseRow+1, baseCol), (baseRow, baseCol+1), (baseRow+1, baseCol+1)
+    let baseRow = row;
+    let baseCol = col;
+
+    if (baseRow === numRows - 1) baseRow--; // shift up if on bottom edge
+    if (baseCol === numCols - 1) baseCol--; // shift left if on right edge
+
+    // Collect enemies in that adjusted 2x2 zone
+    const targets = [];
+    for (let r = baseRow; r < baseRow + 2; r++) {
+      for (let c = baseCol; c < baseCol + 2; c++) {
+        const enemy = state.enemies[r][c];
+        if (enemy && enemy.hp > 0) {
+          targets.push({ enemy, row: r, col: c });
+        }
+      }
+    }
+    if (targets.length > 0){
+      if (targets.length = 3) this.tier = 2;
+      if (targets.length = 4) this.tier = 3;
+      console.log(this.tier);
+    }
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+    shakeScreen(500, 10);
+    // Apply damage + effects
+    targets.forEach(({ row, col }) => {
+      const enemy = state.enemies[row][col];
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+      const damage = skillDamageObject.damage;
+      damageEnemy(enemy, damage, this.resonance);
+      showFloatingDamage(row, col, skillDamageObject);  
+      //if (enemy.hp <= 0) updateEnemiesGrid();
+    });
+  spellHandState.lastHeroSpellResonance = this.resonance;  
+  },
+},
+{
   id: "falconer",
   name: "Falconer",
   resonance: "physical",
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
+  classSkillLevel: null, // used during active casting
   gemCost: 2,
   tier: 2,
   unlocked: true,
   description: "Send a trained falcon to strike the weakest enemy.",
   icon: "assets/images/icons/moonbeam.png",
 
-  activate: function () {
-    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+  activate: function (modifiedLevel = this.skillLevel) {
+    this.classSkillLevel = modifiedLevel;
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     //applyVisualEffect('slash-flash', 0.4);
     logMessage("🦅 Falconer strikes!");
 
@@ -1213,7 +1341,10 @@ export const heroSpells = [
   name: "Frostbite",
   resonance: "water",
   tier: 1,
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 4,
   icon: "assets/images/icons/frostbite.webp",
   description: "Deals heavy water damage but is negated by fire type and fire counters.",
@@ -1254,7 +1385,10 @@ export const heroSpells = [
   id: "dragonsBreath",
   name: "Dragon's Breath",
   resonance: "dark",
-  skillLevel: 1,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
   gemCost: 6,
   tier: 4,
   unlocked: true,

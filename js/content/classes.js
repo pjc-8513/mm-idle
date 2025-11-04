@@ -26,6 +26,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "physical",
         // How much of the hero's stats this class gets
+      role: "dps",
       heroStatRatios: {
         hp: 1,      // 120% of hero HP
         attack: 1,  // 80% of hero attack
@@ -62,6 +63,7 @@ export const classes = [
       resonance: "physical",
       hasAutoAttack: true,
         // How much of the hero's stats this class gets
+      role: "support",
       heroStatRatios: {
         hp: 1.2,      // 120% of hero HP
         attack: 0.8,  // 80% of hero attack
@@ -119,6 +121,7 @@ export const classes = [
       },
       heroStatRatios: { hp: 0.5, attack: 1.5, defense: 2},
       // Class's own base stats (independent of hero)
+      role: "caster",
       baseStats: {
         hp: 0,
         attack: 5,
@@ -157,6 +160,7 @@ export const classes = [
         poisonFlask: { cooldownRemaining: 8000 },
         lethalDose: { active: false }
       },
+      role: "dps",
       heroStatRatios: { hp: 0.7, attack: 1.3, defense: 2 },
       // Class's own base stats (independent of hero)
       baseStats: {
@@ -187,6 +191,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "light",
       hasAutoAttack: true,
+      role: "support",
       heroStatRatios: { hp: 1.1, attack: 0.8, defense: 3 },
       // Class's own base stats (independent of hero)
       baseStats: {
@@ -224,6 +229,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "light",
       hasAutoAttack: true,
+      role: "support",
       heroStatRatios: { hp: 1.2, attack: 0.8, defense: 3 },
       // Class's own base stats (independent of hero)
       baseStats: {
@@ -266,6 +272,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "dark",
       hasAutoAttack: false,
+      role: "caster",
       heroStatRatios: { hp: 0.9, attack: 1, defense: 2 },
       // Class's own base stats (independent of hero)
       baseStats: {
@@ -297,6 +304,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "earth",
       hasAutoAttack: false,
+      role: "caster",
       heroStatRatios: { hp: 0.9, attack: 1.1, defense: 3 },
       // Class's own base stats (independent of hero)
       baseStats: {
@@ -339,6 +347,7 @@ export const classes = [
       sameTargetStreak: 0,
       resonance: "air",
       hasAutoAttack: true,
+      role: "dps",
       heroStatRatios: { hp: 0.6, attack: 1.2, defense: 2 },
       // Class's own base stats (independent of hero)
       baseStats: {
