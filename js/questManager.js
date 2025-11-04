@@ -341,9 +341,8 @@ function addHeroExp(amount) {
  * Using formula: level^2 * 100
  */
 function getExpForLevel(level) {
-  return Math.pow(level, 2) * 100;
+  return Math.floor(level ** 2 * 100 * (1 + level * 0.015));
 }
-
 
 /**
  * Set up quest UI elements
