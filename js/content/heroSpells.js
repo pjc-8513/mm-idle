@@ -609,6 +609,7 @@ export const heroSpells = [
   name: "Landslide",
   resonance: "earth",
   tier: 2,
+  classSkillLevel: null, // used during active casting
   get skillLevel() {
     const library = state.buildings.find(c => c.id === 'library');
     return library ? library.level : 1;
@@ -618,8 +619,8 @@ export const heroSpells = [
   description: "Crushes enemies column by column. If it defeats an enemy, the landslide continues to the next column (max 3).",
   icon: "assets/images/icons/earthquake.webp",
 
-  activate: function () {
-    
+  activate: function (modifiedLevel = this.skillLevel) {
+    this.classSkillLevel = modifiedLevel;
     spellHandState.lastHeroSpellResonance = this.resonance;
     shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
     logMessage("🌋 Casting Landslide!");
@@ -661,7 +662,7 @@ export const heroSpells = [
   },
 
   hitColumn: function (enemies) {
-    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     let defeated = false;
     enemies.forEach(({ enemy, row, col }) => {
       const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
@@ -1222,6 +1223,7 @@ export const heroSpells = [
   id: "rockBlast",
   name: "Rock Blast",
   resonance: "earth",
+  classSkillLevel: null, // used during active casting
   get skillLevel() {
     const library = state.buildings.find(c => c.id === 'library');
     return library ? library.level : 1;
@@ -1232,8 +1234,8 @@ export const heroSpells = [
   description: "A boulder effecting a 2x2 grid.",
   icon: "assets/images/icons/earthquake.webp",
 
-  activate: function () {
-    
+  activate: function (modifiedLevel = this.skillLevel) {
+    this.classSkillLevel = modifiedLevel;
     const activeEnemies = getActiveEnemies();
     if (activeEnemies.length === 0) {
       logMessage(`No enemies available for ${this.name}`);
@@ -1271,7 +1273,7 @@ export const heroSpells = [
       if (targets.length = 4) this.tier = 3;
       console.log(this.tier);
     }
-    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     shakeScreen(500, 10);
     // Apply damage + effects
     targets.forEach(({ row, col }) => {

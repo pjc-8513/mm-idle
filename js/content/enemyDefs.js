@@ -320,6 +320,48 @@ export const ENEMY_TEMPLATES = {
     weaknesses: ["water"],
     description: "Nuisance hydra common throughout the land."
   },
+  diamondGargoyle: {
+    id: "diamondGargoyle",
+    baseName: "Diamond Gargoyle",
+    type: "construct",
+    elementType: "earth",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["air"],
+    image: "assets/images/enemies/diamondGargoyle.webp",
+    weaknesses: ["fire"],
+    description: "Nuisance gargoyle common throughout the land."
+  },
+  earthElemental: {
+    id: "earthElemental",
+    baseName: "Earth Elemental",
+    type: "elemental",
+    elementType: "earth",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["air"],
+    image: "assets/images/enemies/earthElemental.webp",
+    weaknesses: ["fire"],
+    description: "Nuisance earth elemental common throughout the land."
+  },
+  druid: {
+    id: "druid",
+    baseName: "Druid",
+    type: "humanoid",
+    elementType: "earth",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["air"],
+    image: "assets/images/enemies/warlock.webp",
+    weaknesses: ["fire"],
+    description: "Nuisance earth elemental common throughout the land."
+  },
 
   // Boss Enemies
     swarm: {
@@ -357,6 +399,18 @@ export const ENEMY_TEMPLATES = {
       resistances: ["fire"],
       image: "assets/images/enemies/frostDrake.webp",
       weaknesses: ["air"]
+    },
+    agarsAbomination: {
+      id: "agarsAbomination",
+      baseName: "Agar's Abomination",
+      type: "undead",
+      elementType: "air",
+      tier: "boss",
+      isBoss: true,
+      maxMp: 30,
+      resistances: ["water"],
+      image: "assets/images/enemies/chimera.webp",
+      weaknesses: ["earth"]
     },
     goblinKing: {
     id: "goblinKing",

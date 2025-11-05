@@ -488,7 +488,8 @@ const areaAssets = {
   castleIronfist: ["thief.webp", "masterArcher.webp", "goblin.webp", "bandit.webp", "lich.webp", "cobra.webp", "main.webp", "area-side.webp", "area-top.webp"],
   mireOfTheDamned: ["spider.webp", "skeletonArcher.webp", "harpy.webp", "willow.webp", "spectre.webp", "snergle.webp"],
   freeHaven: ["lich.webp", "royalGriffin.webp", "medusa.webp", "emeraldOoze.webp"],
-  eelInfestedWaters:["frostDrake.webp", "waterSpirit.webp", "seaTerror.webp", "hydra.webp"]
+  eelInfestedWaters:["frostDrake.webp", "waterSpirit.webp", "seaTerror.webp", "hydra.webp"],
+  silverCove:["warlock.webp", "earthElemental.webp", "chimera.webp", "diamondGargoyle.webp"]
   // ...
 };
 

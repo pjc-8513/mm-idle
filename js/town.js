@@ -377,14 +377,17 @@ function upgradeBuilding(buildingId) {
     }
     if (building.id === "blacksmith"){ 
       const attackBonus = 2 + Math.floor((buildingData.level ** 0.8) * 0.1);
-      addHeroBonus('attack', attackBonus);}
+      addHeroBonus('attack', attackBonus);
+    }
       /*
     if (building.id === 'library'){
       partyState.heroBonuses[state.libraryUpgrade] += 0.10;
       updateElementalModifiers();
     }
       */
-    if (building.upgradedClasses) upgradeLinkedClasses(building);
+    const buildingLevel = getBuildingLevel(buildingId);
+    //console.log(buildingData);
+    if (building.upgradedClasses && buildingLevel > 1) upgradeLinkedClasses(building);
     // --- NEW: upgrade linked classes ---
     // Emit upgrade event with building data
     emit("buildingUpgraded", { ...building, level: buildingData ? buildingData.level : 1 });

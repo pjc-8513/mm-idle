@@ -99,6 +99,46 @@ export const classes = [
       },
       attackCooldown: 0
     },
+        { id: "archer", 
+      name: "Archer", 
+     //image: "assets/images/classes/archer.png",
+      level: 0,
+      goldCost: 40,
+      gemCost: 0, 
+      goldIncomePerHit: 0.5,
+      gemPerSecond: 0, 
+      buildingRequired: {id: "archery", level: 1},
+      lastTarget: null,
+      sameTargetStreak: 0,
+      resonance: "air",
+      hasAutoAttack: true,
+      role: "dps",
+      heroStatRatios: { hp: 0.6, attack: 1.2, defense: 2 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 10,
+        defense: 10,
+        speed: 1.5,
+        criticalChance: 0.2
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 3
+      },
+      attackCooldown: 0,
+      abilities: [
+        { id: "sparks", unlockLevel: 1, active: false },
+        { id: "falconer", unlockLevel: 5, active: false },        
+      ],
+      skills: {
+        sparks: { cooldownRemaining: 8000 },
+        falconer: { cooldownRemaining: 11000 },
+      }, 
+    },
     { id: "sorceress", 
       name: "Sorceress", 
       level: 0,
@@ -324,56 +364,19 @@ export const classes = [
       attackCooldown: 0,
       abilities: [
         { id: "landslide", unlockLevel: 1, active: false },
-        { id: "summonWaterElemental", unlockLevel: 1, active: false },
-        { id: "earthquake", unlockLevel: 5, active: false },
+        { id: "rockBlast", unlockLevel: 1, active: false },
+        { id: "summonWaterElemental", unlockLevel: 5, active: false },
+        //{ id: "earthquake", unlockLevel: 20, active: false },
         
       ],
       skills: {
-        landslide: { cooldownRemaining: 8000 },
+        landslide: { cooldownRemaining: 7500 },
+        rockBlast: { cooldownRemaining: 9500 },
         summonWaterElemental: { cooldownRemaining: 25000 },
-        earthquake: { cooldownRemaining: 22000 }
+        //earthquake: { cooldownRemaining: 22000 }
       },
     },
-    { id: "archer", 
-      name: "Archer", 
-     //image: "assets/images/classes/archer.png",
-      level: 0,
-      goldCost: 40,
-      gemCost: 0, 
-      goldIncomePerHit: 0.5,
-      gemPerSecond: 0, 
-      buildingRequired: {id: "archery", level: 1},
-      lastTarget: null,
-      sameTargetStreak: 0,
-      resonance: "air",
-      hasAutoAttack: true,
-      role: "dps",
-      heroStatRatios: { hp: 0.6, attack: 1.2, defense: 2 },
-      // Class's own base stats (independent of hero)
-      baseStats: {
-        hp: 0,
-        attack: 10,
-        defense: 10,
-        speed: 1.5,
-        criticalChance: 0.2
-      },
-      
-      // How much the class grows per level
-      growthPerLevel: {
-        hp: 0,
-        attack: 3,
-        defense: 3
-      },
-      attackCooldown: 0,
-      abilities: [
-        { id: "sparks", unlockLevel: 1, active: false },
-        { id: "falconer", unlockLevel: 5, active: false },        
-      ],
-      skills: {
-        sparks: { cooldownRemaining: 8000 },
-        falconer: { cooldownRemaining: 11000 },
-      }, 
-    },
+
     /* 
     { id: "ranger", 
       name: "Ranger", 

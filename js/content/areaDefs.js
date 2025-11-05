@@ -98,10 +98,25 @@ export const AREA_TEMPLATES = {
     enemies: ["seaSerpent", "hydra", "waterSpirit" ],
     boss: "frostDrake", 
     //unlocks: ["mistyIslands", "goblinWatch"],
-    //nextArea: "mistyIslands",
+    nextArea: "silverCove",
     questId: "eelInfestedWaters",
     backgroundImg: "misty-bg.webp",
     sideImg: "misty-side.webp",
+    topImg: "misty-top.webp"
+  },
+  silverCove: {
+    id: "silverCove",
+    name: "Silver Cove",
+    description: "The town of Silver Cove got its start as a fishing and trading village a few hundred years ago.",
+    maxWaves: 10,
+    //baseLevel: 1,
+    enemies: ["diamondGargoyle", "earthElemental", "masterArcher", "druid" ],
+    boss: "agarsAbomination", 
+    //unlocks: ["mistyIslands", "goblinWatch"],
+    //nextArea: "mistyIslands",
+    questId: "silverCove",
+    backgroundImg: "main_bg.webp",
+    sideImg: "area-side.webp",
     topImg: "misty-top.webp"
   },
   // more areas

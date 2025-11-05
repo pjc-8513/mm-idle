@@ -92,14 +92,17 @@ export const abilities = [
             const enemies = getEnemiesInColumn(target.position.col);
            // console.log("[followThrough] activated! target column: ", target.position.col);
            // console.log("[followThrough] enemies: ", enemies);
-            enemies.forEach(({ enemy, row, col }) => {
-                //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
-           //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
-                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
-                damageEnemy(enemy, skillDamageObject.damage, this.resonance);
-                handleSkillAnimation("followThrough", row, col);
-                showFloatingDamage(row, col, skillDamageObject); // show floating text
-            });
+           let reducer = 0;
+          enemies.forEach(({ enemy, row, col }, index) => {
+              const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+              let damageReducer = 1;
+              if (index === 1) damageReducer = 0.75; // 25% reduction for the second pass
+              if (index >= 2) damageReducer = 0.5; // 50% reduction for the third pass and onwards
+              skillDamageObject.damage *= damageReducer;
+              damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+              handleSkillAnimation("followThrough", row, col);
+              showFloatingDamage(row, col, skillDamageObject); 
+          });
         }
           
     },
@@ -667,11 +670,34 @@ export const abilities = [
       skillBaseDamage: 200,
       spritePath: 'assets/images/sprites/flame_arch.png',
       cooldown: 8000,
+      get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+      },
       class: "druid",
       activate: function() {
         const landslideSpell = heroSpells.find(spell => spell.id === "landslide");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
-        landslideSpell.activate();
+        landslideSpell.activate(this.skillLevel);
+      }
+    },
+    {
+      id: "rockBlast",
+      name: "Rock Blast",
+      type: "active",
+      resonance: "earth",
+      skillBaseDamage: 200,
+      spritePath: 'assets/images/sprites/flame_arch.png',
+      cooldown: 8000,
+      get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+      },
+      class: "druid",
+      activate: function() {
+        const rockBlastSpell = heroSpells.find(spell => spell.id === "rockBlast");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        rockBlastSpell.activate(this.skillLevel);
       }
     },
     {
@@ -682,6 +708,10 @@ export const abilities = [
       skillBaseDamage: 200,
       spritePath: 'assets/images/sprites/flame_arch.png',
       cooldown: 22000,
+      get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+      },
       class: "druid",
       activate: function() {
         const earthquake = heroSpells.find(spell => spell.id === "earthquake");
@@ -708,8 +738,10 @@ export const abilities = [
         name: "Splash",
         type: "active",
         resonance: "water",
-        get skillBaseDamage() {
-          return 5 * partyState.heroBaseStats.attack;
+        tier: 1,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
         },
         cooldown: 3000,
         spritePath: 'assets/images/sprites/sparks.webp',
@@ -751,12 +783,15 @@ export const abilities = [
         
             // Apply damage + effects
             targets.forEach(({ row, col }) => {
+              const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
               const enemy = state.enemies[row][col];
-              const skillDamageObject = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
+              //console.log(skillDamageRatio);
+              const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+              //console.log(skillDamageObject);
               const damage = skillDamageObject.damage;
               damageEnemy(enemy, damage, this.resonance);
               handleSkillAnimation("splash", row, col);
-              showFloatingDamage(row, col, this.skillBaseDamage);
+              showFloatingDamage(row, col, skillDamageObject);
               if (enemy.hp <= 0) renderAreaPanel();
             });
           },
