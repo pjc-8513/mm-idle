@@ -25,14 +25,14 @@ export const incomeSystem = {
       let buildingData = buildings.find(b => b.id === building.id);
       const buildingLevel = getBuildingLevel(building.id);
       const goldFromBuilding =  buildingData.goldIncomePerHit * buildingLevel || 0;
-      console.log('buildingData: ', buildingData);
+      //console.log('buildingData: ', buildingData);
       income += goldFromBuilding;
-      console.log(`gold from ${buildingData.id}: ${goldFromBuilding}`);
+      //console.log(`gold from ${buildingData.id}: ${goldFromBuilding}`);
     }
 
     // Global/time bonuses
     income *= getBonusGoldMultiplier();
-    console.log(`income on hit: ${income}`);
+    //console.log(`income on hit: ${income}`);
 
     // Apply to state
     state.resources.gold += income;
