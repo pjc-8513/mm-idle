@@ -20,7 +20,7 @@ const SCALING = {
   zone_length: 10,
   zone_multiplier: 1.5,
   boss_base_multiplier: 12,
-  spike_set: [50, 100, 200],
+  spike_set: [30, 50, 70, 90, 120, 150, 170, 200, 220, 240, 260, 280, 300],
   spike_factor: 3,
 
   // --- Quantum Scaling Parameters ---
@@ -56,7 +56,7 @@ function getRandomPrefix(heroLevel) {
 // NOTE: We need to update this function signature to accept the enemy type
 function getEnemyHP(wave, enemyType, isBoss = false) {
   const W = Math.max(1, wave);
-  
+//  console.log('[Wave] wave#: ', wave);
   // Base HP
   let hp = SCALING.baseHP;
 
@@ -65,7 +65,7 @@ function getEnemyHP(wave, enemyType, isBoss = false) {
 
   // Optional: small zone bumps every 10 waves, mild
   const zoneBoost = Math.floor((W - 1) / SCALING.zone_length);
-  hp *= Math.pow(1.15, zoneBoost); // instead of 1.5
+  hp *= Math.pow(1.5, zoneBoost); // instead of 1.5 // 1.15
 
   // Enemy type flavor multipliers (keep your chart!)
   const typeMult = {
@@ -235,13 +235,13 @@ export function handleWaveCleared() {
   
   // console.log(`Wave ${state.currentWave} cleared! Bonus: ${bonusGold} gold`);
 
-
+  state.currentWave++;
   // Check if this was the final wave (boss wave)
   if (state.areaWave >= currentArea.maxWaves) {
     handleAreaCompleted();
   } else {
     // Advance to next wave
-    state.currentWave++;
+    //state.currentWave++;
     state.areaWave++;
     setTimeout(() => {
       

@@ -255,7 +255,8 @@ export const abilities = [
     defaultBonus: 200, // milliseconds reduced per auto-attack
     perLevelBonus: 10, // additional ms per level
     applyPassive: function (attacker) {
-        const amount = this.defaultBonus + (attacker.level * this.perLevelBonus);
+        //const amount = this.defaultBonus + (attacker.level * this.perLevelBonus);
+        const amount = this.defaultBonus;
         // Simply reduce cooldowns - let updateSkills handle the rest
         partyState.party.forEach(member => {
             if (!member.skills) return;

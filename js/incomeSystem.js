@@ -1,5 +1,7 @@
 import { state } from "./state.js";
 import { emit } from "./events.js";
+import { buildings } from "./content/buildingDefs.js";
+import { getBuildingLevel } from "./town.js";
 
 // Constants
 const K_HIT = 0.02;       // gold per point of auto damage dealt
@@ -20,11 +22,17 @@ export const incomeSystem = {
 
     // Building bonuses (loop through owned buildings in state)
     for (const building of state.buildings) {
-      income += building.goldIncomePerHit || 0;
+      let buildingData = buildings.find(b => b.id === building.id);
+      const buildingLevel = getBuildingLevel(building.id);
+      const goldFromBuilding =  buildingData.goldIncomePerHit * buildingLevel || 0;
+      console.log('buildingData: ', buildingData);
+      income += goldFromBuilding;
+      console.log(`gold from ${buildingData.id}: ${goldFromBuilding}`);
     }
 
     // Global/time bonuses
     income *= getBonusGoldMultiplier();
+    console.log(`income on hit: ${income}`);
 
     // Apply to state
     state.resources.gold += income;

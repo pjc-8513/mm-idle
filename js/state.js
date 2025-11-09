@@ -47,7 +47,7 @@ export const state = {
   tick: 0,
   resources: {
     gold: 10000, //300 / 5000
-    gems: 0,
+    gems: 20,
     maxGems: 20,
     wood: 0,
     ore: 0,

@@ -314,7 +314,7 @@ export function getBuildingLevel(buildingId) {
 // Helper function to calculate upgrade cost (could be exponential scaling)
 function calculateUpgradeCost(building, currentLevel) {
   const nextLevel = currentLevel + 1;
-  const multiplier = Math.pow(1.5, currentLevel); // 50% cost increase per level
+  const multiplier = Math.pow(1.2, currentLevel); // 20% cost increase per level
   
   return {
     gold: Math.floor(building.goldCost * multiplier),
