@@ -69,7 +69,7 @@ export function updateElementalModifiers() {
   }
   partyState.elementalDmgModifiers = { ...baseModifiers };
   emit("elementalModifiersUpdated", partyState.elementalDmgModifiers);
-  console.log("Updated elemental modifiers:", partyState.elementalDmgModifiers);
+  //console.log("Updated elemental modifiers:", partyState.elementalDmgModifiers);
 }
 
 
@@ -253,7 +253,7 @@ export function getSkillDamageRatio(skillId, wave, overrideLevel=null) {
   return finalRatio;
 }
 
-export function getAbilityDamageRatio(skillId, wave) {
+export function getAbilityDamageRatio(skillId, wave, modifiedTier=null) {
   // look up skill
   const skill = abilities.find(a => a.id === skillId);
   // Base ratio depends on skill tier
@@ -268,7 +268,9 @@ export function getAbilityDamageRatio(skillId, wave) {
   const baseRatio = tierBaseRatios[skill.tier] || 1.0;
   
   // Skill level scaling (similar to your enemy HP zone scaling)
-  const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  //const levelScaling = Math.pow(1.15, skill.skillLevel - 1);
+  const effectiveLevel = modifiedTier !== null ? modifiedTier : skill.skillLevel;
+  const levelScaling = Math.pow(1.15, effectiveLevel - 1);
   
   // Wave-based scaling (matches enemy progression but slightly weaker)
   // Using 1.03 instead of 1.035 means skills scale ~97% as fast as enemies

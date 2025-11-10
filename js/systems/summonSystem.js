@@ -83,10 +83,10 @@ export const summonTemplates = {
     hasAutoAttack: true,
     baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 3.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
     abilities: [
-      { id: "starFall", unlockLevel: 1, active: true}
+      { id: "prismaticLight", unlockLevel: 1, active: true}
     ],
     skills:{
-      starFall: { cooldownRemaining: 9000, active: true }
+      prismaticLight: { cooldownRemaining: 8000, active: true }
     },
   },
   waterElemental: {

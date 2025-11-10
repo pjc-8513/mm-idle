@@ -1,4 +1,5 @@
 import { partyState } from "../state.js";
+import { abilities } from "./abilities.js";
 
 export const classes = [
     { id: "fighter", 
@@ -288,11 +289,13 @@ export const classes = [
       },
       abilities: [
         { id: "blindingLight", unlockLevel: 1 },
-        { id: "might", unlockLevel: 1 }
+        { id: "might", unlockLevel: 1 },
+        { id: "smite", unlockLevel: 5, active: false },
       ],
       skills: {
         blindingLight: { active: true },
-        might: { cooldownRemaining: 14000}
+        might: { cooldownRemaining: 14000},
+        smite: { cooldownRemaining: 7500 },
       },
       attackCooldown: 0
     },    

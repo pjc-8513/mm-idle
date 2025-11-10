@@ -92,7 +92,7 @@ export const abilities = [
             const enemies = getEnemiesInColumn(target.position.col);
            // console.log("[followThrough] activated! target column: ", target.position.col);
            // console.log("[followThrough] enemies: ", enemies);
-           let reducer = 0;
+           //let reducer = 0;
           enemies.forEach(({ enemy, row, col }, index) => {
               const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
               let damageReducer = 1;
@@ -133,7 +133,7 @@ export const abilities = [
               //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
           //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
               const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
-              console.log('skillDamageObject: ', skillDamageObject);
+              //console.log('skillDamageObject: ', skillDamageObject);
               damageEnemy(enemy, skillDamageObject.damage, this.resonance);
               handleSkillAnimation("flamePillar", row, col);
               showFloatingDamage(row, col, skillDamageObject); // show floating text
@@ -322,7 +322,12 @@ export const abilities = [
         name: "Zombie Ambush",
         type: "active",
         resonance: "undead",
-        skillBaseDamage: 180,
+        //skillBaseDamage: 180,
+        tier: 2,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
         //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
         spritePath: 'assets/images/sprites/zombie_ambush.png',
         cooldown: 3500,
@@ -334,17 +339,21 @@ export const abilities = [
             const { enemy, enemyRow, enemyCol } = randomEnemyObject;
             //console.log(`[followThrough] ${Date.now()}`);
             // Deal damage to all enemies in target column
-            console.log('[zombieAmbush] enemy: ', enemy);
+        //    console.log('[zombieAmbush] enemy: ', enemy);
             const enemies = getEnemiesInColumn(enemy.position.col);
            // console.log("[zombieAmbush] activated! target column: ", enemy.position.col);
            // console.log("[zombieAmbush] enemies: ", enemies);
             enemies.forEach(({ enemy, row, col }) => {
                 //console.log('[skill damage] skill base dmg: ', this.skillBaseDamge);
            //   console.log("[followThrough] damaging: ", enemy, attacker.stats.attack);
-                const skillDamage = calculateSkillDamage(attacker, this.resonance, this.skillBaseDamage, enemy);
-                damageEnemy(enemy, skillDamage.damage, this.resonance);
+                const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+                const skillDamageObject = calculateSkillDamage(attacker, 
+                  this.resonance, 
+                  skillDamageRatio, 
+                  enemy);
+                damageEnemy(enemy, skillDamageObject.damage, this.resonance);
                 handleSkillAnimation("zombieAmbush", row, col);
-                showFloatingDamage(row, col, skillDamage); // show floating text
+                showFloatingDamage(row, col, skillDamageObject); // show floating text
                 applyUtilityEffects(attacker, this.id, enemy, row, col);
             });
         }
@@ -395,7 +404,12 @@ export const abilities = [
   cooldown: null,
   defaultRestore: 5,
   perLevelBonus: 1,
-  skillBaseDamage: 250,
+  //skillBaseDamage: 250,
+  tier: 2,
+  get skillLevel(){
+    const character = partyState.party.find(c => c.id === this.class);
+    return character ? character.level : 1; // or some other default value
+  },
   triggeredThisWave: false, // track per wave
 
   // Triggered ONLY on column clear (once per wave)
@@ -447,16 +461,23 @@ export const abilities = [
       for (let col = 0; col < state.enemies[row].length; col++) {
         const enemy = state.enemies[row][col];
         if (!enemy || enemy.hp <= 0) continue;
-        
-        const skillDamage = calculateSkillDamage(cleric, this.resonance, this.skillBaseDamage, enemy);
-        damageEnemy(enemy, skillDamage.damage, this.resonance);
+        let modifiedTier = null;
+        if (enemy.type === "undead" || enemy.elementType === "undead") modifiedTier = 5;
+        const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave, modifiedTier);
+        const skillDamageObject = calculateSkillDamage(cleric, 
+          this.resonance, 
+          skillDamageRatio, 
+          enemy);
+        damageEnemy(enemy, skillDamageObject.damage, this.resonance);
         
         // Trigger twice on undead
+        /*
         if (enemy.type === "undead"){
           damageEnemy(enemy, skillDamage.damage, this.resonance);
         }
+        */
         //console.log(`[soul cleric] healEvent dealt ${skillDamage.damage}`);      
-        showFloatingDamage(row, col, skillDamage);
+        showFloatingDamage(row, col, skillDamageObject);
         enemy.strobeEffect = { duration: 0.4, elapsed: 0 };
         // Radiant burst effect
         /*
@@ -493,7 +514,12 @@ export const abilities = [
         name: "Feast of Ages",
         type: "active",
         resonance: "undead",
-        skillBaseDamage: 180,
+        //skillBaseDamage: 180,
+        tier: 3,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
         //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
         spritePath: 'assets/images/sprites/life_drain.png',
         cooldown: 5000,
@@ -505,6 +531,7 @@ export const abilities = [
             let totalDrained = 0;
             enemies.forEach(enemy => {
               // Drain 5% of each enemy's current HP
+              //const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
               const drained = (enemy.hp * 0.05) + attacker.stats.attack;
               //console.log(`[vampire] drained each enemy for ${drained}`);
               damageEnemy(enemy, drained, this.resonance);
@@ -556,12 +583,17 @@ export const abilities = [
       spritePath: null,
       cooldown: null,
       resonance: "undead",
-      defaultBonus: 300, // base % damage per counter
-      perLevelBonus: 50, // extra % per level
+      //defaultBonus: 300, // base % damage per counter
+      tier: 5,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      //perLevelBonus: 50, // extra % per level
       onGhostDragonExpire: function (summon) {
         const attacker = summon;
         const resonance = this.resonance;
-        const basePercent = this.defaultBonus + (this.perLevelBonus * (attacker.level || 1));
+        //const basePercent = this.defaultBonus + (this.perLevelBonus * (attacker.level || 1));
         applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
         //applyVisualEffect('dark-flash', 0.8);
 
@@ -572,8 +604,11 @@ export const abilities = [
 
             const undeadStacks = enemy.counters["undead"] || 0;
             if (undeadStacks <= 0) continue;
-
-            const damagePayload = calculateSkillDamage(attacker, resonance, basePercent * undeadStacks, enemy);
+            const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+            const damagePayload = calculateSkillDamage(attacker, 
+              resonance, 
+              skillDamageRatio * undeadStacks, 
+              enemy);
             damageEnemy(enemy, damagePayload.damage, resonance);
             //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt ${damagePayload.damage} damage based on undead counters.`);
             // Reset undead counters
@@ -805,7 +840,7 @@ export const abilities = [
       skillBaseDamage: 200,
       spritePath: 'assets/images/sprites/follow_through.png',
       cooldown: 9000,
-      class: "angel",
+      //class: "angel",
       activate: function() {
         const starFallSpell = heroSpells.find(spell => spell.id === "starFall");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
@@ -813,18 +848,44 @@ export const abilities = [
       }
     },
     {
+      id: "prismaticLight",
+      name: "Prismatic Light",
+      type: "active",
+      resonance: "air",
+      //skillBaseDamage: 200,
+      tier: 4,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      spritePath: 'assets/images/sprites/follow_through.png',
+      cooldown: 8000,
+      class: "angel",
+      activate: function(attacker, target, context) {
+        const prismaticLight = heroSpells.find(spell => spell.id === "prismaticLight");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        if (!target) return;
+        prismaticLight.activate(target.enemy, this.skillLevel);
+      }
+    },
+    {
       id: "rot",
       name: "rot",
       type: "active",
       resonance: "undead",
-      skillBaseDamage: 200,
+      //skillBaseDamage: 200,
+      tier: 3,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
       spritePath: 'assets/images/sprites/follow_through.png',
       cooldown: 4500,
       class: "ghostDragon",
       activate: function() {
         const rotSpell = heroSpells.find(spell => spell.id === "rot");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
-        rotSpell.activate();
+        rotSpell.activate(this.skillLevel);
       }
     },
     {
@@ -870,6 +931,49 @@ export const abilities = [
     }
     }
     },
+    {
+        id: "smite",
+        name: "Smite",
+        type: "active",
+        resonance: "light",
+        //skillBaseDamage: 180,
+        tier: 3,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
+        //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
+        spritePath: 'assets/images/sprites/sparks.webp',
+        cooldown: 7500,
+        class: "templar",
+        activate: function (attacker, target, context) {
+            const enemies = getActiveEnemies();
+            if (!enemies.length) return;
+            enemies.forEach(enemy => {
+              const vulnerableTypes = ["undead", "demon"];
+              const vulnerableElements = ["undead", "poison", "dark", "fire"];
+              if (
+                  vulnerableTypes.includes(enemy.type) ||
+                  vulnerableElements.includes(enemy.elementType)
+                ) {
+                const bonus = (vulnerableTypes.includes(enemy.type) && vulnerableElements.includes(enemy.elementType)) ? 2 : 1;
+                const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+                
+                //console.log(skillDamageRatio);
+                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+                skillDamageObject.damage *= bonus;
+                console.log('smite damage: ', skillDamageObject.damage);
+                const damage = skillDamageObject.damage;
+                damageEnemy(enemy, damage, this.resonance);
+                handleSkillAnimation("splash", enemy.position.row, enemy.position.col);
+                showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
+                if (enemy.hp <= 0) renderAreaPanel();
+              }
+            });
+        }
+    }
+
+
 ];
 
 

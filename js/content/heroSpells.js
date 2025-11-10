@@ -1,4 +1,4 @@
-import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getRandomEnemy } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
@@ -405,7 +405,7 @@ export const heroSpells = [
     // Helper: finds undead trios
     function checkUndeadLine(enemiesInLine) {
       if (enemiesInLine.some(e => !e || e.hp <= 0)) return;
-      if (enemiesInLine.every(e => e.type === "undead")) {
+      if (enemiesInLine.every(e => e.type === "undead" || e.elementType === "undead")) {
         enemiesInLine.forEach(e => undeadMatches.add(e));
       }
     }
@@ -984,6 +984,7 @@ export const heroSpells = [
   id: "rot",
   name: "Rot",
   resonance: "undead",
+  classSkillLevel: null,
   tier: 3,
   get skillLevel() {
     const library = state.buildings.find(c => c.id === 'library');
@@ -993,8 +994,9 @@ export const heroSpells = [
   icon: "assets/images/icons/breath.png",
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
 
-  activate: function () {
-    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave);
+  activate: function (modifiedLevel = this.skillLevel) {
+    this.classSkillLevel = modifiedLevel;
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     const grid = state.enemies;
     let infectedCount = 0;
     spellHandState.lastHeroSpellResonance = this.resonance;
@@ -1415,7 +1417,65 @@ export const heroSpells = [
     spellHandState.lastHeroSpellResonance = this.resonance;  
     logMessage(`🐉 Dragon's Breath scorches the enemy at (${row}, ${col})!`);
   }
-}
+},
+{
+  id: "prismaticLight",
+  name: "Prismatic Light",
+  resonance: "light",
+  gemCost: 3,
+  tier: 4,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
+  classSkillLevel: null, // used during active casting
+  unlocked: true,
+  description: "Targets damage in a row. Deals more damage if enemy has more light counters than other counter types.",
+  icon: "assets/images/icons/brilliant.png",
+  active: false,
+  activate: function (target=null, modifiedLevel=null) {
+    this.classSkillLevel = modifiedLevel;
+    let skillTarget=target;
+    if (skillTarget === null) skillTarget = getRandomEnemy().enemy;
+    //console.log(skillTarget);
+    const enemies = getEnemiesInColumn(skillTarget.position.col);
+    //console.log(enemies);
+    if (!enemies) return;
+    
+    // Apply light flash effect to all enemies
+    if (state.activePanel === 'panelArea') {
+      //console.log('light flash');
+      applyVisualEffect('light-flash', 0.6);
+    }
+
+    enemies.forEach(({enemy, row, col}) => {
+      // Ensure enemy.counters exists
+      //console.log(enemy);
+      if (!enemy.counters) return;
+
+      const counters = enemy.counters;
+      const lightCount = counters.light || 0;
+
+      // Check if light has a strictly higher value than all other counters
+      const lightIsHighest = Object.entries(counters).every(([element, count]) => {
+        if (element === 'light') return true; // skip comparing light to itself
+        return lightCount > count;
+      });
+
+      // If light dominates, boost damage tier
+      const modifiedTier = lightIsHighest ? 5 : null;
+      if (modifiedTier!== null) this.tier = modifiedTier;
+      console.log(modifiedTier);
+      // Now apply damage
+      const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
+      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+      damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+      showFloatingDamage(row, col, skillDamageObject);
+      if (enemy.hp <=0) updateEnemiesGrid();
+    });
+
+  }
+},
 
 
 

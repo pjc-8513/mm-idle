@@ -669,7 +669,7 @@ function handleEnemyDefeated({ enemy }) {
 }
 
 function handleTargetChanged({ oldTarget, newTarget, enemy }) {
-  console.log(`Target changed from ${oldTarget ? `${oldTarget.row},${oldTarget.col}` : 'none'} to ${newTarget.row},${newTarget.col}`);
+  //console.log(`Target changed from ${oldTarget ? `${oldTarget.row},${oldTarget.col}` : 'none'} to ${newTarget.row},${newTarget.col}`);
 }
 
 // Public API for external use
