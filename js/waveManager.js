@@ -164,6 +164,9 @@ on("enemyDefeated", ({ enemy }) => {
 on("waveStarted", () => {
   const heal = abilities.find(a => a.id === "heal");
   if (heal) heal.triggeredThisWave = false;
+  const minotaur = partyState.party.find(c => c.id === "minotaur");
+  const rageSkill = heroSpells.find(s => s.id === "rage");
+  if (minotaur && rageSkill) rageSkill.cleanup();
 });
 
 // NEW: Listen for ANY heal event and trigger cleric's damage
@@ -457,8 +460,23 @@ export function damageEnemy(enemy, damage, element) {
   if (!enemy || enemy.hp <= 0) return false;
   const applyDmg = Math.round(damage);
   enemy.hp = Math.max(0, enemy.hp - applyDmg);
+  
+  // Check for NaN and log details
+  if (isNaN(applyDmg)) {
+    console.error("[NaN DETECTED] applyDmg is NaN!", {
+      enemy,
+      damage,
+      element,
+      stack: new Error().stack
+    });
+    // Optionally, you can force it to 0 to prevent crashing
+    //return false;
+  }
+  
+  
   enemy.justDamaged = true;
   
+
   emit("enemyDamaged", enemy);
   
   // Check if enemy died

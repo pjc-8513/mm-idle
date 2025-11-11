@@ -3,7 +3,7 @@ import { logMessage } from "./systems/log.js";
 import { emit, on } from "./events.js";
 import { calculateClassStats, updateElementalModifiers, updateTotalStats } from "./systems/math.js";
 import { classes } from "./content/classes.js";
-import { attachRequirementTooltip } from "./tooltip.js";
+import { attachRequirementTooltip, attachPartyTooltip } from "./tooltip.js";
 
 // Store the last state to detect changes
 let lastPartyState = {
@@ -119,6 +119,7 @@ function fullRenderPartyPanel() {
     partyCard.appendChild(imageDiv);
     partyCard.appendChild(infoOverlay);
     partyCard.appendChild(btn);
+    attachPartyTooltip(partyCard, cls);
     container.appendChild(partyCard);
   });
 

@@ -376,7 +376,8 @@ function upgradeBuilding(buildingId) {
       state.buildings.push({ id: buildingId, level: 1 });
     }
     if (building.id === "blacksmith"){ 
-      const attackBonus = 2 + Math.floor((buildingData.level ** 0.8) * 0.1);
+      const blacksmithLevel = getBuildingLevel(building.id);
+      const attackBonus = 2 + Math.floor((blacksmithLevel ** 0.8) * 0.1);
       addHeroBonus('attack', attackBonus);
     }
       /*

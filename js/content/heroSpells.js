@@ -1476,7 +1476,139 @@ export const heroSpells = [
 
   }
 },
+{
+  id: "rage",
+  name: "Rage",
+  resonance: "physical",
+  tier: 2,
+  get skillLevel() {
+    const library = state.buildings.find(c => c.id === 'library');
+    return library ? library.level : 1;
+  },
+  icon: "assets/images/icons/inferno.png",
+  description: "Unleashes fury upon a full row. Each 10 seconds of sustained combat boosts damage further until the wave ends.",
+  unlocked: true,
+  classSkillLevel: null, // used during active casting
+  active: false,
+  currentRow: 0,
+  rageBonus: 0,            // percent damage multiplier (e.g. 0.2 = +20%)
+  elapsedWaveTime: 0,      // counts actual combat seconds
+  lastBonusThreshold: 0,   // track when next +10s boost applies
+  
+  /**
+   * Called once when player activates Rage skill
+   */
+  activate: function (modifiedLevel = this.skillLevel) {
+    if (this.active) return; // can't double-cast
+    //console.log("minotaur rage active");
+    this.classSkillLevel = modifiedLevel;
 
+    // Reset row target to random or strongest enemy row
+    this.currentRow = this.pickTargetRow();
+
+    logMessage("💢 Minotaur bellows in fury!");
+    applyVisualEffect("rage-flash", 0.6);
+
+    this.active = true;
+    this.castRageStrike(); // first strike immediately
+
+    // Register for delta loop updates
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+  },
+
+  /**
+   * Updates every frame
+   */
+  update: function (delta) {
+    if (!this.active) return;
+    //console.log("minotaur rage update");
+    // Add elapsed time only if wave is active and not paused
+    if (state.activeWave) {
+      this.elapsedWaveTime += delta;
+
+      // Every 10 seconds => increase bonus
+      const threshold = Math.floor(this.elapsedWaveTime / 10);
+      if (threshold > this.lastBonusThreshold) {
+        this.lastBonusThreshold = threshold;
+        this.rageBonus += 0.25; // +25% each 10s (tune as needed)
+        logMessage(`💢 Minotaur’s fury intensifies! +${(this.rageBonus * 100).toFixed(0)}% power`);
+        //applyVisualEffect("rage-surge", 0.3);
+      }
+    }
+
+    // Optionally: repeat attack every few seconds
+    // (makes the Rage feel ongoing, not just one hit)
+    if (!this.attackCooldown) this.attackCooldown = 2; // seconds between slams
+    this.attackCooldown -= delta;
+    if (this.attackCooldown <= 0) {
+      this.castRageStrike();
+      this.attackCooldown = 2;
+    }
+  },
+
+  /**
+   * Performs the actual row-wide attack
+   */
+  castRageStrike: function () {
+    const enemies = getEnemiesInRow(this.currentRow);
+    if (enemies.length === 0) {
+      //logMessage("💢 Rage fizzles — no enemies in that row!");
+      this.currentRow = this.pickTargetRow();
+      //this.active = false;
+      //this.cleanup();
+      return;
+    }
+
+    const baseRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
+    const totalMult = 1 + this.rageBonus;
+    //console.log("minotaur rage striking");
+    for (const { enemy, row, col } of enemies) {
+      const dmgObj = calculateHeroSpellDamage(this.resonance, baseRatio, enemy);
+      dmgObj.damage *= totalMult;
+
+      damageEnemy(enemy, dmgObj.damage, this.resonance);
+      showFloatingDamage(row, col, dmgObj);
+      handleSkillAnimation("rage", row, col);
+      if (enemy.hp <=0) updateEnemiesGrid();
+    }
+
+    logMessage(`💢 Minotaur slams row ${this.currentRow + 1}! Damage ×${totalMult.toFixed(2)}`);
+  },
+
+  /**
+   * Pick a target row (e.g. random or most populated)
+   */
+  pickTargetRow: function () {
+    if (state.enemies.length<1) return;
+    // Choose the row with most enemies alive
+    let maxCount = 0;
+    let chosen = 0;
+    for (let r = 0; r < state.enemies.length; r++) {
+      const count = getEnemiesInRow(r).length;
+      if (count > maxCount) {
+        maxCount = count;
+        chosen = r;
+      }
+    }
+    return chosen;
+  },
+
+  /**
+   * Reset when wave ends or spell completes
+   */
+  cleanup: function () {
+    if (!state.activeHeroSpells) return;
+    console.log('minotaur rage cleaning up');
+    this.active = false;
+    this.elapsedWaveTime = 0;
+    this.rageBonus = 0;
+    this.lastBonusThreshold = 0;
+    this.attackCooldown = 0;
+    const i = state.activeHeroSpells.indexOf(this);
+    if (i !== -1) state.activeHeroSpells.splice(i, 1);
+  },
+},
 
 
 ];

@@ -52,7 +52,11 @@ export function updateElementalModifiers() {
   const resonanceCounts = {};
   for (const member of partyState.party) {
     const res = member.resonance;
-    if (res) {
+    if (Array.isArray(res)) {
+      for (const r of res) {
+        resonanceCounts[r] = (resonanceCounts[r] || 0) + 1;
+      }
+    } else if (typeof res === "string") {
       resonanceCounts[res] = (resonanceCounts[res] || 0) + 1;
     }
   }
@@ -63,14 +67,15 @@ export function updateElementalModifiers() {
     let bonus = 0;
     if (count === 2) bonus = 0.25;
     else if (count === 3) bonus = 0.50;
-    else if (count === 4) bonus = 1.00;
+    else if (count >= 4) bonus = 1.00;
     bonus += partyState.heroBonuses[element] || 0;
     baseModifiers[element] += bonus;
   }
+
   partyState.elementalDmgModifiers = { ...baseModifiers };
   emit("elementalModifiersUpdated", partyState.elementalDmgModifiers);
-  //console.log("Updated elemental modifiers:", partyState.elementalDmgModifiers);
 }
+
 
 
 /* 

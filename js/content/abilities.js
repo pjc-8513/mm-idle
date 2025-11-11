@@ -530,9 +530,9 @@ export const abilities = [
             if (!enemies.length) return;
             let totalDrained = 0;
             enemies.forEach(enemy => {
-              // Drain 5% of each enemy's current HP
+              // Drain 5% of each enemy's current HP -- nay, 2%
               //const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
-              const drained = (enemy.hp * 0.05) + attacker.stats.attack;
+              const drained = (enemy.hp * 0.02) + attacker.stats.attack;
               //console.log(`[vampire] drained each enemy for ${drained}`);
               damageEnemy(enemy, drained, this.resonance);
               totalDrained += drained;
@@ -584,7 +584,7 @@ export const abilities = [
       cooldown: null,
       resonance: "undead",
       //defaultBonus: 300, // base % damage per counter
-      tier: 5,
+      tier: 2,
       get skillLevel(){
         const character = partyState.party.find(c => c.id === this.class);
         return character ? character.level : 1; // or some other default value
@@ -971,7 +971,28 @@ export const abilities = [
               }
             });
         }
-    }
+    },
+    {
+    id: "rage",
+      name: "Rage",
+      type: "active",
+      resonance: "physical",
+      //skillBaseDamage: 200,
+      tier: 3,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      spritePath: 'assets/images/sprites/follow_through.png',
+      cooldown: 2000,
+      class: "minotaur",
+      activate: function() {
+        //console.log('activating minotaur rage');
+        const rage = heroSpells.find(spell => spell.id === "rage");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        rage.activate(this.skillLevel);
+      }
+    },
 
 
 ];

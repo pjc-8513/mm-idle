@@ -224,3 +224,64 @@ export function hideEnemyTooltip(container) {
   }
  // console.log('hideRequirementTooltip called');
 }
+
+
+// =============================
+// 🧭 PARTY MEMBER TOOLTIP SYSTEM
+// =============================
+
+export function ensurePartyTooltip(container) {
+  let tooltip = document.querySelector(`.party-tooltip[data-owner-id="${container.dataset.classId}"]`);
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.classList.add("party-tooltip");
+    tooltip.dataset.ownerId = container.dataset.classId;
+    document.body.appendChild(tooltip);
+  }
+  return tooltip;
+}
+
+export function showPartyTooltip(container, cls) {
+  const tooltip = ensurePartyTooltip(container);
+  if (!tooltip || !cls) return;
+
+  // Handle single or multiple resonance types
+  const resonanceText = Array.isArray(cls.resonance)
+    ? cls.resonance.map(r => r[0].toUpperCase() + r.slice(1)).join(" / ")
+    : cls.resonance?.[0].toUpperCase() + cls.resonance?.slice(1) || "None";
+
+  tooltip.innerHTML = `
+    <strong>${cls.name}</strong><br>
+    <em>${cls.description}</em><br>
+    <div><strong>Role:</strong> ${cls.role}</div>
+    <div><strong>Resonance:</strong> ${resonanceText}</div>
+    <div><strong>Base Stats:</strong>
+      <ul>
+        <li>HP: ${cls.baseStats.hp}</li>
+        <li>Attack: ${cls.baseStats.attack}</li>
+        <li>Defense: ${cls.baseStats.defense}</li>
+        <li>Speed: ${cls.baseStats.speed}</li>
+        <li>Crit: ${(cls.baseStats.criticalChance * 100).toFixed(1)}%</li>
+      </ul>
+    </div>
+  `;
+  tooltip.style.display = "block";
+  tooltip.style.position = "fixed";
+
+  // Keep tooltip near cursor
+  container.addEventListener("mousemove", (e) => {
+    tooltip.style.top = `${e.clientY + 10}px`;
+    tooltip.style.left = `${e.clientX + 10}px`;
+  });
+}
+
+export function hidePartyTooltip(container) {
+  const tooltip = document.querySelector(`.party-tooltip[data-owner-id="${container.dataset.classId}"]`);
+  if (tooltip) tooltip.style.display = "none";
+}
+
+export function attachPartyTooltip(container, cls) {
+  ensurePartyTooltip(container);
+  container.addEventListener("mouseenter", (e) => showPartyTooltip(container, cls));
+  container.addEventListener("mouseleave", () => hidePartyTooltip(container));
+}

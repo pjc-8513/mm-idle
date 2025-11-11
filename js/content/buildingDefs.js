@@ -113,6 +113,22 @@ export const buildings = [
       { id: 'trainingCenter', level: 5 }
     ]
   },
+  {
+    id: "labyrinth",
+    name: "Labyrinth",
+    reqHeroLevel: 5,
+    level: 0,
+    goldCost: 300,
+    gemCost: 0,
+    goldIncomePerHit: 1,
+    gemPerSecond: 0,
+    upgradedClasses: { id: "minotaur"},
+    buildingRequired: [
+      { id: "barracks", level: 5 },
+      { id: "mine", level: 5 },
+      { id: "blacksmith", level: 5 }
+    ]
+  },
   { id: "mageGuild",
     name: "Mage Guild", 
     image: "assets/images/buildings/mageguild.png",

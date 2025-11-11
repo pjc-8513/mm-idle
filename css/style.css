@@ -709,6 +709,22 @@ body, html {
   border-top-color: rgba(0, 0, 0, 0.95);
 }
 
+.party-tooltip {
+  position: absolute;
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid #666;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+  z-index: 9999;
+  max-width: 250px;
+  pointer-events: none;
+  display: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+
 /* Scrollbar styling for party grid */
 .partyGrid::-webkit-scrollbar {
   width: 8px;

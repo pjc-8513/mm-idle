@@ -379,6 +379,44 @@ export const classes = [
         //earthquake: { cooldownRemaining: 22000 }
       },
     },
+    { id: "minotaur", 
+      name: "Minotaur Warrior", 
+      level: 0,
+      goldCost: 50,
+      gemCost: 0, 
+      goldIncomePerHit: 1,
+      gemPerSecond: 0, 
+      buildingRequired: {id: "labyrinth", level: 1 },
+      lastTarget: null,
+      sameTargetStreak: 0,
+      resonance: ["physical", "earth"],
+      hasAutoAttack: false,
+      abilities: [
+        { id: "rage", unlockLevel: 1, active: false },
+        
+      ],
+      skills: {
+        rage: { cooldownRemaining: 2000 },
+      },
+      role: "dps",
+      heroStatRatios: { hp: 1, attack: 1.1, defense: 3 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 5,
+        defense: 10,
+        speed: 1.8,
+        criticalChance: 0.16
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 3
+      },
+      attackCooldown: 0
+    },
 
     /* 
     { id: "ranger", 
