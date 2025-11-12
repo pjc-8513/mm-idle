@@ -89,6 +89,21 @@ export const summonTemplates = {
       prismaticLight: { cooldownRemaining: 8000, active: true }
     },
   },
+  lesserDevil: {
+    id: "lesserDevil",
+    name: "Lesser Devil",
+    resonance: "dark",
+    rarity: "Activated via skill",
+    baseDuration: 12,
+    hasAutoAttack: false,
+    baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 3.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
+    abilities: [
+      { id: "fireball", unlockLevel: 1, active: true}
+    ],
+    skills:{
+      fireball: { cooldownRemaining: 3500, active: true }
+    },
+  },
   waterElemental: {
     id: "waterElemental",
     name: "Water Elemental",

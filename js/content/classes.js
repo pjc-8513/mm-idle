@@ -417,6 +417,46 @@ export const classes = [
       },
       attackCooldown: 0
     },
+    { id: "warlock", 
+      name: "Warlock", 
+      level: 0,
+      goldCost: 50,
+      gemCost: 0, 
+      goldIncomePerHit: 1,
+      gemPerSecond: 0, 
+      buildingRequired: {id: "nighonTunnels", level: 1 },
+      lastTarget: null,
+      sameTargetStreak: 0,
+      resonance: ["fire", "air"],
+      hasAutoAttack: false,
+      abilities: [
+        { id: "chainLightning", unlockLevel: 1, active: false },
+        { id: "incinerate", unlockLevel: 5, active: false },      
+        
+      ],
+      skills: {
+        chainLightning: { cooldownRemaining: 4500 },
+        incinerate: { cooldownRemaining: 18000 }
+      },
+      role: "caster",
+      heroStatRatios: { hp: 0.6, attack: 1.6, defense: 1 },
+      // Class's own base stats (independent of hero)
+      baseStats: {
+        hp: 0,
+        attack: 5,
+        defense: 10,
+        speed: 1.8,
+        criticalChance: 0.16
+      },
+      
+      // How much the class grows per level
+      growthPerLevel: {
+        hp: 0,
+        attack: 3,
+        defense: 1
+      },
+      attackCooldown: 0
+    },
 
     /* 
     { id: "ranger", 

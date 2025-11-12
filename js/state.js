@@ -41,7 +41,7 @@ export const partyState = {
   maxPartySize: 4,
   hasActiveDOTs: false,
   activeHeroBuffs: [],
-  activeHeroSpells: [],
+  //activeHeroSpells: [], moved to state(?)
   activeEchoes: []
 };
 export const state = {
@@ -100,6 +100,7 @@ export const state = {
   },
   //libraryUpgrade: 'fire',
   spells: [],
+  activeHeroSpells: [],
   equipment: [],
   currentArea: "newSorpigal",
   currentWave: 1,

@@ -1,4 +1,4 @@
-import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, getAdjacentEnemies } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
@@ -1609,6 +1609,105 @@ export const heroSpells = [
     if (i !== -1) state.activeHeroSpells.splice(i, 1);
   },
 },
+{
+  id: "chainLightning",
+  name: "Chain Lightning",
+  resonance: "air",
+  gemCost: 5,
+  tier: 3,
+  icon: "assets/images/icons/chain.png",
+  description: "Strikes a random enemy, forking between nearby enemies of the same element with dazzling arcs.",
+  classSkillLevel: null,
+  get skillLevel(){
+    const character = partyState.party.find(c => c.id === this.class);
+    return character ? character.level : 1; // or some other default value
+  },
+  active: false,
+  visited: new Set(),
+  remainingDelay: 0,
+  chainQueue: [],
+
+  activate: function (modifiedLevel = this.skillLevel) {
+    //flashScreen('white', 600);
+    logMessage("⚡ Chain Lightning crackles through the air!");
+
+    this.classSkillLevel = modifiedLevel;
+    this.active = true;
+    this.visited.clear();
+    this.chainQueue = [];
+
+    const start = getRandomEnemy();
+    if (!start) {
+      logMessage("⚡ Chain Lightning fizzles — no targets!");
+      this.active = false;
+      return;
+    }
+
+    const { enemy, row, col } = start;
+    this.chainQueue.push({ enemy, row, col });
+    this.remainingDelay = 0;
+
+    if (!state.activeHeroSpells) state.activeHeroSpells = [];
+    state.activeHeroSpells.push(this);
+  },
+
+  update: function (delta) {
+    if (!this.active) return;
+
+    this.remainingDelay -= delta;
+    if (this.remainingDelay > 0) return;
+
+    if (this.chainQueue.length === 0) {
+      this.finishCast();
+      return;
+    }
+
+    // Process all queued targets at this "jump" level (fork)
+    const currentBatch = [...this.chainQueue];
+    this.chainQueue = [];
+
+    for (const { enemy, row, col } of currentBatch) {
+      if (!enemy || enemy.hp <= 0 || this.visited.has(enemy.uniqueId)) continue;
+      this.strikeTarget(enemy, row, col);
+    }
+
+    // Apply delay before next wave of forks
+    this.remainingDelay = 0.18;
+  },
+
+  strikeTarget: function (enemy, row, col) {
+    this.visited.add(enemy.uniqueId);
+
+    const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
+    const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+    damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+    showFloatingDamage(row, col, skillDamageObject);
+    handleSkillAnimation("chainLightning", row, col);
+
+    // Find all adjacent same-element targets
+    const forks = this.findNextTargets(row, col, enemy.elementType);
+    if (forks.length > 0) {
+      logMessage(`⚡ Lightning forks to ${forks.length} nearby target${forks.length > 1 ? "s" : ""}!`);
+      this.chainQueue.push(...forks);
+    }
+  },
+
+  findNextTargets: function (row, col, elementType) {
+    const adjacent = getAdjacentEnemies(row, col);
+    return adjacent.filter(({ enemy }) =>
+      enemy.elementType === elementType &&
+      enemy.hp > 0 &&
+      !this.visited.has(enemy.uniqueId)
+    );
+  },
+
+  finishCast: function () {
+    this.active = false;
+    const i = state.activeHeroSpells.indexOf(this);
+    if (i !== -1) state.activeHeroSpells.splice(i, 1);
+    logMessage("⚡ Chain Lightning fades out.");
+  },
+}
 
 
 ];

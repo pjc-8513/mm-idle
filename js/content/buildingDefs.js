@@ -249,6 +249,22 @@ export const buildings = [
       { id: "graveyard", level: 1 }
     ]
   },
+  {
+  id: "nighonTunnels",
+    name: "Nighon Tunnels",
+    reqHeroLevel: 5,
+    level: 0,
+    goldCost: 400,
+    gemCost: 0,
+    goldIncomePerHit: 1,
+    gemPerSecond: 0,
+    upgradedClasses: { id: "warlock"},
+    buildingRequired: [
+      { id: "labyrinth", level: 5 },
+      { id: "darkTower", level: 5 },
+      { id: "grove", level: 5 }
+    ]
+  },
   { id: "castle",
     name: "Castle",
     image: "assets/images/buildings/castle.png",

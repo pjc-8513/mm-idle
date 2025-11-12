@@ -39,6 +39,12 @@ function handleSummonExpired(summon){
     if (frostBiteSpell) {
       frostBiteSpell.activate();
     }
+  } else if (summon.name === "Lesser Devil") {
+    const eclipse = abilities.find(a => a.id === "eclipse");
+    if (eclipse && eclipse.onLesserDevilExpire){
+      console.log('handling lesserDevilExpire');
+      eclipse.onLesserDevilExpire(summon);
+    }
   }
 }
 
@@ -508,6 +514,20 @@ export const abilities = [
             emit("requestSummon", { summonKey: "angel", class: "cleric" });
         }
       },
+      {
+        id: "summonLesserDevil",
+        name: "Summon Lesser Devil",
+        type: "active",
+        resonance: "dark",
+        //description: `Summons an Angel to fight alongside you for 15 seconds. Summon duration refreshed on any heal event`,
+        cooldown: 20000,
+        class: "warlock",
+        activate: function () {
+            const lesserDevil = partyState.party.find(c => c.id === "lesserDevil");
+            if (lesserDevil) return; // already summoned
+            emit("requestSummon", { summonKey: "lesserDevil", class: "warlock" });
+        }
+      },
 
     {
         id: "feastOfAges",
@@ -528,29 +548,30 @@ export const abilities = [
         activate: function (attacker, target, context) {
             const enemies = getActiveEnemies();
             if (!enemies.length) return;
-            let totalDrained = 0;
+            //let totalDrained = 0;
             enemies.forEach(enemy => {
               // Drain 5% of each enemy's current HP -- nay, 2%
               //const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
               const drained = (enemy.hp * 0.02) + attacker.stats.attack;
               //console.log(`[vampire] drained each enemy for ${drained}`);
               damageEnemy(enemy, drained, this.resonance);
-              totalDrained += drained;
+              //totalDrained += drained;
               handleSkillAnimation("feastOfAges", enemy.position.row, enemy.position.col);
               //showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
               });
           // Store drained HP for later conversion
           //if (!attacker.storedHP) return;
-          this.storedHP += totalDrained;
+          //this.storedHP += totalDrained;
 
           // Small visual/log feedback
-          logMessage(`🩸 Vampire feasts, draining ${Math.round(totalDrained)} HP total.`);
+          //logMessage(`🩸 Vampire feasts, draining ${Math.round(totalDrained)} HP total.`);
         },
 
       onVampireExpire: function(summon){
         //console.log("💀 Vampire expires: releasing stored essence.");
           // Convert stored HP into time (e.g., 1s per 500 HP drained)
-        const secondsRestored = Math.floor(this.storedHP / 500);
+        //const secondsRestored = Math.floor(this.storedHP / 500);
+        const secondsRestored = 5;
         //console.log(`Vampire returns ${secondsRestored}s of stolen time using ${this.storedHP} worth of storedHP.`);
         if (secondsRestored > 0) {
           addWaveTime(secondsRestored);
@@ -610,6 +631,8 @@ export const abilities = [
               skillDamageRatio * undeadStacks, 
               enemy);
             damageEnemy(enemy, damagePayload.damage, resonance);
+            showFloatingDamage(enemy.position.row, enemy.position.col, damagePayload);
+            if (enemy.hp <= 0) renderAreaPanel();
             //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt ${damagePayload.damage} damage based on undead counters.`);
             // Reset undead counters
             enemy.counters["undead"] = 0;
@@ -675,7 +698,7 @@ export const abilities = [
         sparksSpell.activate(this.skillLevel);
       }
     },
-            {
+    {
       // falconer ability placeholder - used for spritepath for hero spell and archer class
         id: "falconer",
         name: "Falconer",
@@ -753,6 +776,25 @@ export const abilities = [
         const earthquake = heroSpells.find(spell => spell.id === "earthquake");
         //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
         earthquake.activate();
+      }
+    },
+    {
+        id: "fireball",
+        name: "Fireball",
+        type: "active",
+        resonance: "fire",
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },         
+        cooldown: 8500,
+        //description: `Deals ${skillBaseDamage}% of attack in physical damage to every enemy on the same column as target`,
+        spritePath: 'assets/images/sprites/flame_arch.png',
+        class: "lesserDevil",
+        activate: function() {
+        const fireballSpell = heroSpells.find(spell => spell.id === "fireball");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        fireballSpell.activate(this.skillLevel);
       }
     },
       {
@@ -932,26 +974,28 @@ export const abilities = [
     }
     },
     {
-        id: "smite",
-        name: "Smite",
+        id: "eclipse",
+        name: "Eclipse",
         type: "active",
-        resonance: "light",
+        resonance: "dark",
         //skillBaseDamage: 180,
-        tier: 3,
+        tier: 5,
         get skillLevel(){
           const character = partyState.party.find(c => c.id === this.class);
           return character ? character.level : 1; // or some other default value
         },
         //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
-        spritePath: 'assets/images/sprites/sparks.webp',
+        spritePath: 'assets/images/sprites/life_drain.png',
         cooldown: 7500,
-        class: "templar",
-        activate: function (attacker, target, context) {
+        class: "lesserDevil",
+        onLesserDevilExpire: function (summon) {
+            if (summon.name !== "Lesser Devil") return;
             const enemies = getActiveEnemies();
             if (!enemies.length) return;
+            applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
             enemies.forEach(enemy => {
-              const vulnerableTypes = ["undead", "demon"];
-              const vulnerableElements = ["undead", "poison", "dark", "fire"];
+              const vulnerableTypes = ["elemental", "humanoid"];
+              const vulnerableElements = ["light", "physical", "water", "earth"];
               if (
                   vulnerableTypes.includes(enemy.type) ||
                   vulnerableElements.includes(enemy.elementType)
@@ -960,12 +1004,12 @@ export const abilities = [
                 const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
                 
                 //console.log(skillDamageRatio);
-                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+                const skillDamageObject = calculateSkillDamage(summon, this.resonance, skillDamageRatio, enemy);
                 skillDamageObject.damage *= bonus;
-                console.log('smite damage: ', skillDamageObject.damage);
+                console.log('eclipse damage: ', skillDamageObject.damage);
                 const damage = skillDamageObject.damage;
                 damageEnemy(enemy, damage, this.resonance);
-                handleSkillAnimation("splash", enemy.position.row, enemy.position.col);
+                handleSkillAnimation("feastOfAges", enemy.position.row, enemy.position.col);
                 showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
                 if (enemy.hp <= 0) renderAreaPanel();
               }
@@ -993,7 +1037,73 @@ export const abilities = [
         rage.activate(this.skillLevel);
       }
     },
+        {
+    id: "chainLightning",
+      name: "Chain Lightning",
+      type: "active",
+      resonance: "air",
+      //skillBaseDamage: 200,
+      tier: 2,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      spritePath: 'assets/images/sprites/sparks.webp',
+      cooldown: 2000,
+      class: "warlock",
+      activate: function() {
+        console.log('activating chainLightning');
+        const chainLightning = heroSpells.find(spell => spell.id === "chainLightning");
+        //if (landslideSpell) console.log("[druid landslide] activating landslide hero spell");
+        chainLightning.activate(this.skillLevel);
+      }
+    },
+  {
+      id: "incinerate",
+      name: "Incinerate",
+      type: "active",
+      class: "warlock",
+      description: "Totals all fire and air counters and deals damage based on total amount. Consumes all counters.",
+      spritePath: 'assets/images/sprites/flamePillar.webp',
+      cooldown: 18000,
+      resonance: "fire",
+      //defaultBonus: 300, // base % damage per counter
+      tier: 3,
+      get skillLevel(){
+        const character = partyState.party.find(c => c.id === this.class);
+        return character ? character.level : 1; // or some other default value
+      },
+      //perLevelBonus: 50, // extra % per level
+      activate: function (attacker) {
+        
+        const resonance = this.resonance;
+        //const basePercent = this.defaultBonus + (this.perLevelBonus * (attacker.level || 1));
+        applyVisualEffect('strobe-flash', 0.8);  // Ghost dragon
+        //applyVisualEffect('dark-flash', 0.8);
 
+        for (let row = 0; row < state.enemies.length; row++) {
+          for (let col = 0; col < state.enemies[row].length; col++) {
+            const enemy = state.enemies[row][col];
+            if (!enemy || enemy.hp <= 0) continue;
+            const airStacks = enemy.counters["air"] || 0;
+            const fireStacks = enemy.counters["fire"] || 0;
+            if (fireStacks <= 0 && airStacks <= 0) continue;
+            const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+            const damagePayload = calculateSkillDamage(attacker, 
+              resonance, 
+              skillDamageRatio * (fireStacks + airStacks), 
+              enemy);
+            damageEnemy(enemy, damagePayload.damage, resonance);
+            handleSkillAnimation("flamePillar", row, col);
+            showFloatingDamage(enemy.position.row, enemy.position.col, damagePayload);
+            if (enemy.hp <= 0) renderAreaPanel();
+            //console.log(`[Soul Detonation] Triggered by ${attacker.name}, dealt ${damagePayload.damage} damage based on undead counters.`);
+            // Reset undead counters
+            enemy.counters = {};
+          }
+        }
+      }
+    },
 
 ];
 

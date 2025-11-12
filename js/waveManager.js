@@ -164,9 +164,14 @@ on("enemyDefeated", ({ enemy }) => {
 on("waveStarted", () => {
   const heal = abilities.find(a => a.id === "heal");
   if (heal) heal.triggeredThisWave = false;
-  const minotaur = partyState.party.find(c => c.id === "minotaur");
+  const rage = state.activeHeroSpells.find(c => c.id === "rage");
   const rageSkill = heroSpells.find(s => s.id === "rage");
-  if (minotaur && rageSkill) rageSkill.cleanup();
+  if (rage && rageSkill) rageSkill.cleanup();
+  const warlock = partyState.party.find(c=> c.id ==="warlock");
+  if (warlock) {
+    const summonLesserDevil = abilities.find(a => a.id ==="summonLesserDevil");
+    if (summonLesserDevil) summonLesserDevil.activate();
+  }
 });
 
 // NEW: Listen for ANY heal event and trigger cleric's damage
