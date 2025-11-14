@@ -512,7 +512,14 @@ const areaAssets = {
   mireOfTheDamned: ["spider.webp", "skeletonArcher.webp", "harpy.webp", "willow.webp", "spectre.webp", "snergle.webp"],
   freeHaven: ["lich.webp", "royalGriffin.webp", "medusa.webp", "emeraldOoze.webp"],
   eelInfestedWaters:["frostDrake.webp", "waterSpirit.webp", "seaTerror.webp", "hydra.webp"],
-  silverCove:["warlock.webp", "earthElemental.webp", "chimera.webp", "diamondGargoyle.webp"]
+  silverCove:["warlock.webp", "earthElemental.webp", "chimera.webp", "diamondGargoyle.webp"],
+  frozenHighlands:["deathKnight.webp", "frostDrake.webp", "chimera.webp", "ogre.webp", "harpy.webp"],
+  blackshire:["werewolf.webp", "goldDragon.webp", "mage.webp", "willow.webp"],
+  kriegspire:["basilisk.webp", "flyingEye.webp", "minotaur.webp", "devilSpawn.webp", "earthElemental"],
+  paradiseValley:["titan.webp", "angel.webp", "hydra.webp", "spectre.webp"],
+  hermitIsle:["seaTerror.webp", "waterSpirit.webp", "lich.webp", "mage.webp"],
+  dragonSand:["goldDragon.webp", "frostDrake.webp", "titan.webp"],
+  sweetWater:["angel.webp", "demonQueen.webp", "devilSpawn.webp", "flyingEye.webp"],
   // ...
 };
 
