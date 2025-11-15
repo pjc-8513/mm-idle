@@ -362,6 +362,20 @@ export const ENEMY_TEMPLATES = {
     weaknesses: ["fire"],
     description: "Nuisance druid common throughout the land."
   },
+  fireElemental: {
+    id: "fireElemental",
+    baseName: "Fire Elemental",
+    type: "elemental",
+    elementType: "fire",
+    tier: 1,
+    speed: 2,
+    maxMp: 15,
+    row: 0,
+    resistances: ["earth"],
+    image: "assets/images/enemies/efreet.webp",
+    weaknesses: ["water"],
+    description: "Nuisance fire elemental common throughout the land."
+  },
   ogre: {
     id: "ogre",
     baseName: "Ogre",
