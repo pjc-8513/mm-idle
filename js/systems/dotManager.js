@@ -110,7 +110,14 @@ function applyDOTDamage(enemy, row, col, deltaTime) {
   //  console.log(`[DOT] damagePerTick: ${damagePerTick},
   //      duration: ${duration}, elapsed: ${elapsed}`);  
     // Apply the damage
-    damageEnemy(enemy, damagePerTick * DOT_TICK_INTERVAL, type);
+  const damageObject = {
+    damage: damagePerTick * DOT_TICK_INTERVAL,
+    isCritical: false,
+    resonance: null,
+    multiplier: 0,
+    elementalMatchup: null
+  };
+    damageEnemy(enemy, damageObject, type);
     if (enemy.hp <= 0) {
       renderAreaPanel();
     }

@@ -292,6 +292,24 @@ export function calculateAttackInterval(partyMember) {
   return Math.max(500, COMBAT_CONFIG.BASE_ATTACK_INTERVAL - (speed * COMBAT_CONFIG.SPEED_SCALING_FACTOR));
 }
 
+// --- Level Difference Dampening ---
+function getLevelDampening(attackerLevel, targetLevel) {
+  const delta = targetLevel - attackerLevel; // positive = target stronger
+  const k = 0.08;   // how punishing being underleveled is
+  const k2 = 0.015; // how rewarding being overleveled is
+
+  if (delta > 0) {
+    // You are weaker → damage reduced
+    return 1 / (1 + delta * k);
+  } else if (delta < 0) {
+    // You are stronger → mild damage bonus
+    return 1 + (-delta * k2);
+  } else {
+    return 1; // same level
+  }
+}
+
+
 /**
  * Calculate damage for an attack
  * @param {Object} attacker - Party member attacking
@@ -383,8 +401,10 @@ function calculateDamage(attacker, target) {
  * @returns 
  */
 export function calculateSkillDamage(attacker, resonance, skillDamageRatio, target) {
-  // check for enemy immunity (elementals are immune to their own element)
-  if (target.elementType === resonance && target.type === 'elemental') {
+  // check for enemy immunity (elementals, dragons, and demons are immune to their own element)
+  if ((target.elementType === resonance && target.type === 'elemental')||
+      (target.elementType === resonance && target.type === 'dragon')||
+      (target.elementType === 'dark' && target.type === 'demon')) {
             return {
               damage: 0,
               isCritical: false,
@@ -422,7 +442,12 @@ export function calculateSkillDamage(attacker, resonance, skillDamageRatio, targ
     attacker.stats.weaknessBonus || 0
   );
 
-  const finalDamage = Math.max(1, Math.floor(skillDamage * elementalMultiplier));
+  const levelMultiplier = getLevelDampening(attacker.level, target.level);
+
+  const finalDamage = Math.max(
+    1,
+    Math.floor(skillDamage * elementalMultiplier * levelMultiplier)
+  );
 
   // console.log(`[Skill Damage] Final: ${finalDamage} (${resonance} vs ${target.elementType})`);
   
@@ -443,9 +468,10 @@ export function calculateSkillDamage(attacker, resonance, skillDamageRatio, targ
  * @returns 
  */
 export function calculateHeroSpellDamage(resonance, skillDamageRatio, target) {
-    // check for enemy immunity (elementals are immune to their own element)
-    
-  if (target.elementType === resonance && target.type === 'elemental') {
+  // check for enemy immunity (elementals, dragons, and demons are immune to their own element)
+  if ((target.elementType === resonance && target.type === 'elemental')||
+      (target.elementType === resonance && target.type === 'dragon')||
+      (target.elementType === 'dark' && target.type === 'demon')) {
     console.log(`[immune check]: ${target.elementType} vs ${resonance}`);
             return {
               damage: 0,
@@ -516,6 +542,7 @@ export function executeAttack(attacker) {
   }
 
   const { position, enemy } = currentTarget;
+  
   const damageResult = calculateDamage(attacker, enemy);
     // ✅ Award hit income
   const income = incomeSystem.applyHitIncome(attacker, damageResult.damage);
@@ -528,7 +555,7 @@ export function executeAttack(attacker) {
   
   
   // Apply damage
-  const success = damageEnemy(enemy, damageResult.damage, attacker.resonance);
+  const success = damageEnemy(enemy, damageResult, attacker.resonance);
 
   // Get canvas position for this enemy
   const pos = getEnemyCanvasPosition(position.row, position.col);

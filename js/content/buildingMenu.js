@@ -47,20 +47,37 @@ export const BUILDING_MENUS = {
     const canAfford = state.resources.gold >= cost;
     const btnColor = canAfford ? "green" : "red";
 
-    return `
-      <h3>Training Center</h3>
-        <div class="building-stats">
-        <p>Need some training?</p>
-        <p>Cost: <strong>${cost} gold</strong></p>
-        </div>
-        <button 
-          style="background-color: ${btnColor};" 
-          onclick="exchangeGoldForExp('${building.id}')"
-        >
-          Train for EXP
-        </button>
-      </div>
-    `;
+  return `
+    <h3>Training Center</h3>
+    <div class="building-stats">
+      <p>Need some training?</p>
+      <p>Cost per training: <strong>${cost} gold</strong></p>
+    </div>
+
+    <div class="training-buttons">
+      <button 
+        style="background-color: ${state.resources.gold >= cost ? "green" : "red"};" 
+        onclick="exchangeGoldForExp('${building.id}', 1)"
+      >
+        Train x1
+      </button>
+
+      <button 
+        style="background-color: ${state.resources.gold >= cost * 10 ? "green" : "red"};" 
+        onclick="exchangeGoldForExp('${building.id}', 10)"
+      >
+        Train x10
+      </button>
+
+      <button 
+        style="background-color: ${state.resources.gold >= cost * 100 ? "green" : "red"};" 
+        onclick="exchangeGoldForExp('${building.id}', 100)"
+      >
+        Train x100
+      </button>
+    </div>
+  `;
+
   },
   blacksmith: (building) => {
         // 🔍 Find building info in state.buildings array
@@ -109,9 +126,9 @@ library: (building) => {
     const bonusPercent = ((modifier - 1) * 100).toFixed(0);
     const currentLevel = Math.round((modifier - 1) / 0.10); // Calculate upgrade level
     
-    // Base cost is 20, increases by 50% per level
+    // Base cost is 20, increases by 20% per level
     const baseCost = 20;
-    const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
+    const upgradeCost = Math.floor(baseCost * Math.pow(1.2, currentLevel));
     
     const canAfford = runeState.crystals[elem.resource] >= upgradeCost;
     const btnColor = canAfford ? elem.color : '#333';
@@ -337,22 +354,35 @@ function unitProducingMenu(building) {
 }
 
 // --- Training function ---
-window.exchangeGoldForExp = function (buildingId) {
-  const cost = TRAINING_COST();
+window.exchangeGoldForExp = function (buildingId, count = 1) {
   const trainingLevel = getBuildingLevel(buildingId);
-  TRAINING_EXP_GAIN = 50 + (trainingLevel - 1) * 10; // Increase EXP gain with building level
-  if (state.resources.gold >= cost) {
+  TRAINING_EXP_GAIN = 50 + (trainingLevel - 1) * 10;
+
+  let trainingsPerformed = 0;
+  let totalExp = 0;
+  let totalGoldSpent = 0;
+
+  for (let i = 0; i < count; i++) {
+    const cost = TRAINING_COST();  // cost increases as hero level increases
+
+    if (state.resources.gold < cost) break;
+
     state.resources.gold -= cost;
-    logMessage("That's the ticket!");
-    emit("addHeroExp", TRAINING_EXP_GAIN);
+    totalGoldSpent += cost;
+    totalExp += TRAINING_EXP_GAIN;
+    trainingsPerformed++;
+
     emit("goldChanged", state.resources.gold);
-  } else {
-    // Optional feedback (e.g. play a sound, flash red, etc.)
-   // console.log("Not enough gold!");
-    logMessage("Not enough gold!");
   }
 
+  if (trainingsPerformed > 0) {
+    logMessage(`Trained ${trainingsPerformed}x for ${totalExp} EXP (spent ${totalGoldSpent} gold).`);
+    emit("addHeroExp", totalExp);
+  } else {
+    logMessage("Not enough gold!");
+  }
 };
+
 
 function renderPartyAssignment(building) {
   const unlockedSlots = getUnlockedInnSlots();
@@ -459,9 +489,9 @@ window.upgradeLibraryElement = function(elementId) {
   const modifier = partyState.elementalDmgModifiers[elementId] || 1;
   const currentLevel = Math.round((modifier - 1) / 0.10);
   
-  // Calculate cost (base 20, increases 50% per level)
+  // Calculate cost (base 20, increases 20% per level)
   const baseCost = 20;
-  const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
+  const upgradeCost = Math.floor(baseCost * Math.pow(1.2, currentLevel));
   
   // Determine which resource to use (all use gold for now, but easily extensible)
   const resourceType = elementId;

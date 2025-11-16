@@ -1,4 +1,4 @@
-import { calculateHeroSpellDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, getAdjacentEnemies } from '../systems/combatSystem.js';
+import { calculateHeroSpellDamage, calculateSkillDamage, getActiveEnemies, getEnemiesBasedOnSkillLevel, getEnemiesInColumn, getEnemiesInRow, getRandomEnemy, getAdjacentEnemies } from '../systems/combatSystem.js';
 import { damageEnemy } from '../waveManager.js';
 import { handleSkillAnimation } from '../systems/animations.js';
 //import { floatingTextManager } from '../systems/floatingtext.js';
@@ -61,11 +61,11 @@ export const heroSpells = [
             enemies.forEach(enemy => {
             const darkCount = enemy.counters["dark"] || 0;
             const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-            const skillDamage = skillDamageObject.damage * darkCount;
+            skillDamageObject.damage = skillDamageObject.damage * darkCount;
 
 
             if (darkCount > 0) {
-                damageEnemy(enemy, skillDamage, this.resonance);
+                damageEnemy(enemy, skillDamageObject, this.resonance);
                 //handleSkillAnimation("moonbeam", enemy.position.row, enemy.position.col);
                 showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
             }
@@ -117,12 +117,13 @@ export const heroSpells = [
             enemy.counters = { [newType]: totalCounters };
             if (totalCounters>0)console.log(`total counters: ${totalCounters}`);
             const skillDamageObject = calculateHeroSpellDamage(newType, skillDamageRatio, enemy);
-            const skillDamage = (skillDamageObject.damage * totalCounters) * damageMultipliers[newType];
+            skillDamageObject.damage = (skillDamageObject.damage * totalCounters) * damageMultipliers[newType];
+            
             //console.log(`Brilliant Light converting to ${newType} counters, dealing ${skillDamage} damage.`);
             //console.log(`formula damage: (${skillDamageObject.damage} * ${totalCounters}) * ${damageMultipliers[newType]}`);
             //console.log('damage object: ', skillDamageObject)
-            if (skillDamage > 0){
-              damageEnemy(enemy, skillDamage, newType);
+            if (skillDamageObject.damage > 0){
+              damageEnemy(enemy, skillDamageObject, newType);
               //handleSkillAnimation("brilliantLight", enemy.row, enemy.col);
               showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
               targetsHit = true;
@@ -160,7 +161,7 @@ export const heroSpells = [
             //console.log('Damaging enemy: ', enemy);
             const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
-            damageEnemy(enemy, skillDamage.damage, this.resonance);
+            damageEnemy(enemy, skillDamage, this.resonance);
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
             //if (enemy.hp<=0) updateEnemiesGrid();
@@ -195,7 +196,7 @@ export const heroSpells = [
             //console.log('Damaging enemy: ', enemy);
             const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
            // console.log(`Calculated skill damage: ${skillDamage.damage}`);
-            damageEnemy(enemy, skillDamage.damage, this.resonance);
+            damageEnemy(enemy, skillDamage, this.resonance);
             //handleSkillAnimation("breathOfDecay", enemy.row, enemy.col);
             showFloatingDamage(enemy.position.row, enemy.position.col, skillDamage); // show floating text
             if (spellHandState.lastHeroSpellResonance === "physical" && enemy.hp > 0) {
@@ -296,7 +297,8 @@ export const heroSpells = [
         const dmgObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
         let dmg = dmgObject.damage;
         if (totalBonus > 0) dmg = dmgObject.damage * totalBonus;
-        damageEnemy(enemy, dmg, this.resonance);
+        dmgObject.damage = dmg;
+        damageEnemy(enemy, dmgObject, this.resonance);
         //handleSkillAnimation("earthquake", newRow, newCol);
         showFloatingDamage(newRow, newCol, dmgObject);
         delete enemy.counters["earth", "physical"]; // Consume earth and physical counters
@@ -364,8 +366,8 @@ export const heroSpells = [
 
       if (row !== null && col !== null) {
         const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio * dmgMultiplier, enemy);
-        const dmg = skillDamageObject.damage;
-        damageEnemy(enemy, dmg, this.resonance);
+        
+        damageEnemy(enemy, skillDamageObject, this.resonance);
         handleSkillAnimation("flush", row, col);
         showFloatingDamage(row, col, skillDamageObject);
         //updateEnemiesGrid();
@@ -448,8 +450,8 @@ export const heroSpells = [
 
       if (row !== null && col !== null) {
         const skillDamageObject = calculateHeroSpellDamage(this.resonance, base, enemy);
-        const dmg = skillDamageObject.damage;
-        damageEnemy(enemy, dmg, this.resonance);
+        
+        damageEnemy(enemy, skillDamageObject, this.resonance);
         handleSkillAnimation("destroyUndead", row, col);
         showFloatingDamage(row, col, skillDamageObject);
         //console.log(`${this.name} deals ${dmg} to undead at (${row}, ${col})`);
@@ -591,7 +593,7 @@ export const heroSpells = [
 
     if (enemy && enemy.hp > 0) {
       const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-      damageEnemy(enemy, skillDamage.damage, this.resonance);
+      damageEnemy(enemy, skillDamage, this.resonance);
       handleSkillAnimation("followThrough", randRow, randCol);
       showFloatingDamage(randRow, randCol, skillDamage);
       //updateEnemiesGrid();
@@ -618,9 +620,10 @@ export const heroSpells = [
   unlocked: true,
   description: "Crushes enemies column by column. If it defeats an enemy, the landslide continues to the next column (max 3).",
   icon: "assets/images/icons/earthquake.webp",
-
-  activate: function (modifiedLevel = this.skillLevel) {
+  attacker: null,
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
     this.classSkillLevel = modifiedLevel;
+    this.attacker = caster;
     spellHandState.lastHeroSpellResonance = this.resonance;
     shakeScreen(500, 5); // duration: 1000ms, intensity: 10px
     logMessage("🌋 Casting Landslide!");
@@ -665,12 +668,17 @@ export const heroSpells = [
     const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     let defeated = false;
     enemies.forEach(({ enemy, row, col }) => {
-      const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+    let skillDamage;
+    if (this.attacker === null){ 
+      skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+    } else {
+      skillDamage = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, enemy);     
+    }
 
       // Apply visual and damage
       showFloatingDamage(row, col, skillDamage);
       const beforeHP = enemy.hp;
-      damageEnemy(enemy, skillDamage.damage, this.resonance);
+      damageEnemy(enemy, skillDamage, this.resonance);
 
       if (beforeHP > 0 && enemy.hp <= 0) {
         defeated = true;
@@ -747,8 +755,8 @@ export const heroSpells = [
     targets.forEach(({ row, col }) => {
       const enemy = state.enemies[row][col];
       const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-      const damage = skillDamageObject.damage;
-      damageEnemy(enemy, damage, this.resonance);
+      
+      damageEnemy(enemy, skillDamageObject, this.resonance);
       if (spellHandState.lastHeroSpellResonance === "fire") {
         // Apply DOT for 5 seconds
         applyDOT(enemy, "fire", this.dotDamage, 5);
@@ -827,8 +835,8 @@ export const heroSpells = [
 
       if (enemy && enemy.hp > 0) {
         const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-        const damage = skillDamageObject.damage;
-        damageEnemy(enemy, damage, this.resonance);
+        
+        damageEnemy(enemy, skillDamageObject, this.resonance);
         handleSkillAnimation("flameArch", row, col);
         showFloatingDamage(row, col, skillDamageObject);
         if (spellHandState.lastHeroSpellResonance === "fire") {
@@ -919,8 +927,8 @@ export const heroSpells = [
 
       if (enemy && enemy.hp > 0) {
         const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-        const damage = skillDamage.damage;
-        damageEnemy(enemy, damage, this.resonance);
+        
+        damageEnemy(enemy, skillDamage, this.resonance);
         handleSkillAnimation("lifeDrain", row, col);
         showFloatingDamage(row, col, skillDamage);
         logMessage(`☠️ Reaper strikes enemy at (${row}, ${col})`);
@@ -993,8 +1001,9 @@ export const heroSpells = [
   gemCost: 3,
   icon: "assets/images/icons/breath.png",
   description: "Attempts to corrupt non-undead enemies, turning them into undead with a 25% chance. Corrupted enemies suffer from a decaying DoT. Bosses are immune.",
-
-  activate: function (modifiedLevel = this.skillLevel) {
+  attacker: null,
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
+    this.attacker = caster;
     this.classSkillLevel = modifiedLevel;
     const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     const grid = state.enemies;
@@ -1016,7 +1025,12 @@ export const heroSpells = [
         if (necromancer) corruptionChance = 0.35;
         if (deterministicChance(corruptionChance)) {
           // Apply DoT *before* changing type
-          const skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+          let skillDamage;
+          if (this.attacker === null){ 
+            skillDamage = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+          } else {
+            skillDamage = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, enemy);     
+          }
           applyDOT(enemy, "undead", skillDamage.damage, 5);
           enemy.type = "undead";
           infectedCount++;
@@ -1082,15 +1096,16 @@ export const heroSpells = [
   unlocked: true,
   description: "Releases 4 spark charges that each strike a random enemy. Consecutive Sparks increase damage.",
   icon: "assets/images/icons/chain.png",
-
+  attacker: null,
   active: false,
   sparksRemaining: 0,
   remainingDelay: 0,
 
-  activate: function (modifiedLevel=this.skillLevel) {
+  activate: function (modifiedLevel=this.skillLevel, caster=null) {
     applyVisualEffect('light-flash', 0.4);
     logMessage("⚡ Casting Spark!");
     this.classSkillLevel = modifiedLevel;
+    this.attacker = caster;
     // ===== COMBO STACK HANDLING =====
     if (spellHandState.lastHeroSpellId === this.id) {
       spellHandState.sparkComboCount = Math.min(spellHandState.sparkComboCount + 1, 5);
@@ -1144,17 +1159,17 @@ export const heroSpells = [
     }
 
     const { enemy, row, col } = target;
-
-    const skillDamageObject = calculateHeroSpellDamage(
-      this.resonance,
-      skillDamageRatio,
-      enemy
-    );
+    let skillDamageObject;
+    if (this.attacker === null){ 
+      skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, target);
+    } else {
+      skillDamageObject = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, target);     
+    }
     //console.log(`combo: ${skillDamageObject.damage}`);
     
     const dmg = skillDamageObject.damage * this.currentComboMult;
     skillDamageObject.damage = dmg;
-    damageEnemy(enemy, dmg, this.resonance);
+    damageEnemy(enemy, skillDamageObject, this.resonance);
     handleSkillAnimation("sparks", row, col);
     showFloatingDamage(row, col, skillDamageObject);
     //updateEnemiesGrid();
@@ -1235,9 +1250,10 @@ export const heroSpells = [
   unlocked: true,
   description: "A boulder effecting a 2x2 grid.",
   icon: "assets/images/icons/earthquake.webp",
-
-  activate: function (modifiedLevel = this.skillLevel) {
+  attacker: null,
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
     this.classSkillLevel = modifiedLevel;
+    this.attacker = caster;
     const activeEnemies = getActiveEnemies();
     if (activeEnemies.length === 0) {
       logMessage(`No enemies available for ${this.name}`);
@@ -1280,9 +1296,14 @@ export const heroSpells = [
     // Apply damage + effects
     targets.forEach(({ row, col }) => {
       const enemy = state.enemies[row][col];
-      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-      const damage = skillDamageObject.damage;
-      damageEnemy(enemy, damage, this.resonance);
+      let skillDamageObject;
+      if (this.attacker === null){ 
+        skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+      } else {
+        skillDamageObject = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, enemy);     
+      }
+      
+      damageEnemy(enemy, skillDamageObject, this.resonance);
       showFloatingDamage(row, col, skillDamageObject);  
       //if (enemy.hp <= 0) updateEnemiesGrid();
     });
@@ -1303,9 +1324,10 @@ export const heroSpells = [
   unlocked: true,
   description: "Send a trained falcon to strike the weakest enemy.",
   icon: "assets/images/icons/moonbeam.png",
-
-  activate: function (modifiedLevel = this.skillLevel) {
+  attacker: null,
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
     this.classSkillLevel = modifiedLevel;
+    this.attacker = caster;
     const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
     //applyVisualEffect('slash-flash', 0.4);
     logMessage("🦅 Falconer strikes!");
@@ -1322,18 +1344,18 @@ export const heroSpells = [
 
     const row = target.position.row;
     const col = target.position.col;
+    let skillDamageObject;
+    if (this.attacker === null){ 
+      skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, target);
+    } else {
+      skillDamageObject = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, target);     
+    }
 
-    const skillDamage = calculateHeroSpellDamage(
-      this.resonance,
-      skillDamageRatio,
-      target
-    );
-
-    damageEnemy(target, skillDamage.damage, this.resonance);
+    damageEnemy(target, skillDamageObject, this.resonance);
     handleSkillAnimation("falconer", row, col);
-    showFloatingDamage(row, col, skillDamage);
+    showFloatingDamage(row, col, skillDamageObject);
     if (spellHandState.lastHeroSpellResonance === "physical" && target.hp > 0) {
-      applyDOT(target, this.resonance, skillDamage.damage/2, 5);
+      applyDOT(target, this.resonance, skillDamageObject.damage/2, 5);
       }
     //if (target.hp <=0) updateEnemiesGrid();
 
@@ -1374,8 +1396,8 @@ export const heroSpells = [
       
       const bonus = remaining * 2; // remaining chill intensifies
       const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio + bonus, enemy);
-      const skillDamage = skillDamageObject.damage;
-      damageEnemy(enemy, skillDamage, this.resonance);
+      
+      damageEnemy(enemy, skillDamageObject, this.resonance);
       handleSkillAnimation("sparks", enemy.position.row, enemy.position.col);
       showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
     
@@ -1410,7 +1432,7 @@ export const heroSpells = [
     const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
     const { row, col } = randomEnemy.position;
     const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, randomEnemy);
-    damageEnemy(randomEnemy, skillDamageObject.damage, this.resonance);
+    damageEnemy(randomEnemy, skillDamageObject, this.resonance);
     handleSkillAnimation("flameArch", row, col);
     showFloatingDamage(row, col, skillDamageObject);
     if (randomEnemy.hp <=0) updateEnemiesGrid();
@@ -1433,7 +1455,9 @@ export const heroSpells = [
   description: "Targets damage in a row. Deals more damage if enemy has more light counters than other counter types.",
   icon: "assets/images/icons/brilliant.png",
   active: false,
-  activate: function (target=null, modifiedLevel=null) {
+  attacker: null,
+  activate: function (target=null, modifiedLevel=null, caster=null) {
+    this.attacker = caster;
     this.classSkillLevel = modifiedLevel;
     let skillTarget=target;
     if (skillTarget === null) skillTarget = getRandomEnemy().enemy;
@@ -1468,8 +1492,13 @@ export const heroSpells = [
       console.log(modifiedTier);
       // Now apply damage
       const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
-      const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-      damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+      let skillDamageObject;
+      if (this.attacker === null){ 
+        skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+      } else {
+        skillDamageObject = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, enemy);     
+      }
+      damageEnemy(enemy, skillDamageObject, this.resonance);
       showFloatingDamage(row, col, skillDamageObject);
       if (enemy.hp <=0) updateEnemiesGrid();
     });
@@ -1494,13 +1523,15 @@ export const heroSpells = [
   rageBonus: 0,            // percent damage multiplier (e.g. 0.2 = +20%)
   elapsedWaveTime: 0,      // counts actual combat seconds
   lastBonusThreshold: 0,   // track when next +10s boost applies
+  attacker: null,
   
   /**
    * Called once when player activates Rage skill
    */
-  activate: function (modifiedLevel = this.skillLevel) {
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
     if (this.active) return; // can't double-cast
     //console.log("minotaur rage active");
+    this.attacker = caster;
     this.classSkillLevel = modifiedLevel;
 
     // Reset row target to random or strongest enemy row
@@ -1564,10 +1595,16 @@ export const heroSpells = [
     const totalMult = 1 + this.rageBonus;
     //console.log("minotaur rage striking");
     for (const { enemy, row, col } of enemies) {
-      const dmgObj = calculateHeroSpellDamage(this.resonance, baseRatio, enemy);
+      let dmgObj;
+      if (this.attacker === null){
+        dmgObj = calculateHeroSpellDamage(this.resonance, baseRatio, enemy);
+      } else {
+        dmgObj = calculateSkillDamage(this.attacker, this.resonance, baseRatio, enemy);
+      }
+        
       dmgObj.damage *= totalMult;
 
-      damageEnemy(enemy, dmgObj.damage, this.resonance);
+      damageEnemy(enemy, dmgObj, this.resonance);
       showFloatingDamage(row, col, dmgObj);
       handleSkillAnimation("rage", row, col);
       if (enemy.hp <=0) updateEnemiesGrid();
@@ -1626,11 +1663,12 @@ export const heroSpells = [
   visited: new Set(),
   remainingDelay: 0,
   chainQueue: [],
+  attacker: null,
 
-  activate: function (modifiedLevel = this.skillLevel) {
+  activate: function (modifiedLevel = this.skillLevel, caster=null) {
     //flashScreen('white', 600);
     logMessage("⚡ Chain Lightning crackles through the air!");
-
+    this.attacker = caster;
     this.classSkillLevel = modifiedLevel;
     this.active = true;
     this.visited.clear();
@@ -1677,10 +1715,14 @@ export const heroSpells = [
 
   strikeTarget: function (enemy, row, col) {
     this.visited.add(enemy.uniqueId);
-
+    let skillDamageObject;
     const skillDamageRatio = getSkillDamageRatio(this.id, state.currentWave, this.classSkillLevel);
-    const skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
-    damageEnemy(enemy, skillDamageObject.damage, this.resonance);
+    if (this.attacker === null){ 
+      skillDamageObject = calculateHeroSpellDamage(this.resonance, skillDamageRatio, enemy);
+    } else {
+      skillDamageObject = calculateSkillDamage(this.attacker, this.resonance, skillDamageRatio, enemy);     
+    }
+    damageEnemy(enemy, skillDamageObject, this.resonance);
     showFloatingDamage(row, col, skillDamageObject);
     handleSkillAnimation("chainLightning", row, col);
 

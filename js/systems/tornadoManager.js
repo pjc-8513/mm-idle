@@ -69,7 +69,7 @@ export function updateTornados(delta) {
       const baseDamageObject = calculateHeroSpellDamage("air", skillDamageRatio, currentEnemy);
       t.baseDamage = baseDamageObject.damage / 3;
       baseDamageObject.damage = t.baseDamage;
-      damageEnemy(currentEnemy, t.baseDamage, "air");
+      damageEnemy(currentEnemy, baseDamageObject, "air");
       showFloatingDamage(t.row, t.col, baseDamageObject);
       handleSkillAnimation("tornado", t.row, t.col);
       if (currentEnemy.hp<=0) updateEnemiesGrid();

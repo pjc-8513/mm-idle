@@ -50,23 +50,7 @@ function getRandomPrefix(heroLevel) {
   const unlocked = prefixes.filter(p => heroLevel >= p.unlocks);
   return unlocked.length > 0 ? randomChoice(unlocked).prefix : "";
 }
-
-// waveManager.js
-
-// NOTE: We need to update this function signature to accept the enemy type
-function getEnemyHP(wave, enemyType, isBoss = false) {
-  const W = Math.max(1, wave);
-//  console.log('[Wave] wave#: ', wave);
-  // Base HP
-  let hp = SCALING.baseHP;
-
-  // Core wave growth — softer curve
-  hp *= Math.pow(1.01, W); // instead of 1.035
-
-  // Optional: small zone bumps every 10 waves, mild
-  const zoneBoost = Math.floor((W - 1) / SCALING.zone_length);
-  hp *= Math.pow(1.5, zoneBoost); // instead of 1.5 // 1.15
-
+/*
   // Enemy type flavor multipliers (keep your chart!)
   const typeMult = {
     pest: 0.9,
@@ -78,17 +62,42 @@ function getEnemyHP(wave, enemyType, isBoss = false) {
     construct: 1.2,
     dragon: 1.3,
   }[enemyType] || 1.0;
+  */
+// waveManager.js
 
-  hp *= typeMult;
+// NOTE: We need to update this function signature to accept the enemy type
+function getEnemyHP(wave, enemyType, isBoss = false) {
 
-  // Boss modifier
-  if (isBoss) hp *= 12;
+    const W = Math.max(1, wave);
 
-  // Spike waves (same as before)
-  if (SCALING.spike_set.includes(W)) hp *= SCALING.spike_factor;
+    let hp = SCALING.baseHP;
 
-  return Math.floor(hp);
+    // Core exponential ramp
+    hp *= Math.pow(SCALING.r, W);
+
+    // Zone tiers (mild)
+    const zoneBoost = Math.floor((W - 1) / SCALING.zone_length);
+    hp *= Math.pow(SCALING.zone_multiplier, zoneBoost);
+
+    // Permanent spike tiers
+    const spikeCount = SCALING.spike_set.filter(s => W >= s).length;
+    hp *= Math.pow(SCALING.spike_factor, spikeCount);
+
+    // Polynomial late-game scaling
+    hp *= 1 + Math.pow(W, SCALING.poly_r2) / SCALING.poly_s;
+
+    // Enemy type
+    const typeMult = SCALING.type_r2_adjustments[enemyType] || 1;
+    hp *= 1 + typeMult; // convert adjustment into multiplier
+
+    // Boss scaling
+    if (isBoss) {
+        hp *= SCALING.boss_base_multiplier * (1 + zoneBoost * 0.05);
+    }
+
+    return Math.floor(hp);
 }
+
 
 
 export function initWaveManager() {
@@ -460,7 +469,13 @@ export function checkWaveCleared() {
 }
 
 // Export for use in combat/damage systems
-export function damageEnemy(enemy, damage, element) {
+export function damageEnemy(enemy, damageObject, element) {
+  //console.log(damageObject);
+  //let damageCap = partyState.heroLevel * 1000;
+  //if (damageObject.isCritical) damageCap = partyState.heroLevel * 10000;
+  let damage = damageObject.damage;
+  //console.log(damage);
+  
   //const enemy = state.enemies[row][col];
   if (!enemy || enemy.hp <= 0) return false;
   const applyDmg = Math.round(damage);
