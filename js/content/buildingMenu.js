@@ -1,4 +1,4 @@
-import { state, partyState } from "../state.js";
+import { state, runeState, partyState } from "../state.js";
 import { buildings as BUILDING_DEFS } from './buildingDefs.js';
 import { classes } from "./classes.js";
 import { abilities } from "./abilities.js";
@@ -98,10 +98,10 @@ library: (building) => {
   }
 
   const elements = [
-    { id: 'fire', label: 'Fire', icon: '🔥', color: '#ff4500', resource: 'gold' },
-    { id: 'water', label: 'Water', icon: '💧', color: '#1e90ff', resource: 'gold' },
-    { id: 'air', label: 'Air', icon: '💨', color: '#87ceeb', resource: 'gold' },
-    { id: 'earth', label: 'Earth', icon: '🌍', color: '#8b4513', resource: 'gold' }
+    { id: 'fire', label: 'Fire', icon: '🔥', color: '#ff4500', resource: 'fire' },
+    { id: 'water', label: 'Water', icon: '💧', color: '#1e90ff', resource: 'water' },
+    { id: 'air', label: 'Air', icon: '💨', color: '#87ceeb', resource: 'air' },
+    { id: 'earth', label: 'Earth', icon: '🌍', color: '#8b4513', resource: 'earth' }
   ];
 
   const elementCards = elements.map(elem => {
@@ -109,11 +109,11 @@ library: (building) => {
     const bonusPercent = ((modifier - 1) * 100).toFixed(0);
     const currentLevel = Math.round((modifier - 1) / 0.10); // Calculate upgrade level
     
-    // Base cost is 100, increases by 50% per level
-    const baseCost = 100;
+    // Base cost is 20, increases by 50% per level
+    const baseCost = 20;
     const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
     
-    const canAfford = state.resources[elem.resource] >= upgradeCost;
+    const canAfford = runeState.crystals[elem.resource] >= upgradeCost;
     const btnColor = canAfford ? elem.color : '#333';
     
     return `
@@ -236,7 +236,10 @@ library: (building) => {
   archery: unitProducingMenu,
   temple: unitProducingMenu,
   grove: unitProducingMenu,
-  belltower: unitProducingMenu,
+  bellTower: unitProducingMenu,
+  labyrinth: unitProducingMenu,
+  mageGuild: unitProducingMenu,
+  nighonTunnels: unitProducingMenu,
   magicConflux: (building) => `
     <h3>Magic Conflux</h3>
     <div>
@@ -456,16 +459,16 @@ window.upgradeLibraryElement = function(elementId) {
   const modifier = partyState.elementalDmgModifiers[elementId] || 1;
   const currentLevel = Math.round((modifier - 1) / 0.10);
   
-  // Calculate cost (base 100, increases 50% per level)
-  const baseCost = 100;
+  // Calculate cost (base 20, increases 50% per level)
+  const baseCost = 20;
   const upgradeCost = Math.floor(baseCost * Math.pow(1.5, currentLevel));
   
   // Determine which resource to use (all use gold for now, but easily extensible)
-  const resourceType = 'gold';
+  const resourceType = elementId;
   
-  if (state.resources[resourceType] >= upgradeCost) {
+  if (runeState.crystals[resourceType] >= upgradeCost) {
     // Deduct cost
-    state.resources[resourceType] -= upgradeCost;
+    runeState.crystals[resourceType] -= upgradeCost;
     
     // Apply upgrade
     //partyState.elementalDmgModifiers[elementId] += 0.10;
@@ -477,7 +480,7 @@ window.upgradeLibraryElement = function(elementId) {
     }
     
     logMessage(`${elementId.charAt(0).toUpperCase() + elementId.slice(1)} magic enhanced! +10% damage`);
-    emit("goldChanged", state.resources.gold);
+    emit("crystalChanged", runeState.crystals[elementId]);
     
     // Re-render the library menu
     const dock = document.getElementById("mainDock");

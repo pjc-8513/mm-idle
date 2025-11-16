@@ -11,6 +11,7 @@ import { updateDockIfEnemyChanged } from "./systems/dockManager.js";
 import { openDock, closeDock, DOCK_TYPES } from "./systems/dockManager.js";
 //import { heroSpells } from "./content/heroSpells.js";
 import { drawSpellHand, castSpellFromHand } from "./area.js";
+import { renderRunePanel } from "./runePanel.js";
 
 export function initUI() {
   // panel switching
@@ -184,6 +185,17 @@ export function showPanel(panelId) {
     removeBackgroundElement("sidePanel");
     document.getElementById("sidePanel").classList.add("spellbook-bg");
     renderQuestPanel();
+  }
+
+  if (panelId === "panelRune") {
+    state.activePanel = "panelRune";
+    removeBackgroundElement("game");
+    document.getElementById("game").classList.add("party-bg");
+    removeBackgroundElement("resourceBar");
+    document.getElementById("resourceBar").classList.add("party-bg");
+    removeBackgroundElement("sidePanel");
+    document.getElementById("sidePanel").classList.add("party-bg");
+    renderRunePanel();
   }
 }
 

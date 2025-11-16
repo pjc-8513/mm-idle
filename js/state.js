@@ -126,6 +126,16 @@ export const state = {
   
 };
 
+export const runeState = {
+  grid: [], // 2D array of element types
+  animatingTiles: [], // Tiles currently animating
+  selectedTile: null, // {row, col}
+  isAnimating: false,
+  crystals: { fire: 0, water: 0, air: 0, earth: 0 },
+  comboMultiplier: 1,
+  lastMatchTime: 0
+};
+
 export const quickSpellState = {
   // array of spell IDs currently assigned to quick slots
   registered: [],

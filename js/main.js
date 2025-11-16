@@ -18,6 +18,7 @@ import { initQuestSystem, renderQuestPanel } from './questManager.js';
 import { initSummonSystem } from "./systems/summonSystem.js";
 import { initBuildingMenu } from "./content/buildingMenu.js";
 import { initSpellbookPanel } from "./spellbookPanel.js";
+import { initRunePanel } from "./runePanel.js";
 
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -36,6 +37,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initQuestSystem();
   initBuildingMenu();
   initSpellbookPanel();
+  initRunePanel(); // rune initialize mini game
   
   // Start the game loop
   startGameLoop();
