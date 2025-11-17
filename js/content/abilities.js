@@ -1031,6 +1031,47 @@ export const abilities = [
         }
     },
     {
+        id: "smite",
+        name: "Smite",
+        type: "active",
+        resonance: "light",
+        //skillBaseDamage: 180,
+        tier: 3,
+        get skillLevel(){
+          const character = partyState.party.find(c => c.id === this.class);
+          return character ? character.level : 1; // or some other default value
+        },
+        //description: `Deals ${skillBaseDamage}% of attack in undead damage to every enemy on the same column as target`,
+        spritePath: 'assets/images/sprites/sparks.webp',
+        cooldown: 7500,
+        class: "templar",
+        activate: function (attacker, target, context) {
+            const enemies = getActiveEnemies();
+            if (!enemies.length) return;
+            enemies.forEach(enemy => {
+              const vulnerableTypes = ["undead", "demon"];
+              const vulnerableElements = ["undead", "poison", "dark", "fire"];
+              if (
+                  vulnerableTypes.includes(enemy.type) ||
+                  vulnerableElements.includes(enemy.elementType)
+                ) {
+                const bonus = (vulnerableTypes.includes(enemy.type) && vulnerableElements.includes(enemy.elementType)) ? 2 : 1;
+                const skillDamageRatio = getAbilityDamageRatio(this.id, state.currentWave);
+                
+                //console.log(skillDamageRatio);
+                const skillDamageObject = calculateSkillDamage(attacker, this.resonance, skillDamageRatio, enemy);
+                skillDamageObject.damage *= bonus;
+                console.log('smite damage: ', skillDamageObject.damage);
+                
+                damageEnemy(enemy, skillDamageObject, this.resonance);
+                handleSkillAnimation("splash", enemy.position.row, enemy.position.col);
+                showFloatingDamage(enemy.position.row, enemy.position.col, skillDamageObject);
+                if (enemy.hp <= 0) renderAreaPanel();
+              }
+            });
+        }
+    },
+    {
     id: "rage",
       name: "Rage",
       type: "active",

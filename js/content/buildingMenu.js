@@ -225,6 +225,130 @@ library: (building) => {
   `;
 },
 
+shadowGuild: (building) => {
+  const b = state.buildings.find(b => b.id === building.id);
+  const buildingLevel = b ? b.level : 0;
+
+  if (buildingLevel <= 0) {
+    return `
+      <h3>Shadow Guild</h3>
+      <p>This building hasn't been constructed yet.</p>
+      <p>Build it first in order increase physical, poison, and undead element effectiveness!</p>
+    `;
+  }
+
+  const elements = [
+    { id: 'physical', label: 'Physical', icon: 'assets/images/icons/flash.png', color: '#52474eff', resource: 'physical' },
+    { id: 'poison', label: 'Poison', icon: 'assets/images/icons/moonbeam.png', color: '#4dbd56ff', resource: 'poison' },
+    { id: 'undead', label: 'Undead', icon: 'assets/images/icons/breath.png', color: '#a0399bff', resource: 'undead' },
+  ];
+
+  const elementCards = elements.map(elem => {
+    const modifier = partyState.elementalDmgModifiers[elem.id] || 1;
+    const bonusPercent = ((modifier - 1) * 100).toFixed(0);
+    const currentLevel = Math.round((modifier - 1) / 0.10); // Calculate upgrade level
+    
+    // Base cost is 20, increases by 20% per level
+    const baseCost = 20;
+    const upgradeCost = Math.floor(baseCost * Math.pow(1.2, currentLevel));
+    
+    const canAfford = runeState.crystals[elem.resource] >= upgradeCost;
+    const btnColor = canAfford ? elem.color : '#333';
+    
+    return `
+      <div class="library-element-card" 
+           style="border-color: ${elem.color};">
+        <div class="element-icon" style="color: ${elem.color};">
+          <div class="element-icon">
+            <img src="${elem.icon}" alt="${elem.label} icon" />
+          </div>
+        </div>
+        <div class="element-name">${elem.label}</div>
+        <div class="element-bonus">+${bonusPercent}%</div>
+        <div class="element-cost">${upgradeCost} ${elem.resource}</div>
+        <button 
+          class="element-upgrade-btn"
+          style="background: ${btnColor}; ${!canAfford ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+          onclick="upgradeLibraryElement('${elem.id}')"
+          ${!canAfford ? 'disabled' : ''}
+        >
+          Upgrade
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <h3>Shadow Guild</h3>
+    <div class="building-stats">
+      <p>Invest in the dark arts to increase damage effectiveness!</p>
+    </div>
+    <div class="library-elements-container">
+      ${elementCards}
+    </div>
+    <style>
+      .library-elements-container {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+      .library-element-card {
+        flex: 1;
+        background: rgba(20, 20, 30, 0.6);
+        border: 2px solid #666;
+        border-radius: 8px;
+        padding: 10px 8px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+      .library-element-card:hover {
+        background: rgba(30, 30, 40, 0.8);
+        transform: translateY(-2px);
+      }
+      .element-icon {
+        font-size: 2em;
+        margin-bottom: 6px;
+      }
+      .element-name {
+        font-weight: 600;
+        font-size: 0.95em;
+        margin-bottom: 4px;
+        color: #fff;
+      }
+      .element-bonus {
+        font-size: 0.85em;
+        color: #4ade80;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .element-cost {
+        font-size: 0.8em;
+        color: #fbbf24;
+        margin-bottom: 8px;
+      }
+      .element-upgrade-btn {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 0.85em;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        color: #fff;
+      }
+      .element-upgrade-btn:not(:disabled):hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+      }
+      .element-upgrade-btn:disabled {
+        cursor: not-allowed;
+      }
+    </style>
+  `;
+},
+
   inn: (building) => {
         // 🔍 Find building info in state.buildings array
     const b = state.buildings.find(b => b.id === building.id);

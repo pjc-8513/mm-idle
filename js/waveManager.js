@@ -3,7 +3,7 @@ import { state, partyState, spellHandState } from "./state.js";
 import { getBuildingLevel } from "./town.js";
 import { heroSpells } from "./content/heroSpells.js";
 import { emit, on } from "./events.js";
-import { awardGems } from "./incomeSystem.js";
+import { tryDropCrystal } from "./incomeSystem.js";
 import { abilities } from "./content/abilities.js";
 import { AREA_TEMPLATES } from "./content/areaDefs.js";
 import { ENEMY_TEMPLATES } from "./content/enemyDefs.js";
@@ -111,8 +111,8 @@ export function initWaveManager() {
 // waveManager.js
 on("enemyDefeated", ({ enemy }) => {
   updateEnemiesGrid();
-  // award a gem for each enemy defeated
-  awardGems(enemy.type);
+  // drop logic
+  tryDropCrystal(enemy);
   // Check if all enemies in this column are cleared
   const col = enemy.position.col;
   const columnCleared = state.enemies.every(row => !row[col] || row[col].hp <= 0);

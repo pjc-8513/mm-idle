@@ -373,6 +373,7 @@ function calculateDamage(attacker, target) {
   // console.log('[undead]: ', baseDamage);
   for (const skillId in attacker.skills) {
     const skillDef = abilities.find(a => a.id === skillId);
+    //console.log(skillDef);
     if (skillDef.type === "passive" && skillDef.applyPassive) {
       skillDef.applyPassive(attacker, target, context);
      // console.log(`[attack] base damage before passive ${baseDamage}`);

@@ -236,10 +236,10 @@ export function renderAreaPanel() {
       <div class="area-content">
         <div class="area-main">
           <div class="area-header">
-            <h2 id="areaName">${currentArea.name}</h2>
-            <p id="areaDescription" class="area-description">${currentArea.description}</p>
-            <div class="area-info">
+            <div id="areaName">${currentArea.name} |
+            
               <span id="waveInfo">Wave: ${state.areaWave}/${currentArea.maxWaves}</span>
+            
             </div>
           </div>
           <div class="wave-timer-section">
@@ -278,8 +278,8 @@ export function updateAreaPanel() {
   const currentArea = AREA_TEMPLATES[state.currentArea];
   if (!currentArea) return;
 
-  document.getElementById("areaName").textContent = currentArea.name;
-  document.getElementById("areaDescription").textContent = currentArea.description;
+  //document.getElementById("areaName").textContent = currentArea.name;
+  //document.getElementById("areaDescription").textContent = currentArea.description;
   document.getElementById("waveInfo").textContent = `Wave: ${state.areaWave}/${currentArea.maxWaves}`;
   document.getElementById("waveTimerText").textContent = `${timeRemaining}s`;
   removeAllEnemyTooltips();

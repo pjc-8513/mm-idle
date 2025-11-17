@@ -169,6 +169,21 @@ export const buildings = [
     upgradedClasses: { id: "rogue"},
     buildingRequired: { id: "barracks", level: 1 }
   },
+  {
+    id: "shadowGuild",
+    name: "Shadow Guild",
+    image: null,
+    reqHeroLevel: 5,
+    level: 0,
+    goldCost: 300,
+    gemCost: 0,
+    goldIncomePerHit: 0,
+    gemPerSecond: 0,
+    buildingRequired: [
+      { id: 'thievesGuild', level: 5 },
+      { id: 'blacksmith', level: 5}
+    ]
+  },
   { id: "temple",
     name: "Temple", 
     image: "assets/images/buildings/temple.png",

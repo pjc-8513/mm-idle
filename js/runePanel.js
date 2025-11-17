@@ -1,6 +1,7 @@
 // runePanel.js
 import { state, runeState } from "./state.js";
 import { emit, on } from "./events.js";
+import { logMessage } from "./systems/log.js";
 
 const GRID_SIZE = 4;
 const TILE_SIZE = 80;
@@ -14,7 +15,10 @@ const ELEMENT_COLORS = {
   earth: "#88ff44"
 };
 
-const SWAP_COST = 1;
+function getSwapCost() {
+  return 1 + runeState.puzzleLevel;
+}
+
 const RESET_COST = 5;
 
 let canvas = null;
@@ -30,6 +34,7 @@ export function initRunePanel() {
 }
 
 export function renderRunePanel() {
+  const SWAP_COST = getSwapCost();
   const panel = document.getElementById("panelRune");
   if (!panel) return;
 
@@ -61,10 +66,10 @@ export function renderRunePanel() {
         </div>
         <div class="rune-info">
           <div class="info-item">
-            <span>Swap Cost: ${SWAP_COST} 💎</span>
+            <span id="swapCostDisplay">Swap Cost: ${SWAP_COST} 💎</span>
           </div>
           <div class="info-item">
-            <span id="availableGemsDisplay">Available Gems: ${Math.floor(state.resources.gems)}</span>
+            <span id="puzzleLevelDisplay">Puzzle level: ${runeState.puzzleLevel}</span>
           </div>
           <div id="comboDisplayContainer">
             ${runeState.comboMultiplier > 1 ? `
@@ -112,11 +117,17 @@ export function updateRunePanel() {
   if (waterCrystal) waterCrystal.textContent = runeState.crystals.water;
   if (airCrystal) airCrystal.textContent = runeState.crystals.air;
   if (earthCrystal) earthCrystal.textContent = runeState.crystals.earth;
+
+  const swapCostDisplay = document.getElementById("swapCostDisplay")
+  if (swapCostDisplay) {
+    const SWAP_COST = getSwapCost();
+    swapCostDisplay.textContent = `Swap Cost: ${SWAP_COST} 💎`;
+  }
   
-  // Update available gems
-  const gemsDisplay = document.getElementById("availableGemsDisplay");
-  if (gemsDisplay) {
-    gemsDisplay.textContent = `Available Gems: ${Math.floor(state.resources.gems)}`;
+  // Update puzzle level
+  const puzzleLevelDisplay = document.getElementById("puzzleLevelDisplay");
+  if (puzzleLevelDisplay) {
+    puzzleLevelDisplay.textContent = `Puzzle level: ${runeState.puzzleLevel}`;
   }
   
   // Update combo display
@@ -479,10 +490,10 @@ function handleSwap(start, end) {
   
   if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
     // Check if player has gems
-    if (state.resources.gems < SWAP_COST) {
-      console.log("Not enough gems to swap!");
-      return;
-    }
+  if (state.resources.gems < getSwapCost()) {
+    console.log("Not enough gems to swap!");
+    return;
+  }
     
     // Perform swap
     const temp = runeState.grid[start.row][start.col];
@@ -492,7 +503,7 @@ function handleSwap(start, end) {
     // Check for matches
     if (hasMatches()) {
       // Valid swap - deduct gem
-      state.resources.gems -= SWAP_COST;
+      state.resources.gems -= getSwapCost();
       emit("gemsChanged");
       processMatches();
     } else {
@@ -589,12 +600,22 @@ function findMatches() {
 }
 
 async function processMatches() {
-  runeState.isAnimating = true;
-  
+  runeState.isAnimating = true;  
   const matches = findMatches();
   if (matches.length === 0) {
     runeState.isAnimating = false;
     return;
+  }
+  // Count tiles matched
+  const tilesMatched = matches.length;
+  runeState.totalMatches += tilesMatched;
+
+  // Level up every 10 matches, max level 10
+  while (runeState.totalMatches >= 10 && runeState.puzzleLevel < 10) {
+    runeState.totalMatches -= 10;
+    runeState.puzzleLevel++;
+    console.log(`Puzzle Level Up! Now level ${runeState.puzzleLevel}`);
+    logMessage(`Puzzle Level Up! Now level ${runeState.puzzleLevel}`);
   }
   
   // Update combo
@@ -620,8 +641,12 @@ async function processMatches() {
     else crystals = 1;
     
     crystals *= runeState.comboMultiplier;
-    runeState.crystals[element] += crystals;
-    console.log(`Earned ${crystals} ${element} crystals!`);
+    const levelBonus = 1 + runeState.puzzleLevel;
+    const reward = crystals * levelBonus;
+
+    runeState.crystals[element] += reward;
+    console.log(`Earned ${reward} ${element} crystals! (Base ${crystals}, Level Bonus x${levelBonus})`);
+    logMessage(`Earned ${reward} ${element} crystals! (Base ${crystals}, Level Bonus x${levelBonus})`);
   }
   
   // Remove matched tiles

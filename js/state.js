@@ -131,9 +131,13 @@ export const runeState = {
   animatingTiles: [], // Tiles currently animating
   selectedTile: null, // {row, col}
   isAnimating: false,
-  crystals: { fire: 0, water: 0, air: 0, earth: 0 },
+  crystals: { fire: 0, water: 0, air: 0, earth: 0, poison: 0,
+              physical: 0, light: 0, dark: 0, undead: 0
+  },
   comboMultiplier: 1,
-  lastMatchTime: 0
+  lastMatchTime: 0,
+  puzzleLevel: 0,       // 0–10
+  totalMatches: 0       // counting all matches for level-ups
 };
 
 export const quickSpellState = {
