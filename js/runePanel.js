@@ -6,13 +6,19 @@ import { logMessage } from "./systems/log.js";
 const GRID_SIZE = 4;
 const TILE_SIZE = 80;
 const TILE_PADDING = 8;
-const ELEMENTS = ["fire", "water", "air", "earth"];
+const ELEMENTS = [
+  "fire", "water", "air", "earth",
+  "physical", "poison", "undead"
+];
 
 const ELEMENT_COLORS = {
   fire: "#ff4444",
   water: "#4444ff",
   air: "#44ffff",
-  earth: "#88ff44"
+  earth: "#88ff44",
+  physical: "#aaaaaa",
+  poison: "#44aa44",
+  undead: "#8866aa"
 };
 
 function getSwapCost() {
@@ -63,6 +69,18 @@ export function renderRunePanel() {
             <span class="crystal-icon">🌍</span>
             <span class="crystal-count" id="earthCrystalCount">${runeState.crystals.earth}</span>
           </div>
+          <div class="crystal-item physical-crystal">
+            <span class="crystal-icon">⚔️</span>
+            <span class="crystal-count" id="physicalCrystalCount">${runeState.crystals.physical}</span>
+          </div>
+          <div class="crystal-item poison-crystal">
+            <span class="crystal-icon">☠️</span>
+            <span class="crystal-count" id="poisonCrystalCount">${runeState.crystals.poison}</span>
+          </div>
+          <div class="crystal-item undead-crystal">
+            <span class="crystal-icon">💀</span>
+            <span class="crystal-count" id="undeadCrystalCount">${runeState.crystals.undead}</span>
+          </div>
         </div>
         <div class="rune-info">
           <div class="info-item">
@@ -112,11 +130,17 @@ export function updateRunePanel() {
   const waterCrystal = document.getElementById("waterCrystalCount");
   const airCrystal = document.getElementById("airCrystalCount");
   const earthCrystal = document.getElementById("earthCrystalCount");
+  const physicalCrystal = document.getElementById("physicalCrystalCount");
+  const poisonCrystal = document.getElementById("poisonCrystalCount");
+  const undeadCrystal = document.getElementById("undeadCrystalCount");
   
   if (fireCrystal) fireCrystal.textContent = runeState.crystals.fire;
   if (waterCrystal) waterCrystal.textContent = runeState.crystals.water;
   if (airCrystal) airCrystal.textContent = runeState.crystals.air;
   if (earthCrystal) earthCrystal.textContent = runeState.crystals.earth;
+  if (physicalCrystal) physicalCrystal.textContent = runeState.crystals.physical;
+  if (poisonCrystal) poisonCrystal.textContent = runeState.crystals.poison;
+  if (undeadCrystal) undeadCrystal.textContent = runeState.crystals.undead;
 
   const swapCostDisplay = document.getElementById("swapCostDisplay")
   if (swapCostDisplay) {
@@ -218,6 +242,10 @@ function addRunePanelCSS() {
     .water-crystal { border-color: #4444ff; }
     .air-crystal { border-color: #44ffff; }
     .earth-crystal { border-color: #88ff44; }
+    .physical-crystal { border-color: #aaaaaa; }
+    .poison-crystal { border-color: #44aa44; }
+    .undead-crystal { border-color: #8866aa; }
+
 
     .rune-info {
       display: flex;
@@ -355,8 +383,19 @@ function initializeGrid() {
 }
 
 function getRandomElement() {
-  return ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
+  const lvl = runeState.puzzleLevel;
+
+  // Base elements (always available)
+  let available = ["fire", "water", "air", "earth"];
+
+  // Level-based unlocks
+  if (lvl >= 2) available.push("physical");
+  if (lvl >= 4) available.push("poison");
+  if (lvl >= 6) available.push("undead");
+
+  return available[Math.floor(Math.random() * available.length)];
 }
+
 
 function shuffleGrid() {
   for (let row = 0; row < GRID_SIZE; row++) {
@@ -415,7 +454,15 @@ function drawTile(row, col, element) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   
-  const icons = { fire: "🔥", water: "💧", air: "💨", earth: "🌍" };
+  const icons = {
+  fire: "🔥",
+  water: "💧",
+  air: "💨",
+  earth: "🌍",
+  physical: "⚔️",
+  poison: "☠️",
+  undead: "💀"
+};
   ctx.fillText(icons[element], x + TILE_SIZE / 2, y + TILE_SIZE / 2);
 }
 
