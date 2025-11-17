@@ -45,7 +45,7 @@ export const summonTemplates = {
     rarity: "rare",
     resonance: "undead",
     baseDuration: 15,
-    baseStats: { hp: partyState.heroBaseStats.hp * 0.3, attack: partyState.heroBaseStats.attack, defense: 1, criticalChance: 0.15, speed: 1.3 },
+    baseStats: { hp: partyState.heroBaseStats.hp * 0.3, attack: partyState.heroBaseStats.attack * 0.75, defense: 1, criticalChance: 0.15, speed: 1.3 },
     hasAutoAttack: false,
     level: 1,
     abilities: [
@@ -81,7 +81,7 @@ export const summonTemplates = {
     rarity: "Activated via skill",
     baseDuration: 15,
     hasAutoAttack: true,
-    baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 3.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
+    baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 1.8, defense: 2, criticalChance: 0.15, speed: 1.2 },
     abilities: [
       { id: "prismaticLight", unlockLevel: 1, active: true}
     ],
@@ -96,7 +96,7 @@ export const summonTemplates = {
     rarity: "Activated via skill",
     baseDuration: 12,
     hasAutoAttack: false,
-    baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 3.2, defense: 2, criticalChance: 0.15, speed: 1.2 },
+    baseStats: { hp: partyState.heroBaseStats.hp * 0.4, attack: partyState.heroBaseStats.attack * 1.7, defense: 2, criticalChance: 0.15, speed: 1.2 },
     abilities: [
       { id: "fireball", unlockLevel: 1, active: true}
     ],

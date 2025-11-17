@@ -237,9 +237,8 @@ export function renderAreaPanel() {
         <div class="area-main">
           <div class="area-header">
             <div id="areaName">${currentArea.name} |
-            
-              <span id="waveInfo">Wave: ${state.areaWave}/${currentArea.maxWaves}</span>
-            
+              <span id="waveInfo">Area: ${state.areaWave}/${currentArea.maxWaves} | </span>
+              <span id="enemyInfo">Enemy level: ${state.currentWave} </span>
             </div>
           </div>
           <div class="wave-timer-section">

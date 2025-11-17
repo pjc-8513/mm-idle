@@ -46,6 +46,13 @@ body, html {
   text-shadow: 1px 1px 2px #000;
 }
 
+#resourceBar.dungeon-bg {
+  background: url('../assets/images/dungeon-top.webp') no-repeat center center;
+  background-size: cover;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
 #resourceBar.spellbook-bg {
   background: url('../assets/images/spellbook-top.webp') no-repeat center center;
   background-size: cover;
@@ -96,6 +103,14 @@ body, html {
   overflow-y: auto;
 }
 
+#game.dungeon-bg {
+  background: url('../assets/images/dungeon-bg.webp') no-repeat center center;
+  background-size: cover;
+  opacity: 0.95;
+  padding: 20px;
+  overflow-y: auto;
+}
+
 .panel {
   display: none;
 }
@@ -124,6 +139,11 @@ body, html {
 
 #sidePanel.party-bg {
   background: url('../assets/images/party-side.webp') no-repeat center center;
+  background-size: cover;
+}
+
+#sidePanel.dungeon-bg {
+  background: url('../assets/images/dungeon-side.webp') no-repeat center center;
   background-size: cover;
 }
 
@@ -196,6 +216,23 @@ body, html {
   flex-direction: column;
 }
 
+.building-section-header {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.building-section-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.building-section-header hr {
+  margin-top: 4px;
+  border: 0;
+  border-top: 1px solid #555;
+  opacity: 0.6;
+}
 
 
 /*

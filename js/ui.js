@@ -126,6 +126,16 @@ export function showPanel(panelId) {
     document.getElementById("sidePanel").classList.add("town-bg");
     renderBuildingPanel();
   }
+  if (panelId === "panelDungeon") {
+    state.activePanel = "panelDungeon";
+    removeBackgroundElement("game");
+    document.getElementById("game").classList.add("dungeon-bg");
+    removeBackgroundElement("resourceBar");
+    document.getElementById("resourceBar").classList.add("dungeon-bg");
+    removeBackgroundElement("sidePanel");
+    document.getElementById("sidePanel").classList.add("dungeon-bg");
+    renderBuildingPanel();
+  }
   if (panelId === "panelArea") {
     
     state.activePanel = "panelArea";
