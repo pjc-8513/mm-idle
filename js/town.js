@@ -66,109 +66,90 @@ function fullRenderBuildingPanel() {
     </div>
   `;
 
-  // Group buildings by type
-  const groups = {
-    unitProduction: [],
-    economy: [],
-    upgrade: []
+  const container = document.createElement("div");
+  container.classList.add("buildingGrid");
+
+  // ---- SORT BY TYPE (single container, no sections) ----
+  const typeOrder = {
+    unitProduction: 0,
+    economy: 1,
+    upgrade: 2
   };
 
-  buildings.forEach(b => groups[b.type].push(b));
+  const sortedBuildings = [...buildings].sort((a, b) => {
+    return typeOrder[a.type] - typeOrder[b.type];
+  });
 
-  // Order we want them displayed:
-  const renderOrder = [
-    { key: "unitProduction", label: "Unit Production" },
-    { key: "economy",        label: "Economy" },
-    { key: "upgrade",        label: "Upgrades" }
-  ];
+  // ---- render normally ----
+  sortedBuildings.forEach((building, index) => {
+    const buildingCard = document.createElement("div");
+    buildingCard.classList.add("buildingCard");
+    buildingCard.dataset.buildingId = building.id;
 
-  // Loop groups in that order
-  renderOrder.forEach(group => {
-    const list = groups[group.key];
-    if (list.length === 0) return; // skip empty types
+    // --- Building image ---
+    const imageDiv = document.createElement("div");
+    imageDiv.classList.add("buildingImage");
+    const img = document.createElement("img");
+    img.src = building.image;
+    img.alt = building.name;
+    img.onerror = () => {
+      img.style.display = 'none';
+      imageDiv.innerHTML = `<div class="building-placeholder">${building.name[0]}</div>`;
+    };
+    imageDiv.appendChild(img);
 
-    // --- Heading section ---
-    const sectionHeader = document.createElement("div");
-    sectionHeader.classList.add("building-section-header");
-    sectionHeader.innerHTML = `
-      <h3>${group.label}</h3>
-      <hr>
-    `;
-    panel.appendChild(sectionHeader);
+    // --- Info overlay ---
+    const infoOverlay = document.createElement("div");
+    infoOverlay.classList.add("buildingInfo");
 
-    // --- Container for cards ---
-    const container = document.createElement("div");
-    container.classList.add("buildingGrid");
+    const nameDiv = document.createElement("div");
+    nameDiv.classList.add("buildingName");
+    nameDiv.textContent = building.name;
 
-    // Render all buildings in this type
-    list.forEach((building, index) => {
-      const buildingCard = document.createElement("div");
-      buildingCard.classList.add("buildingCard");
-      buildingCard.dataset.buildingId = building.id;
+    const levelDiv = document.createElement("div");
+    levelDiv.classList.add("buildingLevel");
 
-      // --- Building image ---
-      const imageDiv = document.createElement("div");
-      imageDiv.classList.add("buildingImage");
-      const img = document.createElement("img");
-      img.src = building.image;
-      img.alt = building.name;
-      img.onerror = () => {
-        img.style.display = 'none';
-        imageDiv.innerHTML = `<div class="building-placeholder">${building.name[0]}</div>`;
-      };
-      imageDiv.appendChild(img);
+    const productionDiv = document.createElement("div");
+    productionDiv.classList.add("buildingProduction");
 
-      // --- Info overlay ---
-      const infoOverlay = document.createElement("div");
-      infoOverlay.classList.add("buildingInfo");
+    infoOverlay.appendChild(nameDiv);
+    infoOverlay.appendChild(levelDiv);
+    infoOverlay.appendChild(productionDiv);
 
-      const nameDiv = document.createElement("div");
-      nameDiv.classList.add("buildingName");
-      nameDiv.textContent = building.name;
+    // --- Upgrade button ---
+    const btn = document.createElement("button");
+    btn.classList.add("upgradeBtn");
+    btn.dataset.buildingId = building.id;
+    btn.dataset.index = index;
 
-      const levelDiv = document.createElement("div");
-      levelDiv.classList.add("buildingLevel");
+    const costSpan = document.createElement("span");
+    costSpan.classList.add("upgrade-cost");
+    btn.appendChild(costSpan);
 
-      const productionDiv = document.createElement("div");
-      productionDiv.classList.add("buildingProduction");
-
-      infoOverlay.appendChild(nameDiv);
-      infoOverlay.appendChild(levelDiv);
-      infoOverlay.appendChild(productionDiv);
-
-      // --- Upgrade button ---
-      const btn = document.createElement("button");
-      btn.classList.add("upgradeBtn");
-      btn.dataset.buildingId = building.id;
-      btn.dataset.index = index;
-
-      const costSpan = document.createElement("span");
-      costSpan.classList.add("upgrade-cost");
-      btn.appendChild(costSpan);
-
-      attachRequirementTooltip(btn, building, {
-        checkBuildingRequirements,
-        getBuildingLevel,
-        getHeroLevel: () => partyState.heroLevel
-      });
-
-      btn.addEventListener("click", () => {
-        upgradeBuilding(building.id);
-      });
-
-      buildingCard.appendChild(imageDiv);
-      buildingCard.appendChild(infoOverlay);
-      buildingCard.appendChild(btn);
-      buildingCard.addEventListener("click", e => {
-        e.stopPropagation();
-        openDock(DOCK_TYPES.BUILDING, building);
-      });
-
-      container.appendChild(buildingCard);
+    attachRequirementTooltip(btn, building, {
+      checkBuildingRequirements,
+      getBuildingLevel,
+      getHeroLevel: () => partyState.heroLevel
     });
 
-    panel.appendChild(container);
+    btn.addEventListener("click", () => {
+      upgradeBuilding(building.id);
+    });
+
+    // --- assemble ---
+    buildingCard.appendChild(imageDiv);
+    buildingCard.appendChild(infoOverlay);
+    buildingCard.appendChild(btn);
+
+    buildingCard.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openDock(DOCK_TYPES.BUILDING, building);
+    });
+
+    container.appendChild(buildingCard);
   });
+
+  panel.appendChild(container);
 
   updateBuildingPanel();
 }
